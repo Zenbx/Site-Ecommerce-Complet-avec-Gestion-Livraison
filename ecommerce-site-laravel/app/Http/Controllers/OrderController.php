@@ -14,6 +14,41 @@ use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+
+    /**
+ * @OA\Post(
+ *     path="/client/orders",
+ *     summary="Créer une commande",
+ *     tags={"Commandes"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"delivery_address","payment_method"},
+ *             @OA\Property(property="delivery_address", type="string", example="123 Main St, Douala"),
+ *             @OA\Property(property="payment_method", type="string", enum={"MOMO","OM","CASH"}, example="MOMO"),
+ *             @OA\Property(property="notes", type="string", example="Livrer entre 14h et 18h")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Commande créée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Commande créée avec succès"),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="order_id", type="integer", example=1),
+ *                 @OA\Property(property="order_number", type="string", example="ORD-1"),
+ *                 @OA\Property(property="status", type="string", example="PENDING"),
+ *                 @OA\Property(property="total_amount", type="number", example=2500000),
+ *                 @OA\Property(property="tracking_code", type="string", example="TRK-ABC12345"),
+ *                 @OA\Property(property="qr_token", type="string", example="abc123def456...")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(response=400, description="Panier vide ou stock insuffisant")
+ * )
+ */
     // CLIENT-ORDER-01: Créer une commande
     public function store(Request $request)
     {
@@ -138,6 +173,40 @@ class OrderController extends Controller
         }
     }
 
+    /**
+ * @OA\Get(
+ *     path="/client/orders",
+ *     summary="Mes commandes",
+ *     tags={"Commandes"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="status",
+ *         in="query",
+ *         description="Filtrer par statut",
+ *         required=false,
+ *         @OA\Schema(type="string", enum={"PENDING","CONFIRMED","PROCESSING","SHIPPED","DELIVERED","CANCELLED"})
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des commandes",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="data", type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="order_number", type="string", example="ORD-1"),
+ *                     @OA\Property(property="status", type="string", example="PROCESSING"),
+ *                     @OA\Property(property="total_amount", type="number", example=2500000),
+ *                     @OA\Property(property="items_count", type="integer", example=1),
+ *                     @OA\Property(property="created_at", type="string", example="2024-12-13T10:00:00Z")
+ *                 )
+ *             )
+ *         )
+ *     )
+ * )
+ */
+
+
     // CLIENT-ORDER-02: Mes commandes
     public function index(Request $request)
     {
@@ -175,6 +244,38 @@ class OrderController extends Controller
             ]
         ]);
     }
+
+    /**
+ * @OA\Get(
+ *     path="/client/orders/{id}",
+ *     summary="Détails d'une commande",
+ *     tags={"Commandes"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Détails de la commande",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="id", type="integer", example=1),
+ *                 @OA\Property(property="order_number", type="string", example="ORD-1"),
+ *                 @OA\Property(property="status", type="string", example="IN_TRANSIT"),
+ *                 @OA\Property(property="items", type="array", @OA\Items(type="object")),
+ *                 @OA\Property(property="tracking", type="object",
+ *                     @OA\Property(property="tracking_code", type="string", example="TRK-ABC12345"),
+ *                     @OA\Property(property="current_status", type="string", example="IN_TRANSIT")
+ *                 )
+ *             )
+ *         )
+ *     )
+ * )
+ */
 
     // CLIENT-ORDER-03: Détails d'une commande
     public function show(Request $request, $id)
@@ -250,6 +351,34 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+ * @OA\Post(
+ *     path="/client/orders/{id}/cancel",
+ *     summary="Annuler une commande",
+ *     tags={"Commandes"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         @OA\JsonContent(
+ *             @OA\Property(property="reason", type="string", example="Changement d'avis")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Commande annulée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Commande annulée avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(response=400, description="La commande ne peut plus être annulée")
+ * )
+ */
     // CLIENT-ORDER-05: Annuler une commande
     public function cancel(Request $request, $id)
     {

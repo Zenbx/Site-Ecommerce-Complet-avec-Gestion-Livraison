@@ -14,6 +14,41 @@ class CartController extends Controller
     // CLIENT-CART-01: Obtenir le panier
     public function index(Request $request)
     {
+        /**
+ * @OA\Get(
+ *     path="/client/cart",
+ *     summary="Voir mon panier",
+ *     tags={"Panier"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Contenu du panier",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="items", type="array",
+ *                     @OA\Items(
+ *                         @OA\Property(property="id", type="integer", example=1),
+ *                         @OA\Property(property="product", type="object",
+ *                             @OA\Property(property="id", type="integer", example=1),
+ *                             @OA\Property(property="name", type="string", example="MacBook Pro 14"),
+ *                             @OA\Property(property="price", type="number", example=2500000)
+ *                         ),
+ *                         @OA\Property(property="quantity", type="integer", example=2),
+ *                         @OA\Property(property="total", type="number", example=5000000)
+ *                     )
+ *                 ),
+ *                 @OA\Property(property="summary", type="object",
+ *                     @OA\Property(property="subtotal", type="number", example=5000000),
+ *                     @OA\Property(property="total", type="number", example=5000000),
+ *                     @OA\Property(property="items_count", type="integer", example=2)
+ *                 )
+ *             )
+ *         )
+ *     )
+ * )
+ */
+
         $client = $request->user();
         
         $cart = Cart::with(['cartLines.product'])
@@ -71,6 +106,38 @@ class CartController extends Controller
             ]
         ]);
     }
+
+/**
+ * @OA\Post(
+ *     path="/client/cart/items",
+ *     summary="Ajouter un produit au panier",
+ *     tags={"Panier"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"product_id","quantity"},
+ *             @OA\Property(property="product_id", type="integer", example=1),
+ *             @OA\Property(property="quantity", type="integer", example=2)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Produit ajouté au panier",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Produit ajouté au panier"),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="cart_item_id", type="integer", example=1),
+ *                 @OA\Property(property="quantity", type="integer", example=2),
+ *                 @OA\Property(property="total", type="number", example=5000000)
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(response=400, description="Stock insuffisant"),
+ *     @OA\Response(response=422, description="Erreur de validation")
+ * )
+ */
 
     // CLIENT-CART-02: Ajouter au panier
     public function store(Request $request)
@@ -161,6 +228,37 @@ class CartController extends Controller
         }
     }
 
+    /**
+ * @OA\Patch(
+ *     path="/client/cart/items/{id}",
+ *     summary="Modifier la quantité d'un article",
+ *     tags={"Panier"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"quantity"},
+ *             @OA\Property(property="quantity", type="integer", example=3)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Quantité mise à jour",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Quantité mise à jour")
+ *         )
+ *     )
+ * )
+ */
+
+
     // CLIENT-CART-03: Modifier la quantité
     public function update(Request $request, $id)
     {
@@ -206,6 +304,29 @@ class CartController extends Controller
         ]);
     }
 
+/**
+ * @OA\Delete(
+ *     path="/client/cart/items/{id}",
+ *     summary="Retirer un produit du panier",
+ *     tags={"Panier"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Produit retiré",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Produit retiré du panier")
+ *         )
+ *     )
+ * )
+ */
+
     // CLIENT-CART-04: Retirer du panier
     public function destroy(Request $request, $id)
     {
@@ -223,6 +344,23 @@ class CartController extends Controller
             'message' => 'Produit retiré du panier'
         ]);
     }
+
+    /**
+ * @OA\Delete(
+ *     path="/client/cart",
+ *     summary="Vider le panier",
+ *     tags={"Panier"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Panier vidé",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Panier vidé")
+ *         )
+ *     )
+ * )
+ */
 
     // CLIENT-CART-05: Vider le panier
     public function clear(Request $request)

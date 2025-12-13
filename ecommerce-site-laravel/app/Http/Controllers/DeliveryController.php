@@ -9,6 +9,39 @@ use Illuminate\Support\Facades\Validator;
 
 class DeliveryController extends Controller
 {
+
+    /**
+ * @OA\Get(
+ *     path="/delivery-person/deliveries",
+ *     summary="Mes livraisons (Livreur)",
+ *     tags={"Livraisons"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="status",
+ *         in="query",
+ *         description="Filtrer par statut",
+ *         @OA\Schema(type="string", enum={"PENDING","ASSIGNED","PICKED_UP","IN_TRANSIT","DELIVERED","FAILED"})
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Liste des livraisons",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="data", type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="id", type="integer", example=1),
+ *                     @OA\Property(property="order", type="object",
+ *                         @OA\Property(property="order_number", type="string", example="ORD-1"),
+ *                         @OA\Property(property="qr_token", type="string", example="abc123...")
+ *                     ),
+ *                     @OA\Property(property="status", type="string", example="ASSIGNED"),
+ *                     @OA\Property(property="delivery_address", type="string", example="123 Main St, Douala")
+ *                 )
+ *             )
+ *         )
+ *     )
+ * )
+ */
     // DELIVERY-01: Mes livraisons (pour le livreur)
     public function index(Request $request)
     {
@@ -61,6 +94,7 @@ class DeliveryController extends Controller
         ]);
     }
 
+
     // DELIVERY-02: Détails d'une livraison
     public function show(Request $request, $id)
     {
@@ -96,6 +130,28 @@ class DeliveryController extends Controller
         ]);
     }
 
+    /**
+ * @OA\Post(
+ *     path="/delivery-person/deliveries/{id}/pickup",
+ *     summary="Marquer comme récupéré",
+ *     tags={"Livraisons"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Colis récupéré",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Colis récupéré")
+ *         )
+ *     )
+ * )
+ */
     // DELIVERY-05: Marquer comme récupéré
     public function pickup(Request $request, $id)
     {
@@ -124,6 +180,26 @@ class DeliveryController extends Controller
             ]
         ]);
     }
+
+    /**
+ * @OA\Post(
+ *     path="/delivery-person/deliveries/{id}/start",
+ *     summary="Démarrer la livraison",
+ *     tags={"Livraisons"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Livraison démarrée"
+ *     )
+ * )
+ */
+
 
     // DELIVERY-06: Démarrer la livraison
     public function start(Request $request, $id)
@@ -157,6 +233,48 @@ class DeliveryController extends Controller
             ]
         ]);
     }
+
+    /**
+ * @OA\Post(
+ *     path="/delivery-person/deliveries/{id}/scan-qr",
+ *     summary="Scanner le QR Code",
+ *     tags={"Livraisons"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"qr_token"},
+ *             @OA\Property(property="qr_token", type="string", example="abc123def456...")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="QR Code valide",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="QR Code valide"),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(property="verified", type="boolean", example=true)
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="QR Code invalide",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=false),
+ *             @OA\Property(property="message", type="string", example="QR Code invalide"),
+ *             @OA\Property(property="error", type="string", example="invalid_qr_code")
+ *         )
+ *     )
+ * )
+ */
 
     // DELIVERY-08: Scanner le QR Code
     public function scanQr(Request $request, $id)
@@ -259,6 +377,34 @@ class DeliveryController extends Controller
             ]
         ]);
     }
+/**
+ * @OA\Post(
+ *     path="/delivery-person/deliveries/{id}/complete",
+ *     summary="Compléter la livraison",
+ *     tags={"Livraisons"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         @OA\JsonContent(
+ *             @OA\Property(property="notes", type="string", example="Livraison effectuée avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Livraison complétée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Livraison complétée avec succès")
+ *         )
+ *     ),
+ *     @OA\Response(response=400, description="Le QR Code doit être scanné d'abord")
+ * )
+ */
 
     // DELIVERY-10: Marquer comme livrée
     public function complete(Request $request, $id)
@@ -388,6 +534,38 @@ class DeliveryController extends Controller
             ]
         ]);
     }
+
+    /**
+ * @OA\Post(
+ *     path="/admin/orders/{id}/assign-delivery",
+ *     summary="Assigner une livraison à un livreur (Admin)",
+ *     tags={"Admin - Commandes"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"delivery_person_id"},
+ *             @OA\Property(property="delivery_person_id", type="integer", example=1),
+ *             @OA\Property(property="notes", type="string", example="Livraison prioritaire")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Commande assignée",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="Commande assignée au livreur")
+ *         )
+ *     ),
+ *     @OA\Response(response=400, description="Livreur non disponible")
+ * )
+ */
 
     // ADMIN: Assigner une livraison à un livreur
     public function assignDelivery(Request $request, $orderId)
