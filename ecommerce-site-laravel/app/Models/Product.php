@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Product extends Model
+{
+    use HasFactory;
+
+    protected $table = 'product';
+
+    protected $fillable = [
+        'name',
+        'quantity',
+        'price',
+        'serial_id',
+        'description',
+        'brand',
+        'category',
+        'image_url',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'price' => 'decimal:2',
+        'quantity' => 'integer',
+        'is_active' => 'boolean',
+        'added_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    // Relations
+    public function cartLines()
+    {
+        return $this->hasMany(CartLine::class);
+    }
+
+    public function orderLines()
+    {
+        return $this->hasMany(OrderLine::class);
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeInStock($query)
+    {
+        return $query->where('quantity', '>', 0);
+    }
+}
