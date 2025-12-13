@@ -1,0 +1,580 @@
+// ========================================
+// THÈME ANGULAR MATERIAL PERSONNALISÉ
+// Charte graphique : Bleu Nuit, Blanc, Cyan
+// ========================================
+
+@use '@angular/material' as mat;
+
+// Include les styles de base Angular Material (obligatoire, une seule fois)
+@include mat.core();
+
+// ========================================
+// PALETTE PERSONNALISÉE - BLEU NUIT
+// ========================================
+$custom-blue-night-palette: (
+  50: #e3f2fd,
+  100: #b3d9f7,
+  200: #80bef1,
+  300: #4da3eb,
+  400: #268fe7,
+  500: #0c47a1,  // Bleu nuit principal
+  600: #0a3d8f,
+  700: #08337c,
+  800: #06296a,
+  900: #041f58,
+  A100: #82b1ff,
+  A200: #448aff,
+  A400: #2979ff,
+  A700: #2962ff,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: white,
+    400: white,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+    A100: rgba(black, 0.87),
+    A200: white,
+    A400: white,
+    A700: white,
+  )
+);
+
+// ========================================
+// PALETTE PERSONNALISÉE - CYAN
+// ========================================
+$custom-cyan-palette: (
+  50: #e0f7fa,
+  100: #b2ebf2,
+  200: #80deea,
+  300: #4dd0e1,
+  400: #26c6da,
+  500: #00bcd4,  // Cyan principal
+  600: #00acc1,
+  700: #0097a7,
+  800: #00838f,
+  900: #006064,
+  A100: #84ffff,
+  A200: #18ffff,
+  A400: #00e5ff,
+  A700: #00b8d4,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+    A100: rgba(black, 0.87),
+    A200: rgba(black, 0.87),
+    A400: rgba(black, 0.87),
+    A700: white,
+  )
+);
+
+// ========================================
+// DÉFINITION DU THÈME
+// ========================================
+$admin-primary: mat.define-palette($custom-blue-night-palette, 500);
+$admin-accent: mat.define-palette($custom-cyan-palette, 500);
+$admin-warn: mat.define-palette(mat.$red-palette, 600);
+
+$admin-theme: mat.define-light-theme((
+  color: (
+    primary: $admin-primary,
+    accent: $admin-accent,
+    warn: $admin-warn,
+  ),
+  typography: mat.define-typography-config(
+    $font-family: 'Roboto, "Helvetica Neue", Arial, sans-serif',
+  ),
+  density: 0
+));
+
+// Appliquer le thème à tous les composants Material
+@include mat.all-component-themes($admin-theme);
+
+// ========================================
+// VARIABLES CSS GLOBALES
+// ========================================
+:root {
+  // Couleurs principales (Charte graphique)
+  --blue-night: #0c47a1;
+  --blue-night-dark: #08337c;
+  --blue-night-light: #1565c0;
+  --cyan: #00bcd4;
+  --cyan-light: #4dd0e1;
+  --cyan-dark: #0097a7;
+  --white: #ffffff;
+  
+  // Couleurs système
+  --success: #4caf50;
+  --warning: #ff9800;
+  --danger: #f44336;
+  --info: #2196f3;
+  
+  // Backgrounds
+  --bg-primary: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-sidebar: #0c47a1;
+  --bg-navbar: #ffffff;
+  
+  // Texte
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --text-light: #ffffff;
+  --text-muted: #9e9e9e;
+  
+  // Bordures et ombres
+  --border-color: #e0e0e0;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+  
+  // Transitions
+  --transition: all 0.3s ease;
+}
+
+// ========================================
+// STYLES GLOBAUX DE BASE
+// ========================================
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+// ========================================
+// CLASSES UTILITAIRES
+// ========================================
+
+// Couleurs de texte
+.text-blue-night { color: var(--blue-night) !important; }
+.text-cyan { color: var(--cyan) !important; }
+.text-white { color: var(--white) !important; }
+.text-success { color: var(--success) !important; }
+.text-warning { color: var(--warning) !important; }
+.text-danger { color: var(--danger) !important; }
+.text-muted { color: var(--text-muted) !important; }
+
+// Backgrounds
+.bg-blue-night { background-color: var(--blue-night) !important; }
+.bg-cyan { background-color: var(--cyan) !important; }
+.bg-white { background-color: var(--white) !important; }
+
+// Marges
+.mt-0 { margin-top: 0 !important; }
+.mt-1 { margin-top: 8px !important; }
+.mt-2 { margin-top: 16px !important; }
+.mt-3 { margin-top: 24px !important; }
+.mt-4 { margin-top: 32px !important; }
+
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1 { margin-bottom: 8px !important; }
+.mb-2 { margin-bottom: 16px !important; }
+.mb-3 { margin-bottom: 24px !important; }
+.mb-4 { margin-bottom: 32px !important; }
+
+.ml-auto { margin-left: auto !important; }
+.mr-auto { margin-right: auto !important; }
+.mx-auto { margin-left: auto !important; margin-right: auto !important; }
+
+// Padding
+.p-0 { padding: 0 !important; }
+.p-1 { padding: 8px !important; }
+.p-2 { padding: 16px !important; }
+.p-3 { padding: 24px !important; }
+.p-4 { padding: 32px !important; }
+
+// Display & Flex
+.d-flex { display: flex !important; }
+.d-block { display: block !important; }
+.d-none { display: none !important; }
+.d-inline-block { display: inline-block !important; }
+
+.justify-content-center { justify-content: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.justify-content-end { justify-content: flex-end !important; }
+.align-items-center { align-items: center !important; }
+.flex-column { flex-direction: column !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+
+// Text alignment
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }
+.text-right { text-align: right !important; }
+
+// Width
+.w-100 { width: 100% !important; }
+.w-50 { width: 50% !important; }
+
+// ========================================
+// COMPOSANTS PERSONNALISÉS
+// ========================================
+
+// Cards
+.card {
+  background: var(--bg-card);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 20px;
+  transition: var(--transition);
+  
+  &:hover {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  &-header {
+    border-bottom: 2px solid var(--cyan);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    
+    h2, h3 {
+      margin: 0;
+      color: var(--blue-night);
+    }
+  }
+  
+  &-body {
+    padding: 0;
+  }
+  
+  &-footer {
+    border-top: 1px solid var(--border-color);
+    padding-top: 12px;
+    margin-top: 20px;
+  }
+}
+
+// Boutons personnalisés
+.btn {
+  padding: 10px 20px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  &-primary {
+    background-color: var(--blue-night);
+    color: var(--white);
+    
+    &:hover:not(:disabled) {
+      background-color: var(--blue-night-dark);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+  }
+  
+  &-accent {
+    background-color: var(--cyan);
+    color: var(--white);
+    
+    &:hover:not(:disabled) {
+      background-color: var(--cyan-dark);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+  }
+  
+  &-success {
+    background-color: var(--success);
+    color: var(--white);
+    
+    &:hover:not(:disabled) {
+      background-color: #388e3c;
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+  }
+  
+  &-danger {
+    background-color: var(--danger);
+    color: var(--white);
+    
+    &:hover:not(:disabled) {
+      background-color: #d32f2f;
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+  }
+  
+  &-outline-primary {
+    background-color: transparent;
+    color: var(--blue-night);
+    border: 2px solid var(--blue-night);
+    
+    &:hover:not(:disabled) {
+      background-color: var(--blue-night);
+      color: var(--white);
+    }
+  }
+  
+  &-outline-accent {
+    background-color: transparent;
+    color: var(--cyan);
+    border: 2px solid var(--cyan);
+    
+    &:hover:not(:disabled) {
+      background-color: var(--cyan);
+      color: var(--white);
+    }
+  }
+}
+
+// Badges
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  
+  &-primary { background-color: var(--blue-night); color: var(--white); }
+  &-accent { background-color: var(--cyan); color: var(--white); }
+  &-success { background-color: var(--success); color: var(--white); }
+  &-warning { background-color: var(--warning); color: var(--white); }
+  &-danger { background-color: var(--danger); color: var(--white); }
+}
+
+// Alerts
+.alert {
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  border-left: 4px solid;
+  
+  &-success {
+    background-color: #e8f5e9;
+    border-color: var(--success);
+    color: #2e7d32;
+  }
+  
+  &-warning {
+    background-color: #fff3e0;
+    border-color: var(--warning);
+    color: #ef6c00;
+  }
+  
+  &-danger {
+    background-color: #ffebee;
+    border-color: var(--danger);
+    color: #c62828;
+  }
+  
+  &-info {
+    background-color: #e1f5fe;
+    border-color: var(--cyan);
+    color: var(--cyan-dark);
+  }
+}
+
+// Tables
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  
+  thead {
+    background-color: var(--blue-night);
+    color: var(--white);
+    
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+  }
+  
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--border-color);
+      transition: var(--transition);
+      
+      &:hover {
+        background-color: #f5f5f5;
+      }
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      td {
+        padding: 16px;
+      }
+    }
+  }
+}
+
+// Forms
+.form-group {
+  margin-bottom: 20px;
+  
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--blue-night);
+  }
+  
+  input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    transition: var(--transition);
+    
+    &:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+    }
+    
+    &.is-invalid {
+      border-color: var(--danger);
+      
+      &:focus {
+        box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+      }
+    }
+  }
+  
+  .invalid-feedback {
+    color: var(--danger);
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+  }
+}
+
+// Scrollbar personnalisée
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cyan);
+  border-radius: 4px;
+  
+  &:hover {
+    background: var(--cyan-dark);
+  }
+}
+
+// ========================================
+// ANIMATIONS
+// ========================================
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+// ========================================
+// RESPONSIVE
+// ========================================
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+  }
+  
+  .table {
+    font-size: 14px;
+    
+    thead th,
+    tbody td {
+      padding: 12px 8px;
+    }
+  }
+  
+  .btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 12px;
+  }
+  
+  h1 { font-size: 24px; }
+  h2 { font-size: 20px; }
+  h3 { font-size: 18px; }
+}

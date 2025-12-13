@@ -1,0 +1,83 @@
+<div class="dashboard-container">
+  <div class="container">
+    <!-- Header -->
+    <div class="dashboard-header">
+      <h1>🎯 Tableau de Bord</h1>
+      <button class="btn btn-danger" (click)="logout()">
+        🚪 Déconnexion
+      </button>
+    </div>
+
+    <!-- Info utilisateur -->
+    <div class="card fade-in">
+      <div class="card-header">
+        <h3>👤 Informations utilisateur</h3>
+      </div>
+      <div class="card-body">
+        <div class="user-info">
+          <div class="info-item">
+            <strong>Nom :</strong> {{ userName }}
+          </div>
+          <div class="info-item">
+            <strong>Email :</strong> {{ userEmail }}
+          </div>
+          <div class="info-item">
+            <strong>Rôle :</strong> 
+            <span class="badge badge-primary">{{ userRole }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message de bienvenue -->
+    <div class="card fade-in">
+      <div class="card-body">
+        <h2>🎉 Bienvenue sur l'interface d'administration !</h2>
+        <p>Vous êtes actuellement en <strong>mode développement</strong> avec des données fictives (Mock Data).</p>
+        
+        <div class="alert alert-info">
+          <strong>ℹ️ Mode Mock Data activé</strong>
+          <p>L'application fonctionne avec des données de test. Lorsque l'API Laravel sera prête, 
+          il suffira de changer <code>useMockData: false</code> dans le fichier d'environnement.</p>
+        </div>
+
+        <h4>📋 Fonctionnalités à venir :</h4>
+        <ul>
+          <li>✅ Authentification (Terminé)</li>
+          <li>⏳ Gestion des livreurs (CRUD)</li>
+          <li>⏳ Gestion des livraisons</li>
+          <li>⏳ Suivi en temps réel avec carte</li>
+          <li>⏳ Statistiques et rapports</li>
+          <li>⏳ Notifications push</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Stats rapides -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Livraisons en cours</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Livraisons réussies</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Livreurs actifs</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">En attente</div>
+      </div>
+    </div>
+  </div>
+</div>
