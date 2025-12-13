@@ -1,0 +1,26 @@
+<?php
+
+// ============================================
+// 7. PRODUCT OUT OF STOCK EVENT
+// app/Events/ProductOutOfStock.php
+// ============================================
+
+namespace App\Events;
+
+use App\Models\Product;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+class ProductOutOfStock
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    public Product $product;
+
+    public function __construct(Product $product)
+    {
+        $this->product = $product;
+    }
+}
+
