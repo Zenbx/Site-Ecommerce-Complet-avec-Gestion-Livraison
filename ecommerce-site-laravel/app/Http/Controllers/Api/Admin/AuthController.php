@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Http\Requests\Admin\LoginRequest;
+use App\Http\Resources\AdminResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -75,12 +77,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Connexion réussie',
             'data' => [
-                'admin' => [
-                    'id' => $admin->id,
-                    'name' => $admin->name,
-                    'email' => $admin->email,
-                    'role' => $admin->role,
-                ],
+                'admin' => new AdminResource($admin),
                 'token' => $token,
                 'token_type' => 'Bearer',
             ],
@@ -124,20 +121,17 @@ class AuthController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * Récupérer le profil de l'admin connecté
+     */
     public function me(Request $request)
     {
-        // Récupérer l'admin authentifié via le guard admin-api
-        $admin = $request->user('admin-api');
-
+        // Ici aussi, nous utilisons AdminResource pour transformer le modèle
+        // Au lieu de retourner directement $request->user('admin-api'),
+        // nous l'enveloppons dans une AdminResource
         return response()->json([
             'success' => true,
-            'data' => [
-                'id' => $admin->id,
-                'name' => $admin->name,
-                'email' => $admin->email,
-                'role' => $admin->role,
-                'created_at' => $admin->created_at,
-            ],
+            'data' => new AdminResource($request->user('admin-api')),
         ], 200);
     }
 }
