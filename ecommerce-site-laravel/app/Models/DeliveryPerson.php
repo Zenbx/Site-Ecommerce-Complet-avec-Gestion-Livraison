@@ -11,7 +11,7 @@ class DeliveryPerson extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $table = 'delivery_person';
+    protected $table = 'delivery_persons';
 
     protected $fillable = [
         'name',

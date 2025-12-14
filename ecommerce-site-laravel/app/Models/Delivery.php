@@ -9,7 +9,7 @@ class Delivery extends Model
 {
     use HasFactory;
 
-    protected $table = 'delivery';
+    protected $table = 'deliveries';
 
     protected $fillable = [
         'order_id',
@@ -54,4 +54,58 @@ class Delivery extends Model
     {
         return $query->where('status', 'PENDING');
     }
+
+    /**
+ * Vérifie si la livraison est en attente d'assignation.
+ */
+public function isPending(): bool
+{
+    return $this->status === 'PENDING';
+}
+
+/**
+ * Vérifie si la livraison a été assignée à un livreur.
+ */
+public function isAssigned(): bool
+{
+    return $this->status === 'ASSIGNED';
+}
+
+/**
+ * Vérifie si la livraison est en cours.
+ */
+public function isInTransit(): bool
+{
+    return $this->status === 'IN_TRANSIT';
+}
+
+/**
+ * Vérifie si la livraison a été complétée avec succès.
+ */
+public function isDelivered(): bool
+{
+    return $this->status === 'DELIVERED';
+}
+
+/**
+ * Vérifie si le QR code est toujours valide.
+ */
+public function isQrCodeValid(): bool
+{
+    // Le QR code est valide s'il existe et n'a pas expiré
+    return $this->qr_token !== null 
+           && $this->qr_expires_at !== null 
+           && $this->qr_expires_at->isFuture()
+           && $this->qr_status !== 'used';
+}
+
+/**
+ * Génère un nouveau token de QR code avec une date d'expiration.
+ */
+public function generateQrToken(): void
+{
+    $this->qr_token = bin2hex(random_bytes(32)); // Token aléatoire sécurisé
+    $this->qr_expires_at = now()->addDays(7); // Valide pendant 7 jours
+    $this->qr_status = 'valid';
+}
 }

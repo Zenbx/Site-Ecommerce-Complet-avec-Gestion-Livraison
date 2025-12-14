@@ -2,108 +2,139 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\Api\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Api\Client\AuthController as ClientAuthController;
+use App\Http\Controllers\Api\DeliveryPerson\AuthController as DeliveryAuthController;
+
+/*
+|--------------------------------------------------------------------------
+| Routes API
+|--------------------------------------------------------------------------
+|
+| Toutes les routes définies dans ce fichier sont automatiquement préfixées
+| par /api grâce à la configuration dans RouteServiceProvider.
+| Elles retournent toutes du JSON et sont destinées à être consommées par
+| nos applications frontend Angular et React Native.
+|
+*/
+
+/*
+|--------------------------------------------------------------------------
+| ROUTES PUBLIQUES D'AUTHENTIFICATION
+|--------------------------------------------------------------------------
+|
+| Ces routes ne nécessitent aucune authentification. Elles sont accessibles
+| à tous et permettent aux utilisateurs de s'inscrire et de se connecter.
+|
+*/
 
 // ============================================
-// ROUTES PUBLIQUES
+// ROUTES ADMIN
 // ============================================
-Route::get('/test', function() {
-    return response()->json(['message' => 'API fonctionne']);
-});
-
-Route::post('/auth/register', [AuthController::class, 'registerClient']);
-Route::post('/auth/login', [AuthController::class, 'login']);
-
-// Catalogue public (sans auth)
-Route::get('/products', [ProductController::class, 'index']);
-Route::get('/products/{id}', [ProductController::class, 'show']);
-
-// ============================================
-// ROUTES PROTÉGÉES (AUTH REQUIRED)
-// ============================================
-
-Route::middleware('auth:sanctum')->group(function () {
+// Toutes les routes admin sont préfixées par /api/admin
+Route::prefix('admin')->group(function () {
     
-    // --------------------------------------------
-    // AUTHENTIFICATION
-    // --------------------------------------------
-    Route::post('/auth/logout', [AuthController::class, 'logout']);
-    Route::post('/auth/refresh', [AuthController::class, 'refresh']);
-    Route::get('/auth/me', [AuthController::class, 'me']);
-
-    // --------------------------------------------
-    // ADMIN - GESTION PRODUITS
-    // --------------------------------------------
-    Route::prefix('admin')->middleware('admin')->group(function () {
+    // Routes publiques (non authentifiées)
+    // POST /api/admin/login - Connexion d'un administrateur
+    Route::post('/login', [AdminAuthController::class, 'login']);
+    
+    // Routes protégées (nécessitent un token valide)
+    // Ces routes sont protégées par le middleware auth:admin-api
+    // qui vérifie que la requête contient un token valide émis pour un admin
+    Route::middleware('auth:admin-api')->group(function () {
+        // POST /api/admin/logout - Déconnexion (supprime le token)
+        Route::post('/logout', [AdminAuthController::class, 'logout']);
         
-        // Produits
-        Route::prefix('products')->group(function () {
-            Route::get('/', [ProductController::class, 'index']);
-            Route::get('/{id}', [ProductController::class, 'show']);
-            Route::post('/', [ProductController::class, 'store']);
-            Route::put('/{id}', [ProductController::class, 'update']);
-            Route::delete('/{id}', [ProductController::class, 'destroy']);
-            Route::patch('/{id}/stock', [ProductController::class, 'updateStock']);
-        });
-
-        // Commandes (Admin)
-        Route::prefix('orders')->group(function () {
-            Route::get('/', [OrderController::class, 'adminIndex']);
-            Route::get('/{id}', [OrderController::class, 'show']);
-            Route::patch('/{id}/status', [OrderController::class, 'updateStatus']);
-            Route::post('/{id}/assign-delivery', [DeliveryController::class, 'assignDelivery']);
-        });
-
-        // Livraisons (Admin)
-        Route::prefix('deliveries')->group(function () {
-            Route::get('/', [DeliveryController::class, 'adminIndex']);
-            Route::get('/{id}', [DeliveryController::class, 'show']);
-        });
-    });
-
-    // --------------------------------------------
-    // CLIENT - PANIER
-    // --------------------------------------------
-    Route::prefix('client/cart')->group(function () {
-        Route::get('/', [CartController::class, 'index']);
-        Route::post('/items', [CartController::class, 'store']);
-        Route::patch('/items/{id}', [CartController::class, 'update']);
-        Route::delete('/items/{id}', [CartController::class, 'destroy']);
-        Route::delete('/', [CartController::class, 'clear']);
-    });
-
-    // --------------------------------------------
-    // CLIENT - COMMANDES
-    // --------------------------------------------
-    Route::prefix('client/orders')->group(function () {
-        Route::get('/', [OrderController::class, 'index']);
-        Route::post('/', [OrderController::class, 'store']);
-        Route::get('/{id}', [OrderController::class, 'show']);
-        Route::post('/{id}/cancel', [OrderController::class, 'cancel']);
-    });
-
-    // --------------------------------------------
-    // LIVREUR - LIVRAISONS
-    // --------------------------------------------
-    Route::prefix('delivery-person')->group(function () {
+        // GET /api/admin/me - Récupérer le profil de l'admin connecté
+        Route::get('/me', [AdminAuthController::class, 'me']);
         
-        // Liste et détails
-        Route::get('/deliveries', [DeliveryController::class, 'index']);
-        Route::get('/deliveries/{id}', [DeliveryController::class, 'show']);
-        
-        // Actions de livraison
-        Route::post('/deliveries/{id}/pickup', [DeliveryController::class, 'pickup']);
-        Route::post('/deliveries/{id}/start', [DeliveryController::class, 'start']);
-        Route::post('/deliveries/{id}/scan-qr', [DeliveryController::class, 'scanQr']);
-        Route::post('/deliveries/{id}/proof', [DeliveryController::class, 'submitProof']);
-        Route::post('/deliveries/{id}/complete', [DeliveryController::class, 'complete']);
-        Route::post('/deliveries/{id}/report-issue', [DeliveryController::class, 'reportIssue']);
-        
-        // Disponibilité
-        Route::patch('/availability', [DeliveryController::class, 'updateAvailability']);
+        // Ici viendront toutes les autres routes protégées pour les admins :
+        // - Gestion des produits (CRUD)
+        // - Gestion des catégories
+        // - Gestion des commandes
+        // - Gestion des utilisateurs
+        // - Gestion des livreurs
+        // - Dashboard et statistiques
+        // etc.
     });
 });
+
+// ============================================
+// ROUTES CLIENT
+// ============================================
+// Toutes les routes client sont préfixées par /api/client
+Route::prefix('client')->group(function () {
+    
+    // Routes publiques (non authentifiées)
+    // POST /api/client/register - Inscription d'un nouveau client
+    Route::post('/register', [ClientAuthController::class, 'register']);
+    
+    // POST /api/client/login - Connexion d'un client
+    Route::post('/login', [ClientAuthController::class, 'login']);
+    
+    // Routes protégées (nécessitent un token valide de client)
+    Route::middleware('auth:client-api')->group(function () {
+        // POST /api/client/logout - Déconnexion
+        Route::post('/logout', [ClientAuthController::class, 'logout']);
+        
+        // GET /api/client/me - Profil du client connecté
+        Route::get('/me', [ClientAuthController::class, 'me']);
+        
+        // Ici viendront toutes les autres routes protégées pour les clients :
+        // - Gestion du panier
+        // - Passage de commandes
+        // - Historique des commandes
+        // - Suivi des livraisons
+        // - Gestion du profil
+        // - Liste de souhaits
+        // etc.
+    });
+});
+
+// ============================================
+// ROUTES DELIVERY PERSON
+// ============================================
+// Toutes les routes livreur sont préfixées par /api/delivery-person
+Route::prefix('delivery-person')->group(function () {
+    
+    // Routes publiques (non authentifiées)
+    // POST /api/delivery-person/login - Connexion d'un livreur
+    Route::post('/login', [DeliveryAuthController::class, 'login']);
+    
+    // Routes protégées (nécessitent un token valide de livreur)
+    Route::middleware('auth:delivery-api')->group(function () {
+        // POST /api/delivery-person/logout - Déconnexion
+        Route::post('/logout', [DeliveryAuthController::class, 'logout']);
+        
+        // GET /api/delivery-person/me - Profil du livreur connecté
+        Route::get('/me', [DeliveryAuthController::class, 'me']);
+        
+        // PATCH /api/delivery-person/availability - Mettre à jour la disponibilité
+        Route::patch('/availability', [DeliveryAuthController::class, 'updateAvailability']);
+        
+        // Ici viendront toutes les autres routes protégées pour les livreurs :
+        // - Liste des livraisons assignées
+        // - Mise à jour du statut des livraisons
+        // - Scan des QR codes
+        // - Upload des preuves de livraison
+        // - Mise à jour de la géolocalisation
+        // - Historique des livraisons
+        // etc.
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| ROUTES PUBLIQUES (CATALOGUE)
+|--------------------------------------------------------------------------
+|
+| Ces routes sont accessibles sans authentification et permettent
+| de consulter le catalogue de produits, les catégories, etc.
+| Ces endpoints seront utilisés par les visiteurs non connectés du site.
+|
+*/
+
+// Route::get('/products', [ProductController::class, 'index']);
+// Route::get('/products/{id}', [ProductController::class, 'show']);
+// Route::get('/categories', [CategoryController::class, 'index']);
+// etc.

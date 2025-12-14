@@ -27,8 +27,6 @@ class Product extends Model
         'price' => 'decimal:2',
         'quantity' => 'integer',
         'is_active' => 'boolean',
-        'added_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
     // Relations

@@ -30,6 +30,15 @@ class Client extends Authenticatable
         'updated_at' => 'datetime',
     ];
 
+    /**
+     * Mutateur pour hasher automatiquement le mot de passe.
+     */
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = bcrypt($value);
+    }
+
+
     // Relations
     public function carts()
     {
@@ -44,5 +53,43 @@ class Client extends Authenticatable
     public function activeCart()
     {
         return $this->hasOne(Cart::class)->where('status', 'ACTIVE');
+    }
+
+    /**
+     * Scope pour les clients actifs (qui ont passé au moins une commande).
+     */
+    public function scopeActive($query)
+    {
+        return $query->has('orders');
+    }
+
+    /**
+     * Scope pour les clients inactifs (qui n'ont jamais passé de commande).
+     */
+    public function scopeInactive($query)
+    {
+        return $query->doesntHave('orders');
+    }
+
+    /**
+     * Calcule le montant total dépensé par ce client.
+     * 
+     * @return float
+     */
+    public function getTotalSpentAttribute()
+    {
+        return $this->orders()
+                    ->where('status', 'DELIVERED')
+                    ->sum('total_amount');
+    }
+
+    /**
+     * Compte le nombre total de commandes de ce client.
+     * 
+     * @return int
+     */
+    public function getOrdersCountAttribute()
+    {
+        return $this->orders()->count();
     }
 }
