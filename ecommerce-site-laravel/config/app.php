@@ -124,7 +124,7 @@ return [
     ],
 
 
-    'providers' => ServiceProvider::defaultProviders()->merge([
+    'providers' => Illuminate\Support\ServiceProvider::defaultProviders()->merge([
     
     // Package Service Providers...
     

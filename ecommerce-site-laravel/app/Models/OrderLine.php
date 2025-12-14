@@ -9,7 +9,7 @@ class OrderLine extends Model
 {
     use HasFactory;
 
-    protected $table = 'order_line';
+    protected $table = 'order_lines';
 
     protected $fillable = [
         'order_id',

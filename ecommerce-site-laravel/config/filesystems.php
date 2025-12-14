@@ -60,6 +60,28 @@ return [
             'report' => false,
         ],
 
+        'products' => [
+        'driver' => 'local',
+        'root' => storage_path('app/public/products'),
+        'url' => env('APP_URL').'/storage/products',
+        'visibility' => 'public',
+        ],
+        
+        'deliveries' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/deliveries'),
+            'url' => env('APP_URL').'/storage/deliveries',
+            'visibility' => 'public',
+        ],
+        
+        'qrcodes' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/qrcodes'),
+            'url' => env('APP_URL').'/storage/qrcodes',
+            'visibility' => 'public',
+        ],
+        
+
     ],
 
     /*

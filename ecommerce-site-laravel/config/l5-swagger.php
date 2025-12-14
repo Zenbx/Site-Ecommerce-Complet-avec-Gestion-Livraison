@@ -102,6 +102,10 @@ return [
         ],
 
         'scanOptions' => [
+
+            'exclude' => [
+                     base_path('app/Http/Requests'),
+                ],
             /**
              * Configuration for default processors. Allows to pass processors configuration to swagger-php.
              *

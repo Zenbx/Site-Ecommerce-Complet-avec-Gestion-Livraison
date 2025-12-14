@@ -1,3 +1,4 @@
+<?php
 // ============================================
 // 5. BROADCAST SERVICE PROVIDER (Pour WebSocket/Pusher)
 // app/Providers/BroadcastServiceProvider.php

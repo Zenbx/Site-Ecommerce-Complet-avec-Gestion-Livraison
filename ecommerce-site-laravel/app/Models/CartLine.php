@@ -9,7 +9,7 @@ class CartLine extends Model
 {
     use HasFactory;
 
-    protected $table = 'cart_line';
+    protected $table = 'cart_lines';
 
     protected $fillable = [
         'cart_id',
