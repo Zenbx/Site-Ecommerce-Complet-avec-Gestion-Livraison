@@ -7,6 +7,7 @@ use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\Delivery;
 use App\Models\DeliveryPerson;
+use App\Events\DeliveryAssigned;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -274,6 +275,7 @@ class OrderController extends Controller
             
             DB::commit();
             
+            broadcast(new DeliveryAssigned($delivery));
             $delivery->load(['deliveryPerson', 'order.orderLines.product']);
             
             return response()->json([

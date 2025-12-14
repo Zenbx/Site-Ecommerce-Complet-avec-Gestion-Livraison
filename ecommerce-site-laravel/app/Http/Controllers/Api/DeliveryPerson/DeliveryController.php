@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\DeliveryPerson;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DeliveryResource;
 use App\Models\Delivery;
+use App\Events\DeliveryLocationUpdated;
+use App\Services\GeolocationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -251,7 +253,10 @@ class DeliveryController extends Controller
         }
         
         $delivery->update(['status' => 'IN_TRANSIT']);
-        
+
+        // Déclencher l'événement de changement de statut
+        broadcast(new DeliveryStatusChanged($delivery, $oldStatus, 'IN_TRANSIT'));
+
         return response()->json([
             'success' => true,
             'message' => 'Livraison démarrée. En route vers le client.',
@@ -267,43 +272,39 @@ class DeliveryController extends Controller
      * Cette méthode est appelée régulièrement par l'app mobile (ex: toutes les 30 secondes)
      * pour permettre le suivi en temps réel
      */
-    public function updateLocation(Request $request, Delivery $delivery): JsonResponse
-    {
-        $deliveryPerson = $request->user('delivery-api');
-        
-        if ($delivery->delivery_person_id !== $deliveryPerson->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Accès non autorisé',
-            ], 403);
-        }
-        
-        $validated = $request->validate([
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            'speed' => 'nullable|numeric|min:0',
-            'heading' => 'nullable|numeric|between:0,360',
-        ]);
-        
-        // Stocker la position dans une table de tracking GPS
-        // DeliveryLocationHistory::create([
-        //     'delivery_id' => $delivery->id,
-        //     'latitude' => $validated['latitude'],
-        //     'longitude' => $validated['longitude'],
-        //     'speed' => $validated['speed'] ?? null,
-        //     'heading' => $validated['heading'] ?? null,
-        //     'timestamp' => now(),
-        // ]);
-        
-        // Émettre un événement pour WebSocket (suivi temps réel dans Angular)
-        // broadcast(new DeliveryLocationUpdated($delivery, $validated));
-        
+    use App\Events\DeliveryLocationUpdated; // Ajoutez cet import en haut du fichier
+
+public function updateLocation(Request $request, Delivery $delivery): JsonResponse
+{
+    $deliveryPerson = $request->user('delivery-api');
+    
+    if ($delivery->delivery_person_id !== $deliveryPerson->id) {
         return response()->json([
-            'success' => true,
-            'message' => 'Position mise à jour',
-        ], 200);
+            'success' => false,
+            'message' => 'Accès non autorisé',
+        ], 403);
     }
     
+    $validated = $request->validate([
+        'latitude' => 'required|numeric|between:-90,90',
+        'longitude' => 'required|numeric|between:-180,180',
+        'speed' => 'nullable|numeric|min:0',
+        'heading' => 'nullable|numeric|between:0,360',
+    ]);
+    
+    // Stocker la position dans une table de tracking si vous en avez une
+    // ou simplement déclencher l'événement pour diffusion temps réel
+    
+    // DÉCLENCHER L'ÉVÉNEMENT WEBSOCKET
+    // Cette ligne unique fait toute la magie : elle diffuse instantanément
+    // la nouvelle position vers tous les clients connectés
+    broadcast(new DeliveryLocationUpdated($delivery, $validated))->toOthers();
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Position mise à jour et diffusée en temps réel',
+    ], 200);
+}
     /**
      * Scanne le QR code de confirmation de livraison
      * 
@@ -576,4 +577,90 @@ class DeliveryController extends Controller
             ],
         ], 200);
     }
+
+    /**
+ * Obtient l'itinéraire optimisé pour une livraison
+ * 
+ * GET /api/delivery-person/deliveries/{delivery}/route
+ * 
+ * Query params:
+ * - current_lat: Latitude actuelle du livreur (required)
+ * - current_lon: Longitude actuelle du livreur (required)
+ * 
+ * Cette méthode simplifie l'obtention d'un itinéraire pour le livreur.
+ * Au lieu que l'app mobile doive géocoder l'adresse de destination elle-même,
+ * elle donne simplement sa position actuelle et reçoit l'itinéraire complet.
+ */
+public function getRoute(Request $request, Delivery $delivery): JsonResponse
+{
+    $deliveryPerson = $request->user('delivery-api');
+    
+    // Vérifier que cette livraison appartient au livreur connecté
+    if ($delivery->delivery_person_id !== $deliveryPerson->id) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Accès non autorisé',
+        ], 403);
+    }
+    
+    $validated = $request->validate([
+        'current_lat' => 'required|numeric|between:-90,90',
+        'current_lon' => 'required|numeric|between:-180,180',
+    ]);
+    
+    try {
+        // Géocoder l'adresse de livraison si elle n'a pas déjà de coordonnées
+        // Dans votre table deliveries, vous pourriez ajouter des colonnes
+        // delivery_latitude et delivery_longitude pour stocker les coordonnées
+        // une fois géocodées, évitant ainsi de géocoder à chaque fois
+        
+        $geolocationService = app(GeolocationService::class);
+        
+        // Pour l'instant, nous allons géocoder l'adresse à chaque fois
+        // Dans une vraie application, vous géocoderiez une seule fois
+        // au moment de la création de la livraison et stockeriez les coordonnées
+        $destination = $geolocationService->geocodeAddress($delivery->delivery_address);
+        
+        if (!$destination) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Impossible de localiser l\'adresse de livraison',
+            ], 400);
+        }
+        
+        // Calculer l'itinéraire
+        $route = $geolocationService->calculateRoute(
+            $validated['current_lat'],
+            $validated['current_lon'],
+            $destination['latitude'],
+            $destination['longitude'],
+            'driving'
+        );
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'delivery_id' => $delivery->id,
+                'tracking_code' => $delivery->tracking_code,
+                'current_position' => [
+                    'latitude' => $validated['current_lat'],
+                    'longitude' => $validated['current_lon'],
+                ],
+                'destination' => [
+                    'latitude' => $destination['latitude'],
+                    'longitude' => $destination['longitude'],
+                    'address' => $delivery->delivery_address,
+                ],
+                'route' => $route,
+            ],
+        ], 200);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erreur lors du calcul de l\'itinéraire',
+            'error' => config('app.debug') ? $e->getMessage() : 'Erreur interne',
+        ], 500);
+    }
+}
 }

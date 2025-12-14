@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\Client\OrderController as ClientOrderController;
 use App\Http\Controllers\Api\DeliveryPerson\AuthController as DeliveryAuthController;
 use App\Http\Controllers\Api\DeliveryPerson\DeliveryController as DeliveryPersonDeliveryController;
 
+// Controllers Utilitaires
+use App\Http\Controllers\Api\MapController;
 /*
 |--------------------------------------------------------------------------
 | API E-COMMERCE COMPLÈTE - ROUTES
@@ -197,6 +199,9 @@ Route::prefix('delivery-person')->name('delivery.')->group(function () {
             
             // Historique
             Route::get('/history/list', [DeliveryPersonDeliveryController::class, 'history'])->name('history');
+            
+            // Obtenir la route
+            Route::get('/deliveries/{delivery}/route', [DeliveryPersonDeliveryController::class, 'getRoute'])->name('deliveries.get-route');
         });
         
         // ========== STATISTIQUES LIVREUR ==========
@@ -222,4 +227,11 @@ Route::fallback(function () {
         'message' => 'Endpoint API non trouvé',
         'error' => 'La route demandée n\'existe pas. Vérifiez l\'URL et la méthode HTTP.',
     ], 404);
+    Route::prefix('map')->name('map.')->group(function () {
+    // Ces endpoints sont publics car ils peuvent être utilisés
+    // par n'importe quelle partie du système
+    Route::post('/geocode', [MapController::class, 'geocode'])->name('geocode');
+    Route::post('/route', [MapController::class, 'calculateRoute'])->name('route');
+    Route::post('/distance', [MapController::class, 'calculateDistance'])->name('distance');
+});
 });

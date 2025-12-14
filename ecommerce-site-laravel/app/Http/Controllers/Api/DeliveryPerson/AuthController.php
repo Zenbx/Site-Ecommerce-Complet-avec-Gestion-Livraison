@@ -71,16 +71,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'id' => $deliveryPerson->id,
-                'name' => $deliveryPerson->name,
-                'email' => $deliveryPerson->email,
-                'id_card_number' => $deliveryPerson->id_card_number,
-                'address' => $deliveryPerson->address,
-                'photo_url' => $deliveryPerson->photo_url,
-                'is_available' => $deliveryPerson->is_available,
-                'created_at' => $deliveryPerson->created_at,
-            ],
+            'data' => new DeliveryPersonResource($deliveryPerson), 
         ], 200);
     }
 

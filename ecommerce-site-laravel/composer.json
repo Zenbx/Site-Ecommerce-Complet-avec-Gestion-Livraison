@@ -14,9 +14,10 @@
         "guzzlehttp/guzzle": "*",
         "intervention/image": "^3.11",
         "laravel/framework": "^12.0",
+        "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10.1",
-        "pusher/pusher-php-server": "*",
+        "pusher/pusher-php-server": "^7.2",
         "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-permission": "^6.23"
@@ -31,7 +32,8 @@
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.1",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "phpunit/phpunit": "^12.4"
     },
     "autoload": {
         "psr-4": {
