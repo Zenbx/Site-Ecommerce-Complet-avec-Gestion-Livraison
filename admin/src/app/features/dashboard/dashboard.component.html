@@ -1,83 +1,146 @@
+<!-- src/app/features/dashboard/dashboard.component.html -->
+
 <div class="dashboard-container">
-  <div class="container">
-    <!-- Header -->
-    <div class="dashboard-header">
-      <h1>🎯 Tableau de Bord</h1>
-      <button class="btn btn-danger" (click)="logout()">
-        🚪 Déconnexion
-      </button>
-    </div>
+  <div class="dashboard-header">
+    <h1>Tableau de bord logistique</h1>
+    <p class="subtitle">Vue d'ensemble en temps réel</p>
+  </div>
 
-    <!-- Info utilisateur -->
-    <div class="card fade-in">
-      <div class="card-header">
-        <h3>👤 Informations utilisateur</h3>
-      </div>
-      <div class="card-body">
-        <div class="user-info">
-          <div class="info-item">
-            <strong>Nom :</strong> {{ userName }}
-          </div>
-          <div class="info-item">
-            <strong>Email :</strong> {{ userEmail }}
-          </div>
-          <div class="info-item">
-            <strong>Rôle :</strong> 
-            <span class="badge badge-primary">{{ userRole }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des données...</p>
+  </div>
 
-    <!-- Message de bienvenue -->
-    <div class="card fade-in">
-      <div class="card-body">
-        <h2>🎉 Bienvenue sur l'interface d'administration !</h2>
-        <p>Vous êtes actuellement en <strong>mode développement</strong> avec des données fictives (Mock Data).</p>
-        
-        <div class="alert alert-info">
-          <strong>ℹ️ Mode Mock Data activé</strong>
-          <p>L'application fonctionne avec des données de test. Lorsque l'API Laravel sera prête, 
-          il suffira de changer <code>useMockData: false</code> dans le fichier d'environnement.</p>
-        </div>
-
-        <h4>📋 Fonctionnalités à venir :</h4>
-        <ul>
-          <li>✅ Authentification (Terminé)</li>
-          <li>⏳ Gestion des livreurs (CRUD)</li>
-          <li>⏳ Gestion des livraisons</li>
-          <li>⏳ Suivi en temps réel avec carte</li>
-          <li>⏳ Statistiques et rapports</li>
-          <li>⏳ Notifications push</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Stats rapides -->
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading && stats" class="dashboard-content">
+    
+    <!-- Stats Cards -->
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">📦</div>
-        <div class="stat-value">0</div>
-        <div class="stat-label">Livraisons en cours</div>
+      <div class="stat-card ready-to-ship">
+        <div class="stat-icon">
+          <i class="icon-package"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.readyToShip }}</h3>
+          <p>Prêtes à expédier</p>
+        </div>
       </div>
+
+      <div class="stat-card in-transit">
+        <div class="stat-icon">
+          <i class="icon-truck"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.inTransit }}</h3>
+          <p>En cours de livraison</p>
+        </div>
+      </div>
+
+      <div class="stat-card delivered">
+        <div class="stat-icon">
+          <i class="icon-check"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.delivered }}</h3>
+          <p>Livrées avec succès</p>
+        </div>
+      </div>
+
+      <div class="stat-card failed">
+        <div class="stat-icon">
+          <i class="icon-alert"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.failed }}</h3>
+          <p>Livraisons échouées</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="additional-stats">
+      <div class="info-card">
+        <span class="label">Total aujourd'hui :</span>
+        <span class="value">{{ stats.totalToday }}</span>
+      </div>
+      <div class="info-card">
+        <span class="label">Délai moyen :</span>
+        <span class="value">{{ formatTime(stats.averageDeliveryTime) }}</span>
+      </div>
+      <div class="info-card">
+        <span class="label">Livreurs actifs :</span>
+        <span class="value">{{ stats.activeDrivers }}/{{ stats.activeDrivers + stats.availableDrivers }}</span>
+      </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="content-grid">
       
-      <div class="stat-card">
-        <div class="stat-icon">✅</div>
-        <div class="stat-value">0</div>
-        <div class="stat-label">Livraisons réussies</div>
+      <!-- Recent Deliveries -->
+      <div class="panel recent-deliveries">
+        <div class="panel-header">
+          <h2>Livraisons récentes</h2>
+          <span class="live-indicator">
+            <span class="pulse"></span>
+            En direct
+          </span>
+        </div>
+        <div class="panel-content">
+          <div *ngIf="recentDeliveries.length === 0" class="empty-state">
+            <p>Aucune livraison récente</p>
+          </div>
+          <div class="delivery-list">
+            <div *ngFor="let delivery of recentDeliveries" class="delivery-item">
+              <div class="delivery-info">
+                <div class="order-number">#{{ delivery.orderNumber }}</div>
+                <div class="customer-name">{{ delivery.customerName }}</div>
+                <div class="driver-name" *ngIf="delivery.driverName">
+                  <i class="icon-user"></i> {{ delivery.driverName }}
+                </div>
+              </div>
+              <div class="delivery-meta">
+                <span class="status-badge" [ngClass]="getStatusClass(delivery.status)">
+                  {{ getStatusLabel(delivery.status) }}
+                </span>
+                <span class="timestamp">{{ delivery.timestamp | date: 'HH:mm' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">👥</div>
-        <div class="stat-value">0</div>
-        <div class="stat-label">Livreurs actifs</div>
+
+      <!-- Driver Performance -->
+      <div class="panel driver-performance">
+        <div class="panel-header">
+          <h2>Performances des livreurs</h2>
+        </div>
+        <div class="panel-content">
+          <div *ngIf="driverPerformance.length === 0" class="empty-state">
+            <p>Aucune donnée disponible</p>
+          </div>
+          <div class="performance-list">
+            <div *ngFor="let driver of driverPerformance; let i = index" class="performance-item">
+              <div class="rank">{{ i + 1 }}</div>
+              <div class="driver-details">
+                <div class="driver-name">{{ driver.driverName }}</div>
+                <div class="metrics">
+                  <span class="metric">
+                    <strong>{{ driver.deliveriesCompleted }}</strong> livraisons
+                  </span>
+                  <span class="metric">
+                    <strong>{{ formatTime(driver.averageTime) }}</strong> moy.
+                  </span>
+                  <span class="metric success-rate">
+                    <strong>{{ driver.successRate }}%</strong> succès
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon">⏱️</div>
-        <div class="stat-value">0</div>
-        <div class="stat-label">En attente</div>
-      </div>
+
     </div>
   </div>
 </div>

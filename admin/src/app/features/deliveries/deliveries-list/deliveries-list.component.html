@@ -1,0 +1,126 @@
+<!-- src/app/features/deliveries/deliveries-list/deliveries-list.component.html -->
+
+<div class="deliveries-container">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Gestion des livraisons</h1>
+      <p class="subtitle">{{ totalDeliveries }} livraison(s) au total</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <i class="icon-search"></i>
+      <input
+        type="text"
+        placeholder="Rechercher par numéro, client..."
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="onSearch()"
+      />
+    </div>
+
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+      <option *ngFor="let option of statusOptions" [value]="option.value">
+        {{ option.label }}
+      </option>
+    </select>
+
+    <button class="btn btn-secondary" (click)="onSearch()">
+      Rechercher
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des livraisons...</p>
+  </div>
+
+  <!-- Deliveries Grid -->
+  <div *ngIf="!loading" class="deliveries-grid">
+    <div *ngFor="let delivery of deliveries" class="delivery-card">
+      <div class="card-header">
+        <div class="order-info">
+          <h3 class="order-number">#{{ delivery.orderNumber }}</h3>
+          <span class="priority-badge" [ngClass]="getPriorityClass(delivery.priority)">
+            {{ delivery.priority === 'high' ? 'Urgente' : delivery.priority === 'medium' ? 'Normale' : 'Basse' }}
+          </span>
+        </div>
+        <span class="status-badge" [ngClass]="getStatusClass(delivery.status)">
+          {{ getStatusLabel(delivery.status) }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <div class="info-row">
+          <i class="icon-user"></i>
+          <span>{{ delivery.customer.name }}</span>
+        </div>
+        <div class="info-row">
+          <i class="icon-phone"></i>
+          <span>{{ delivery.customer.phone }}</span>
+        </div>
+        <div class="info-row">
+          <i class="icon-location"></i>
+          <span>{{ delivery.address.city }}</span>
+        </div>
+        <div *ngIf="delivery.driver" class="info-row driver-info">
+          <i class="icon-truck"></i>
+          <span>{{ delivery.driver.firstName }} {{ delivery.driver.lastName }}</span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button 
+          *ngIf="delivery.status === 'pending'" 
+          class="btn btn-sm btn-assign"
+          (click)="assignDelivery(delivery)"
+        >
+          <i class="icon-user-plus"></i>
+          Assigner
+        </button>
+        <button 
+          *ngIf="delivery.status === 'in_progress'" 
+          class="btn btn-sm btn-track"
+          (click)="trackDelivery(delivery)"
+        >
+          <i class="icon-map"></i>
+          Suivre
+        </button>
+        <button class="btn btn-sm btn-view" (click)="viewDelivery(delivery)">
+          <i class="icon-eye"></i>
+          Détails
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="deliveries.length === 0" class="empty-state">
+      <i class="icon-package"></i>
+      <p>Aucune livraison trouvée</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && deliveries.length > 0" class="pagination">
+    <button
+      class="btn btn-pagination"
+      [disabled]="currentPage === 1"
+      (click)="onPageChange(currentPage - 1)"
+    >
+      Précédent
+    </button>
+    
+    <span class="page-info">
+      Page {{ currentPage }} sur {{ getTotalPages() }}
+    </span>
+    
+    <button
+      class="btn btn-pagination"
+      [disabled]="currentPage >= getTotalPages()"
+      (click)="onPageChange(currentPage + 1)"
+    >
+      Suivant
+    </button>
+  </div>
+</div>

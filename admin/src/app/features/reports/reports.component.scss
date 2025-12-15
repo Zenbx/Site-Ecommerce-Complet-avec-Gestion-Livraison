@@ -1,0 +1,16 @@
+/* Styles pour le component ReportsComponent */
+
+:host {
+  display: block;
+  padding: 1rem;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.table-container {
+  overflow-x: auto;
+}

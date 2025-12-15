@@ -1,14 +1,17 @@
-export enum UserRole {
-  ADMIN = 'admin',
-  GESTIONNAIRE = 'gestionnaire',
-  SUPERVISEUR = 'superviseur'
-}
+// src/app/core/models/user.model.ts
+
+import { UserRole } from './role.enum';
 
 export interface User {
   id: number;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
+  phone?: string;
   role: UserRole;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LoginRequest {
@@ -17,6 +20,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
   user: User;
+  token: string;
+  expiresIn: number;
 }

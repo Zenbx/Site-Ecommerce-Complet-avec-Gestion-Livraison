@@ -1,0 +1,144 @@
+<!-- src/app/features/delivery-drivers/delivery-drivers-list/delivery-drivers-list.component.html -->
+
+<div class="drivers-container">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Gestion des livreurs</h1>
+      <p class="subtitle">{{ totalDrivers }} livreur(s) au total</p>
+    </div>
+    <button class="btn btn-primary" (click)="createDriver()">
+      <i class="icon-plus"></i>
+      Ajouter un livreur
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <i class="icon-search"></i>
+      <input
+        type="text"
+        placeholder="Rechercher par nom, téléphone..."
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="onSearch()"
+      />
+    </div>
+
+    <select class="filter-select" [(ngModel)]="filterAvailability" (change)="onFilterChange()">
+      <option value="all">Tous les livreurs</option>
+      <option value="available">Disponibles</option>
+      <option value="unavailable">Non disponibles</option>
+    </select>
+
+    <button class="btn btn-secondary" (click)="onSearch()">
+      Rechercher
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des livreurs...</p>
+  </div>
+
+  <!-- Drivers Table -->
+  <div *ngIf="!loading" class="drivers-table-container">
+    <table class="drivers-table">
+      <thead>
+        <tr>
+          <th>Livreur</th>
+          <th>Téléphone</th>
+          <th>Véhicule</th>
+          <th>Plaque</th>
+          <th>Statut</th>
+          <th>Disponibilité</th>
+          <th class="actions-column">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let driver of drivers">
+          <td>
+            <div class="driver-info">
+              <div class="driver-avatar">
+                {{ driver.firstName.charAt(0) }}{{ driver.lastName.charAt(0) }}
+              </div>
+              <div>
+                <div class="driver-name">{{ driver.firstName }} {{ driver.lastName }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ driver.phone }}</td>
+          <td>{{ driver.vehicleType }}</td>
+          <td><span class="plate-badge">{{ driver.vehiclePlate }}</span></td>
+          <td>
+            <span class="status-badge" [class.active]="driver.isAvailable" [class.inactive]="!driver.isAvailable">
+              {{ driver.isAvailable ? 'Disponible' : 'Indisponible' }}
+            </span>
+          </td>
+          <td>
+            <label class="toggle-switch">
+              <input
+                type="checkbox"
+                [checked]="driver.isAvailable"
+                (change)="toggleAvailability(driver)"
+              />
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+          <td class="actions-column">
+            <div class="action-buttons">
+              <button
+                class="btn-icon btn-info"
+                (click)="viewStatistics(driver)"
+                title="Statistiques"
+              >
+                <i class="icon-chart"></i>
+              </button>
+              <button
+                class="btn-icon btn-edit"
+                (click)="editDriver(driver)"
+                title="Modifier"
+              >
+                <i class="icon-edit"></i>
+              </button>
+              <button
+                class="btn-icon btn-delete"
+                (click)="deleteDriver(driver)"
+                title="Supprimer"
+              >
+                <i class="icon-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="drivers.length === 0" class="empty-state">
+      <p>Aucun livreur trouvé</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && drivers.length > 0" class="pagination">
+    <button
+      class="btn btn-pagination"
+      [disabled]="currentPage === 1"
+      (click)="onPageChange(currentPage - 1)"
+    >
+      Précédent
+    </button>
+    
+    <span class="page-info">
+      Page {{ currentPage }} sur {{ getTotalPages() }}
+    </span>
+    
+    <button
+      class="btn btn-pagination"
+      [disabled]="currentPage >= getTotalPages()"
+      (click)="onPageChange(currentPage + 1)"
+    >
+      Suivant
+    </button>
+  </div>
+</div>

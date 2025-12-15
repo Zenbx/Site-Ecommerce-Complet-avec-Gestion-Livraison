@@ -1,0 +1,29 @@
+<!-- src/app/features/reports/reports.component.html -->
+
+<div class="reports-container">
+  <h2>Reporting & Statistiques</h2>
+
+  <div class="actions">
+    <button (click)="exportPDF()">Exporter PDF</button>
+    <button (click)="exportExcel()">Exporter Excel</button>
+  </div>
+
+  <div *ngIf="loading">Chargement...</div>
+
+  <div *ngIf="!loading">
+    <div class="card">
+      <h3>Livraisons réussies</h3>
+      <p>{{ stats.successfulDeliveries }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Livraisons échouées</h3>
+      <p>{{ stats.failedDeliveries }}</p>
+    </div>
+
+    <div class="card">
+      <h3>Délai moyen (min)</h3>
+      <p>{{ stats.averageDeliveryTime }}</p>
+    </div>
+  </div>
+</div>
