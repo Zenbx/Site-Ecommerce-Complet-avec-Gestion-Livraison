@@ -34,6 +34,10 @@ return new class extends Migration
             $table->decimal('total_amount', 10, 2);
             $table->decimal('delivery_fee', 10, 2)->default(0);
             
+            // Adresse de livraison et notes
+            $table->text('delivery_address');
+            $table->text('notes')->nullable();
+            
             // Les deux colonnes de statut créées SANS valeurs par défaut
             $table->string('status');
             $table->string('payment_status');

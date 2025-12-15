@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\DeliveryResource;
 use App\Models\Delivery;
 use App\Events\DeliveryLocationUpdated;
+use App\Events\DeliveryStatusChanged;
 use App\Services\GeolocationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -373,6 +374,7 @@ class DeliveryController extends Controller
             ], 400);
         }
         
+        $oldStatus = $delivery->status;
         $delivery->update(['status' => 'IN_TRANSIT']);
 
         // Déclencher l'événement de changement de statut

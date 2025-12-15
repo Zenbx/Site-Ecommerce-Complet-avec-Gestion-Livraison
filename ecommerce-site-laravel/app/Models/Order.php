@@ -28,6 +28,8 @@ class Order extends Model
         'client_id',
         'total_amount',
         'delivery_fee',
+        'delivery_address',
+        'notes',
         'status',
         'payment_status',
     ];

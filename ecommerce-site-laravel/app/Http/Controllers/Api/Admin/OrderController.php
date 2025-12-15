@@ -377,7 +377,8 @@ class OrderController extends Controller
             
             DB::commit();
             
-            broadcast(new DeliveryAssigned($delivery));
+            // TODO: Implement DeliveryAssigned event listener
+            // broadcast(new DeliveryAssigned($delivery));
             $delivery->load(['deliveryPerson', 'order.orderLines.product']);
             
             return response()->json([

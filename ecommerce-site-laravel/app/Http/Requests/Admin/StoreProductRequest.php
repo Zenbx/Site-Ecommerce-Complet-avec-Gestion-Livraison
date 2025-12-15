@@ -57,8 +57,8 @@ class StoreProductRequest extends FormRequest
             // La marque est optionnelle
             'brand' => 'nullable|string|max:255',
             
-            // La catégorie est optionnelle
-            'category' => 'nullable|string|max:100',
+            // La catégorie est requise et doit exister dans la table categories
+            'category_id' => 'required|integer|exists:categories,id',
             
             // L'URL de l'image est optionnelle mais si fournie, doit être une URL valide
             'image_url' => 'nullable|url|max:500',

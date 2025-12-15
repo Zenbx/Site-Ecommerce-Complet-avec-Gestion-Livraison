@@ -251,8 +251,10 @@ class OrderController extends Controller
             // Étape 3 : Créer l'enregistrement de commande
             $order = Order::create([
                 'client_id' => $client->id,
-                'total_amount' => $totalAmount,
+                'total_amount' => $totalAmount + $deliveryFee,
                 'delivery_fee' => $deliveryFee,
+                'delivery_address' => $validated['delivery_address'],
+                'notes' => $validated['notes'] ?? null,
                 'status' => 'PENDING',
                 'payment_status' => 'PENDING',
             ]);

@@ -50,6 +50,7 @@ class ProductResource extends JsonResource
             'serial_id' => $this->serial_id,
             'brand' => $this->brand,
             'category' => $this->category,
+            'category_id' => $this->category_id,
             
             // URL de l'image
             // Si image_url est null, nous fournissons une URL vers une image placeholder

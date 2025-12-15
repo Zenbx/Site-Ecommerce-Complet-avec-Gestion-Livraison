@@ -242,14 +242,16 @@ class ProfileController extends Controller
             ? 'Vous êtes maintenant disponible pour recevoir des livraisons'
             : 'Vous êtes maintenant indisponible. Vous ne recevrez plus de nouvelles livraisons.';
         
-        return generate_api_response(
-            true,
-            [
+        return response()->json([
+            'success' => true,
+            'data' => [
                 'is_available' => $deliveryPerson->is_available,
-                'updated_at' => $deliveryPerson->updated_at->toIso8601String(),
+                'updated_at' => is_string($deliveryPerson->updated_at) 
+                    ? $deliveryPerson->updated_at 
+                    : $deliveryPerson->updated_at?->toIso8601String(),
             ],
-            $message
-        );
+            'message' => $message
+        ], 200);
     }
     
     /**
