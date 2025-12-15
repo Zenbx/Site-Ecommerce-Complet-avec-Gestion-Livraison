@@ -2,236 +2,271 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Controllers Admin
+// ============================================================================
+// IMPORTS DES CONTROLLERS
+// ============================================================================
+
+// Controllers d'authentification
 use App\Http\Controllers\Api\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Api\Client\AuthController as ClientAuthController;
+use App\Http\Controllers\Api\DeliveryPerson\AuthController as DeliveryPersonAuthController;
+
+// Controllers Admin
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
+//use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\DeliveryPersonController as AdminDeliveryPersonController;
+use App\Http\Controllers\Api\Admin\DeliveryController as AdminDeliveryController;
+use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 
 // Controllers Client
-use App\Http\Controllers\Api\Client\AuthController as ClientAuthController;
+use App\Http\Controllers\Api\Client\ProductController as ClientProductController;
 use App\Http\Controllers\Api\Client\CartController;
 use App\Http\Controllers\Api\Client\OrderController as ClientOrderController;
+use App\Http\Controllers\Api\Client\ProfileController as ClientProfileController;
 
 // Controllers Delivery Person
-use App\Http\Controllers\Api\DeliveryPerson\AuthController as DeliveryAuthController;
 use App\Http\Controllers\Api\DeliveryPerson\DeliveryController as DeliveryPersonDeliveryController;
+use App\Http\Controllers\Api\DeliveryPerson\ProfileController as DeliveryPersonProfileController;
+use App\Http\Controllers\Api\DeliveryPerson\DashboardController as DeliveryPersonDashboardController;
 
-// Controllers Utilitaires
+// Controllers utilitaires
 use App\Http\Controllers\Api\MapController;
+
 /*
 |--------------------------------------------------------------------------
-| API E-COMMERCE COMPLÈTE - ROUTES
+| ROUTES API
 |--------------------------------------------------------------------------
 |
-| Ce fichier définit l'intégralité des endpoints de votre système e-commerce
-| avec livraison intégrée et suivi en temps réel.
+| Organisation des routes par section fonctionnelle :
+| 1. Authentification (publique)
+| 2. Routes publiques (catalogue produits)
+| 3. Routes Admin (protégées par auth:admin-api)
+| 4. Routes Client (protégées par auth:client-api)
+| 5. Routes Delivery Person (protégées par auth:delivery-api)
+| 6. Routes utilitaires (cartographie, etc.)
 |
-| ARCHITECTURE :
-| - Admin API (Angular) : Gestion complète du système
-| - Client API (Web/Mobile) : Catalogue, panier, commandes
-| - Delivery Person API (React Native Mobile) : Livraisons terrain
-|
-| AUTHENTICATION :
-| Trois guards Sanctum indépendants : admin-api, client-api, delivery-api
-| Chaque section a ses routes publiques (auth) et protégées (business)
-|
+| Chaque section utilise les middlewares appropriés pour la sécurité.
 */
 
 // ============================================================================
-// SECTION 1 : ADMINISTRATION
-// Prefix: /api/admin
-// Guard: admin-api
-// Application: Angular Dashboard
+// SECTION 1 : AUTHENTIFICATION (Routes publiques)
 // ============================================================================
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('auth')->name('auth.')->group(function () {
     
-    // ========== AUTHENTICATION ==========
-    // Routes publiques - génération de tokens
-    Route::post('/login', [AdminAuthController::class, 'login'])
-        ->name('login');
-    
-    // Routes protégées - nécessitent un token admin valide
-    Route::middleware('auth:admin-api')->group(function () {
+    // Authentification Admin
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::post('/register', [AdminAuthController::class, 'register'])->name('register');
+        Route::post('/login', [AdminAuthController::class, 'login'])->name('login');
         
-        // Profil et déconnexion
-        Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
-        Route::get('/me', [AdminAuthController::class, 'me'])->name('me');
-        
-        // ========== GESTION DES PRODUITS ==========
-        // CRUD complet + gestion du stock
-        Route::apiResource('products', AdminProductController::class);
-        Route::patch('products/{product}/stock', [AdminProductController::class, 'updateStock'])
-            ->name('products.update-stock');
-        
-        // ========== GESTION DES COMMANDES ==========
-        // Consultation, changement de statut, assignation de livraisons
-        Route::prefix('orders')->name('orders.')->group(function () {
-            Route::get('/', [AdminOrderController::class, 'index'])->name('index');
-            Route::get('/{order}', [AdminOrderController::class, 'show'])->name('show');
-            Route::patch('/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('update-status');
-            Route::post('/{order}/assign-delivery', [AdminOrderController::class, 'assignDelivery'])->name('assign-delivery');
+        // Routes protégées admin auth
+        Route::middleware('auth:admin-api')->group(function () {
+            Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+            Route::post('/refresh', [AdminAuthController::class, 'refresh'])->name('refresh');
+            Route::get('/me', [AdminAuthController::class, 'me'])->name('me');
         });
+    });
+    
+    // Authentification Client
+    Route::prefix('client')->name('client.')->group(function () {
+        Route::post('/register', [ClientAuthController::class, 'register'])->name('register');
+        Route::post('/login', [ClientAuthController::class, 'login'])->name('login');
         
-        // ========== GESTION DES LIVREURS ==========
-        // CRUD complet + disponibilité + statistiques
-        Route::apiResource('delivery-persons', AdminDeliveryPersonController::class);
-        Route::patch('delivery-persons/{deliveryPerson}/availability', [AdminDeliveryPersonController::class, 'updateAvailability'])
-            ->name('delivery-persons.update-availability');
-        Route::get('delivery-persons/{deliveryPerson}/statistics', [AdminDeliveryPersonController::class, 'statistics'])
-            ->name('delivery-persons.statistics');
+        Route::middleware('auth:client-api')->group(function () {
+            Route::post('/logout', [ClientAuthController::class, 'logout'])->name('logout');
+            Route::post('/refresh', [ClientAuthController::class, 'refresh'])->name('refresh');
+            Route::get('/me', [ClientAuthController::class, 'me'])->name('me');
+        });
+    });
+    
+    // Authentification Delivery Person
+    Route::prefix('delivery-person')->name('delivery-person.')->group(function () {
+        Route::post('/register', [DeliveryPersonAuthController::class, 'register'])->name('register');
+        Route::post('/login', [DeliveryPersonAuthController::class, 'login'])->name('login');
         
-        // ========== DASHBOARD & STATISTIQUES ==========
-        // Ces routes seront utilisées pour afficher le tableau de bord Angular
-        // avec graphiques, KPIs, et métriques en temps réel
-        // Vous les implémenterez plus tard selon vos besoins spécifiques
-        
-        // Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
-        // Route::get('/dashboard/revenue', [DashboardController::class, 'revenue'])->name('dashboard.revenue');
-        // Route::get('/dashboard/top-products', [DashboardController::class, 'topProducts'])->name('dashboard.top-products');
-        
+        Route::middleware('auth:delivery-api')->group(function () {
+            Route::post('/logout', [DeliveryPersonAuthController::class, 'logout'])->name('logout');
+            Route::post('/refresh', [DeliveryPersonAuthController::class, 'refresh'])->name('refresh');
+            Route::get('/me', [DeliveryPersonAuthController::class, 'me'])->name('me');
+        });
     });
 });
 
 // ============================================================================
-// SECTION 2 : CLIENT
-// Prefix: /api/client
-// Guard: client-api
-// Application: Web Angular + Mobile (optionnel)
+// SECTION 2 : ROUTES PUBLIQUES (Catalogue produits)
 // ============================================================================
 
-Route::prefix('client')->name('client.')->group(function () {
+Route::prefix('public')->name('public.')->group(function () {
+    // Catalogue produits accessible sans authentification
+    Route::get('/products', [ClientProductController::class, 'index'])->name('products.index');
+    Route::get('/products/{product}', [ClientProductController::class, 'show'])->name('products.show');
+    Route::get('/products/search', [ClientProductController::class, 'search'])->name('products.search');
+    Route::get('/products/popular', [ClientProductController::class, 'popular'])->name('products.popular');
+    Route::get('/categories', [ClientProductController::class, 'categories'])->name('categories');
+});
+
+// ============================================================================
+// SECTION 3 : ROUTES ADMIN (Protégées)
+// ============================================================================
+
+Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(function () {
     
-    // ========== AUTHENTICATION ==========
-    // Routes publiques
-    Route::post('/register', [ClientAuthController::class, 'register'])->name('register');
-    Route::post('/login', [ClientAuthController::class, 'login'])->name('login');
+    // Dashboard Admin
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('/overview', [AdminDashboardController::class, 'overview'])->name('overview');
+        Route::get('/sales-chart', [AdminDashboardController::class, 'salesChart'])->name('sales-chart');
+        Route::get('/top-products', [AdminDashboardController::class, 'topProducts'])->name('top-products');
+        Route::get('/delivery-performance', [AdminDashboardController::class, 'deliveryPerformance'])->name('delivery-performance');
+        Route::get('/recent-activity', [AdminDashboardController::class, 'recentActivity'])->name('recent-activity');
+    });
     
-    // Routes protégées - nécessitent un token client valide
-    Route::middleware('auth:client-api')->group(function () {
-        
-        // Profil et déconnexion
-        Route::post('/logout', [ClientAuthController::class, 'logout'])->name('logout');
-        Route::get('/me', [ClientAuthController::class, 'me'])->name('me');
-        
-        // ========== GESTION DU PANIER ==========
-        // Le panier est une structure temporaire avant la commande
-        Route::prefix('cart')->name('cart.')->group(function () {
-            Route::get('/', [CartController::class, 'show'])->name('show');
-            Route::post('/items', [CartController::class, 'addItem'])->name('add-item');
-            Route::patch('/items/{cartLine}', [CartController::class, 'updateItem'])->name('update-item');
-            Route::delete('/items/{cartLine}', [CartController::class, 'removeItem'])->name('remove-item');
-            Route::delete('/', [CartController::class, 'clear'])->name('clear');
-        });
-        
-        // ========== GESTION DES COMMANDES ==========
-        // Création, consultation, annulation, suivi
-        Route::prefix('orders')->name('orders.')->group(function () {
-            Route::get('/', [ClientOrderController::class, 'index'])->name('index');
-            Route::post('/', [ClientOrderController::class, 'store'])->name('store');
-            Route::get('/{order}', [ClientOrderController::class, 'show'])->name('show');
-            Route::post('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('cancel');
-            Route::get('/{order}/tracking', [ClientOrderController::class, 'tracking'])->name('tracking');
-        });
-        
-        // ========== CATALOGUE PRODUITS ==========
-        // Ces routes permettent au client de parcourir le catalogue
-        // Vous les implémenterez selon vos besoins
-        
-        // Route::get('/products', [ClientProductController::class, 'index'])->name('products.index');
-        // Route::get('/products/{product}', [ClientProductController::class, 'show'])->name('products.show');
-        // Route::get('/categories', [ClientCategoryController::class, 'index'])->name('categories.index');
-        
+    // Gestion des catégories
+    Route::apiResource('categories', AdminCategoryController::class);
+    
+    // Gestion des produits
+    Route::prefix('products')->name('products.')->group(function () {
+        Route::get('/', [AdminProductController::class, 'index'])->name('index');
+        Route::post('/', [AdminProductController::class, 'store'])->name('store');
+        Route::get('/{product}', [AdminProductController::class, 'show'])->name('show');
+        Route::put('/{product}', [AdminProductController::class, 'update'])->name('update');
+        Route::delete('/{product}', [AdminProductController::class, 'destroy'])->name('destroy');
+        Route::patch('/{product}/stock', [AdminProductController::class, 'updateStock'])->name('update-stock');
+    });
+    
+    // Gestion des commandes
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [AdminOrderController::class, 'index'])->name('index');
+        Route::get('/{order}', [AdminOrderController::class, 'show'])->name('show');
+        Route::patch('/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('update-status');
+        Route::post('/{order}/assign-delivery', [AdminOrderController::class, 'assignDelivery'])->name('assign-delivery');
+        Route::post('/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('cancel');
+    });
+    
+    // Gestion des utilisateurs
+    //Route::apiResource('users', AdminUserController::class);
+    
+    // Gestion des livreurs
+    Route::prefix('delivery-persons')->name('delivery-persons.')->group(function () {
+        Route::get('/', [AdminDeliveryPersonController::class, 'index'])->name('index');
+        Route::post('/', [AdminDeliveryPersonController::class, 'store'])->name('store');
+        Route::get('/{deliveryPerson}', [AdminDeliveryPersonController::class, 'show'])->name('show');
+        Route::put('/{deliveryPerson}', [AdminDeliveryPersonController::class, 'update'])->name('update');
+        Route::delete('/{deliveryPerson}', [AdminDeliveryPersonController::class, 'destroy'])->name('destroy');
+        Route::patch('/{deliveryPerson}/availability', [AdminDeliveryPersonController::class, 'updateAvailability'])->name('update-availability');
+        Route::get('/{deliveryPerson}/deliveries', [AdminDeliveryPersonController::class, 'deliveries'])->name('deliveries');
+    });
+    
+    // Gestion des livraisons
+    Route::prefix('deliveries')->name('deliveries.')->group(function () {
+        Route::get('/', [AdminDeliveryController::class, 'index'])->name('index');
+        Route::get('/{delivery}', [AdminDeliveryController::class, 'show'])->name('show');
+        Route::post('/{delivery}/autoassign', [AdminDeliveryController::class, 'autoAssign'])->name('auto-assign');
+        Route::post('/{delivery}/manualassign', [AdminDeliveryController::class, 'manualAssign'])->name('manual-assign');
+        Route::patch('/{delivery}/reassign', [AdminDeliveryController::class, 'reassign'])->name('reassign');
     });
 });
 
 // ============================================================================
-// SECTION 3 : LIVREUR (DELIVERY PERSON)
-// Prefix: /api/delivery-person
-// Guard: delivery-api
-// Application: React Native Mobile
+// SECTION 4 : ROUTES CLIENT (Protégées)
 // ============================================================================
 
-Route::prefix('delivery-person')->name('delivery.')->group(function () {
+Route::prefix('client')->name('client.')->middleware('auth:client-api')->group(function () {
     
-    // ========== AUTHENTICATION ==========
-    // Routes publiques
-    Route::post('/login', [DeliveryAuthController::class, 'login'])->name('login');
+    // Profil client
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ClientProfileController::class, 'show'])->name('show');
+        Route::put('/', [ClientProfileController::class, 'update'])->name('update');
+        Route::post('/photo', [ClientProfileController::class, 'updatePhoto'])->name('update-photo');
+        Route::put('/password', [ClientProfileController::class, 'changePassword'])->name('change-password');
+        Route::get('/orders', [ClientProfileController::class, 'orderHistory'])->name('order-history');
+    });
     
-    // Routes protégées - nécessitent un token livreur valide
-    Route::middleware('auth:delivery-api')->group(function () {
-        
-        // Profil et déconnexion
-        Route::post('/logout', [DeliveryAuthController::class, 'logout'])->name('logout');
-        Route::get('/me', [DeliveryAuthController::class, 'me'])->name('me');
-        
-        // Gestion de la disponibilité
-        Route::patch('/availability', [DeliveryAuthController::class, 'updateAvailability'])
-            ->name('update-availability');
-        
-        // ========== GESTION DES LIVRAISONS ==========
-        // Interface complète pour gérer les livraisons depuis l'app mobile
-        Route::prefix('deliveries')->name('deliveries.')->group(function () {
-            
-            // Liste et détails
-            Route::get('/', [DeliveryPersonDeliveryController::class, 'index'])->name('index');
-            Route::get('/{delivery}', [DeliveryPersonDeliveryController::class, 'show'])->name('show');
-            
-            // Acceptation/Refus de livraisons
-            Route::post('/{delivery}/accept', [DeliveryPersonDeliveryController::class, 'accept'])->name('accept');
-            Route::post('/{delivery}/decline', [DeliveryPersonDeliveryController::class, 'decline'])->name('decline');
-            
-            // Progression de la livraison
-            Route::post('/{delivery}/pickup', [DeliveryPersonDeliveryController::class, 'markAsPickedUp'])->name('pickup');
-            Route::post('/{delivery}/start', [DeliveryPersonDeliveryController::class, 'start'])->name('start');
-            
-            // Tracking GPS en temps réel
-            Route::post('/{delivery}/location', [DeliveryPersonDeliveryController::class, 'updateLocation'])->name('update-location');
-            
-            // Confirmation de livraison
-            Route::post('/{delivery}/scan-qr', [DeliveryPersonDeliveryController::class, 'scanQRCode'])->name('scan-qr');
-            Route::post('/{delivery}/proof', [DeliveryPersonDeliveryController::class, 'submitProof'])->name('submit-proof');
-            Route::post('/{delivery}/complete', [DeliveryPersonDeliveryController::class, 'complete'])->name('complete');
-            
-            // Gestion des problèmes
-            Route::post('/{delivery}/report-issue', [DeliveryPersonDeliveryController::class, 'reportIssue'])->name('report-issue');
-            
-            // Historique
-            Route::get('/history/list', [DeliveryPersonDeliveryController::class, 'history'])->name('history');
-            
-            // Obtenir la route
-            Route::get('/deliveries/{delivery}/route', [DeliveryPersonDeliveryController::class, 'getRoute'])->name('deliveries.get-route');
-        });
-        
-        // ========== STATISTIQUES LIVREUR ==========
-        // Ces routes fournissent les métriques de performance au livreur
-        // Vous les implémenterez selon vos besoins
-        
-        // Route::get('/statistics/today', [DeliveryPersonStatsController::class, 'today'])->name('stats.today');
-        // Route::get('/statistics/week', [DeliveryPersonStatsController::class, 'week'])->name('stats.week');
-        // Route::get('/statistics/month', [DeliveryPersonStatsController::class, 'month'])->name('stats.month');
-        
+    // Catalogue produits (authentifié pour personnalisation)
+    Route::get('/products', [ClientProductController::class, 'index'])->name('products.index');
+    Route::get('/products/{product}', [ClientProductController::class, 'show'])->name('products.show');
+    Route::get('/products/search', [ClientProductController::class, 'search'])->name('products.search');
+    Route::get('/categories', [ClientProductController::class, 'categories'])->name('categories');
+    
+    // Gestion du panier
+    Route::prefix('cart')->name('cart.')->group(function () {
+        Route::get('/', [CartController::class, 'show'])->name('show');
+        Route::post('/items', [CartController::class, 'addItem'])->name('add-item');
+        Route::patch('/items/{cartLine}', [CartController::class, 'updateItem'])->name('update-item');
+        Route::delete('/items/{cartLine}', [CartController::class, 'removeItem'])->name('remove-item');
+        Route::delete('/', [CartController::class, 'clear'])->name('clear');
+    });
+    
+    // Gestion des commandes
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [ClientOrderController::class, 'index'])->name('index');
+        Route::post('/', [ClientOrderController::class, 'store'])->name('store');
+        Route::get('/{order}', [ClientOrderController::class, 'show'])->name('show');
+        Route::get('/{order}/track', [ClientOrderController::class, 'track'])->name('track');
+        Route::post('/{order}/cancel', [ClientOrderController::class, 'cancel'])->name('cancel');
     });
 });
 
 // ============================================================================
-// ROUTES UTILITAIRES
+// SECTION 5 : ROUTES DELIVERY PERSON (Protégées)
 // ============================================================================
 
-// Route de fallback pour les endpoints inexistants
-// Retourne une erreur 404 formatée en JSON au lieu de HTML
-Route::fallback(function () {
-    return response()->json([
-        'success' => false,
-        'message' => 'Endpoint API non trouvé',
-        'error' => 'La route demandée n\'existe pas. Vérifiez l\'URL et la méthode HTTP.',
-    ], 404);
-    Route::prefix('map')->name('map.')->group(function () {
-    // Ces endpoints sont publics car ils peuvent être utilisés
-    // par n'importe quelle partie du système
+Route::prefix('delivery-person')->name('delivery-person.')->middleware('auth:delivery-api')->group(function () {
+    
+    // Dashboard livreur
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('/overview', [DeliveryPersonDashboardController::class, 'overview'])->name('overview');
+        Route::get('/daily-summary', [DeliveryPersonDashboardController::class, 'dailySummary'])->name('daily-summary');
+    });
+    
+    // Profil livreur
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [DeliveryPersonProfileController::class, 'show'])->name('show');
+        Route::put('/', [DeliveryPersonProfileController::class, 'update'])->name('update');
+        Route::post('/photo', [DeliveryPersonProfileController::class, 'updatePhoto'])->name('update-photo');
+        Route::put('/password', [DeliveryPersonProfileController::class, 'changePassword'])->name('change-password');
+        Route::patch('/availability', [DeliveryPersonProfileController::class, 'updateAvailability'])->name('update-availability');
+        Route::get('/deliveries', [DeliveryPersonProfileController::class, 'deliveryHistory'])->name('delivery-history');
+        Route::get('/statistics', [DeliveryPersonProfileController::class, 'statistics'])->name('statistics');
+    });
+    
+    // Gestion des livraisons
+    Route::prefix('deliveries')->name('deliveries.')->group(function () {
+        Route::get('/', [DeliveryPersonDeliveryController::class, 'index'])->name('index');
+        Route::get('/{delivery}', [DeliveryPersonDeliveryController::class, 'show'])->name('show');
+        Route::post('/{delivery}/accept', [DeliveryPersonDeliveryController::class, 'accept'])->name('accept');
+        Route::post('/{delivery}/decline', [DeliveryPersonDeliveryController::class, 'decline'])->name('decline');
+        Route::post('/{delivery}/pickup', [DeliveryPersonDeliveryController::class, 'markAsPickedUp'])->name('pickup');
+        Route::post('/{delivery}/start', [DeliveryPersonDeliveryController::class, 'start'])->name('start');
+        Route::post('/{delivery}/location', [DeliveryPersonDeliveryController::class, 'updateLocation'])->name('update-location');
+        Route::post('/{delivery}/scan-qr', [DeliveryPersonDeliveryController::class, 'scanQR'])->name('scan-qr');
+        Route::post('/{delivery}/complete', [DeliveryPersonDeliveryController::class, 'complete'])->name('complete');
+        Route::post('/{delivery}/report-issue', [DeliveryPersonDeliveryController::class, 'reportIssue'])->name('report-issue');
+        Route::get('/{delivery}/route', [DeliveryPersonDeliveryController::class, 'getRoute'])->name('get-route');
+    });
+});
+
+// ============================================================================
+// SECTION 6 : ROUTES UTILITAIRES (Cartographie)
+// ============================================================================
+
+Route::prefix('map')->name('map.')->group(function () {
+    // Ces endpoints peuvent être publics ou protégés selon vos besoins
     Route::post('/geocode', [MapController::class, 'geocode'])->name('geocode');
     Route::post('/route', [MapController::class, 'calculateRoute'])->name('route');
     Route::post('/distance', [MapController::class, 'calculateDistance'])->name('distance');
 });
+
+// ============================================================================
+// ROUTE DE TEST (À supprimer en production)
+// ============================================================================
+
+Route::get('/test', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'API E-Commerce Laravel fonctionne correctement',
+        'version' => '1.0.0',
+        'timestamp' => now()->toIso8601String(),
+    ]);
 });

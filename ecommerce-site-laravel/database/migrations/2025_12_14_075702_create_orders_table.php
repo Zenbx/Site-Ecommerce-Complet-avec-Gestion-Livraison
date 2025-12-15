@@ -12,8 +12,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        DB::statement("DROP TYPE IF EXISTS order_status_enum");
+
         // Créer les deux types ENUM nécessaires pour les commandes
         DB::statement("CREATE TYPE order_status_enum AS ENUM ('PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED')");
+        
+        DB::statement("DROP TYPE IF EXISTS payment_status_enum");
+        
         DB::statement("CREATE TYPE payment_status_enum AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED')");
         
         Schema::create('orders', function (Blueprint $table) {

@@ -12,6 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        DB::statement("DROP TYPE IF EXISTS cart_status_enum");
         // Créer le type ENUM pour les statuts de panier
         DB::statement("CREATE TYPE cart_status_enum AS ENUM ('ACTIVE', 'ABANDONED', 'CONVERTED')");
         

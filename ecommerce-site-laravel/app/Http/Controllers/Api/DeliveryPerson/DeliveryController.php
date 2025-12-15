@@ -272,7 +272,6 @@ class DeliveryController extends Controller
      * Cette méthode est appelée régulièrement par l'app mobile (ex: toutes les 30 secondes)
      * pour permettre le suivi en temps réel
      */
-    use App\Events\DeliveryLocationUpdated; // Ajoutez cet import en haut du fichier
 
 public function updateLocation(Request $request, Delivery $delivery): JsonResponse
 {

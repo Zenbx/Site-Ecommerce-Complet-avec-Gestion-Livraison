@@ -12,6 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        DB::statement("DROP TYPE IF EXISTS admin_role");
+
         // ÉTAPE 1 : Créer le type ENUM pour les rôles d'admin
         DB::statement("CREATE TYPE admin_role AS ENUM ('GESTIONNAIRE', 'SUPERVISEUR', 'ADMIN')");
         

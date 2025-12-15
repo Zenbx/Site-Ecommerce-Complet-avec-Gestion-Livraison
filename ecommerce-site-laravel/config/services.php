@@ -39,4 +39,17 @@ return [
     'server_key' => env('FCM_SERVER_KEY'),
     ],
 
+    'mtn' => [
+    'api_url' => env('MTN_API_URL', 'https://sandbox.momodeveloper.mtn.com'),
+    'api_key' => env('MTN_API_KEY'),
+    'api_secret' => env('MTN_API_SECRET'),
+    'environment' => env('MTN_ENVIRONMENT', 'sandbox'),
+],
+
+'orange' => [
+    'api_url' => env('ORANGE_API_URL'),
+    'merchant_id' => env('ORANGE_MERCHANT_ID'),
+    'api_key' => env('ORANGE_API_KEY'),
+],
+
 ];

@@ -18,7 +18,7 @@ class Product extends Model
         'serial_id',
         'description',
         'brand',
-        'category',
+        'category_id',
         'image_url',
         'is_active',
     ];
@@ -30,6 +30,11 @@ class Product extends Model
     ];
 
     // Relations
+     public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
     public function cartLines()
     {
         return $this->hasMany(CartLine::class);

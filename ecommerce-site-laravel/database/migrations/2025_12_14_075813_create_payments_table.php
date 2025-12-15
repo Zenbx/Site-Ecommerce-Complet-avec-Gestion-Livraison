@@ -12,6 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+         DB::statement("DROP TYPE IF EXISTS payment_method_enum");
         // Créer le type ENUM pour les méthodes de paiement
         DB::statement("CREATE TYPE payment_method_enum AS ENUM ('MOMO', 'OM', 'CASH')");
         
