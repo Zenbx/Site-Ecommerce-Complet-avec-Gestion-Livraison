@@ -16,7 +16,7 @@ export class SidebarComponent {
     { 
       icon: '📊', 
       label: 'Dashboard', 
-      route: '/dashboard' 
+      route: '/dashboard'
     },
     { 
       icon: '🚚', 

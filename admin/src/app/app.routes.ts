@@ -1,15 +1,23 @@
 // src/app/app.routes.ts
 import { Routes } from '@angular/router';
 import { LoginComponent } from './features/auth/login/login.component';
+import { AccessDeniedComponent } from './shared/access-denied/access-denied.component';
 import { LayoutComponent } from './shared/layout/layout.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { DeliveryDriversListComponent } from './features/delivery-drivers/delivery-drivers-list/delivery-drivers-list.component';
+import { DeliveriesListComponent } from './features/deliveries/deliveries-list/deliveries-list.component'
+import { DeliveryTrackingComponent } from './features/deliveries/delivery-tracking/delivery-tracking.component';
 import { ReportsComponent } from './features/reports/reports.component';
-import { AuthGuard } from './core/guards/auth.guard'; // Décommente quand tu auras le guard
+import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { 
     path: 'login', 
     component: LoginComponent 
+  },
+  {
+    path: 'access-denied',
+    component: AccessDeniedComponent
   },
 
   // Routes protégées (avec layout)
@@ -31,9 +39,18 @@ export const routes: Routes = [
         path: 'reports', 
         component: ReportsComponent 
       },
-      // Ajoute tes autres routes ici
-      // { path: 'drivers', loadChildren: () => import('./features/delivery-drivers/delivery-drivers.routes').then(m => m.DRIVERS_ROUTES) },
-      // { path: 'deliveries', loadChildren: () => import('./features/deliveries/deliveries.routes').then(m => m.DELIVERIES_ROUTES) },
+      {
+        path: 'drivers',
+        component: DeliveryDriversListComponent
+      },
+      {
+        path: 'deliveries',
+        component: DeliveriesListComponent
+      },
+      {
+        path: 'deliveries/track/:id',
+        component: DeliveryTrackingComponent
+      }
     ]
   },
 

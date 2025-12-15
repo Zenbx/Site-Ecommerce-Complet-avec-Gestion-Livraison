@@ -65,30 +65,62 @@
           <i class="icon-location"></i>
           <span>{{ delivery.address.city }}</span>
         </div>
+
         <div *ngIf="delivery.driver" class="info-row driver-info">
           <i class="icon-truck"></i>
-          <span>{{ delivery.driver.firstName }} {{ delivery.driver.lastName }}</span>
+          <span class="driver-name">
+            {{ delivery.driver.firstName }} {{ delivery.driver.lastName }}
+          </span>
         </div>
       </div>
 
       <div class="card-footer">
+        <!-- Bouton Assignation manuelle -->
         <button 
-          *ngIf="delivery.status === 'pending'" 
+          *ngIf="canAssign(delivery)" 
           class="btn btn-sm btn-assign"
-          (click)="assignDelivery(delivery)"
+          (click)="openAssignModal(delivery)"
         >
           <i class="icon-user-plus"></i>
           Assigner
         </button>
+
+        <!-- Bouton Assignation automatique -->
         <button 
-          *ngIf="delivery.status === 'in_progress'" 
+          *ngIf="canAssign(delivery)" 
+          class="btn btn-sm btn-auto-assign"
+          (click)="autoAssignDelivery(delivery)"
+          [disabled]="autoAssigning"
+        >
+          <i class="icon-zap"></i>
+          {{ autoAssigning ? 'Auto...' : 'Auto' }}
+        </button>
+
+        <!-- Bouton Désassigner -->
+        <button 
+          *ngIf="canUnassign(delivery)" 
+          class="btn btn-sm btn-unassign"
+          (click)="unassignDelivery(delivery)"
+        >
+          <i class="icon-x"></i>
+          Retirer
+        </button>
+
+        <!-- Bouton Suivre -->
+        <button 
+          *ngIf="canTrack(delivery)" 
           class="btn btn-sm btn-track"
           (click)="trackDelivery(delivery)"
         >
           <i class="icon-map"></i>
           Suivre
         </button>
-        <button class="btn btn-sm btn-view" (click)="viewDelivery(delivery)">
+
+        <!-- Bouton Détails -->
+        <button 
+          class="btn btn-sm btn-view" 
+          (click)="viewDelivery(delivery)"
+        >
           <i class="icon-eye"></i>
           Détails
         </button>
@@ -122,5 +154,90 @@
     >
       Suivant
     </button>
+  </div>
+</div>
+
+<!-- MODAL D'ASSIGNATION -->
+<div *ngIf="showAssignModal" class="modal-overlay" (click)="closeAssignModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Assigner une livraison</h2>
+      <button class="btn-close" (click)="closeAssignModal()">
+        <i class="icon-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="delivery-info-section">
+        <h3>Livraison #{{ selectedDelivery?.orderNumber }}</h3>
+        <p>
+          <strong>Client:</strong> {{ selectedDelivery?.customer?.name }}<br>
+          <strong>Destination:</strong> {{ selectedDelivery?.address?.city }}<br>
+          <strong>Priorité:</strong> 
+          <span [class]="'priority-badge ' + getPriorityClass(selectedDelivery?.priority || 'medium')">
+            {{ selectedDelivery?.priority === 'high' ? 'Urgente' : selectedDelivery?.priority === 'medium' ? 'Normale' : 'Basse' }}
+          </span>
+        </p>
+      </div>
+
+      <div class="drivers-list-section">
+        <h3>Sélectionner un livreur</h3>
+        
+        <div *ngIf="availableDrivers.length === 0" class="no-drivers">
+          <p>Aucun livreur disponible pour le moment</p>
+        </div>
+
+        <div class="drivers-list">
+          <div 
+            *ngFor="let driver of availableDrivers" 
+            class="driver-card"
+            [class.selected]="selectedDriverId === driver.id"
+            (click)="selectedDriverId = driver.id"
+          >
+            <div class="driver-avatar">
+              {{ driver.firstName.charAt(0) }}{{ driver.lastName.charAt(0) }}
+            </div>
+            <div class="driver-details">
+              <div class="driver-name">
+                {{ driver.firstName }} {{ driver.lastName }}
+              </div>
+              <div class="driver-meta">
+                <span class="vehicle">{{ driver.vehicleType }}</span>
+                <span class="plate">{{ driver.vehiclePlate }}</span>
+              </div>
+              <div class="driver-phone">{{ driver.phone }}</div>
+            </div>
+            <div class="driver-status">
+              <span class="status-indicator available"></span>
+              Disponible
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button 
+        class="btn btn-secondary" 
+        (click)="closeAssignModal()"
+        [disabled]="assigning"
+      >
+        Annuler
+      </button>
+      <button 
+        class="btn btn-primary" 
+        (click)="confirmAssignment()"
+        [disabled]="!selectedDriverId || assigning"
+      >
+        <span *ngIf="!assigning">
+          <i class="icon-check"></i>
+          Confirmer l'assignation
+        </span>
+        <span *ngIf="assigning">
+          <i class="icon-loading"></i>
+          Assignation en cours...
+        </span>
+      </button>
+    </div>
   </div>
 </div>

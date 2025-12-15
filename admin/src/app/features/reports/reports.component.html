@@ -1,29 +1,114 @@
 <!-- src/app/features/reports/reports.component.html -->
-
 <div class="reports-container">
-  <h2>Reporting & Statistiques</h2>
-
-  <div class="actions">
-    <button (click)="exportPDF()">Exporter PDF</button>
-    <button (click)="exportExcel()">Exporter Excel</button>
+  <div class="reports-header">
+    <h1 class="reports-title">Rapports et Statistiques</h1>
+    <div class="export-buttons">
+      <button 
+        class="btn btn-secondary" 
+        (click)="exportPDF()"
+        [disabled]="exportingPdf">
+        <span *ngIf="!exportingPdf">📄 Exporter PDF</span>
+        <span *ngIf="exportingPdf">⏳ Export en cours...</span>
+      </button>
+      <button 
+        class="btn btn-primary" 
+        (click)="exportExcel()"
+        [disabled]="exportingExcel">
+        <span *ngIf="!exportingExcel">📊 Exporter Excel</span>
+        <span *ngIf="exportingExcel">⏳ Export en cours...</span>
+      </button>
+    </div>
   </div>
 
-  <div *ngIf="loading">Chargement...</div>
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner-border"></div>
+  </div>
 
-  <div *ngIf="!loading">
-    <div class="card">
-      <h3>Livraisons réussies</h3>
-      <p>{{ stats.successfulDeliveries }}</p>
+  <div *ngIf="!loading && stats" class="reports-content">
+    <!-- Statistiques principales -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <p>Total Livraisons</p>
+        <h3>{{ stats.totalDeliveries || 0 }}</h3>
+      </div>
+
+      <div class="stat-card">
+        <p>Livrées Aujourd'hui</p>
+        <h3>{{ stats.deliveredToday || 0 }}</h3>
+      </div>
+
+      <div class="stat-card">
+        <p>En Cours</p>
+        <h3>{{ stats.inProgress || 0 }}</h3>
+      </div>
+
+      <div class="stat-card">
+        <p>Taux de Réussite</p>
+        <h3 [style.color]="getSuccessRateColor()">
+          {{ stats.successRate || 0 }}%
+        </h3>
+      </div>
     </div>
 
-    <div class="card">
-      <h3>Livraisons échouées</h3>
-      <p>{{ stats.failedDeliveries }}</p>
+    <!-- Temps moyen et revenu -->
+    <div class="info-cards">
+      <div class="card">
+        <h3 class="card-title">Temps Moyen de Livraison</h3>
+        <p class="big-number">{{ stats.averageDeliveryTime || 0 }} min</p>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">Revenu Total</h3>
+        <p class="big-number">{{ stats.totalRevenue || 0 | number:'1.2-2' }} €</p>
+      </div>
     </div>
 
-    <div class="card">
-      <h3>Délai moyen (min)</h3>
-      <p>{{ stats.averageDeliveryTime }}</p>
+    <!-- Top livreurs -->
+    <div class="card" *ngIf="stats.topDrivers && stats.topDrivers.length > 0">
+      <h3 class="card-title">🏆 Top Livreurs</h3>
+      <div class="drivers-list">
+        <div *ngFor="let driver of stats.topDrivers; let i = index" class="driver-item">
+          <span class="driver-rank">{{ i + 1 }}</span>
+          <span class="driver-name">{{ driver.name }}</span>
+          <span class="driver-deliveries">{{ driver.deliveries }} livraisons</span>
+          <span class="driver-rating">⭐ {{ driver.rating }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Livraisons par jour -->
+    <div class="card" *ngIf="stats.deliveriesByDay && stats.deliveriesByDay.length > 0">
+      <h3 class="card-title">📈 Livraisons par Jour</h3>
+      <div class="chart-bars">
+        <div *ngFor="let item of stats.deliveriesByDay" class="bar-item">
+          <div class="bar-value">{{ item.count }}</div>
+          <div class="bar" [style.height.%]="(item.count / 250) * 100"></div>
+          <div class="bar-label">{{ item.day }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Répartition par statut -->
+    <div class="card" *ngIf="stats.deliveriesByStatus">
+      <h3 class="card-title">📊 Répartition par Statut</h3>
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="status-badge status-delivered">Livrées</span>
+          <span class="status-count">{{ stats.deliveriesByStatus.delivered }}%</span>
+        </div>
+        <div class="status-item">
+          <span class="status-badge status-in-progress">En cours</span>
+          <span class="status-count">{{ stats.deliveriesByStatus.inProgress }}%</span>
+        </div>
+        <div class="status-item">
+          <span class="status-badge status-pending">En attente</span>
+          <span class="status-count">{{ stats.deliveriesByStatus.pending }}%</span>
+        </div>
+        <div class="status-item">
+          <span class="status-badge status-failed">Échouées</span>
+          <span class="status-count">{{ stats.deliveriesByStatus.failed }}%</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>

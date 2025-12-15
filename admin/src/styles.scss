@@ -2,8 +2,8 @@
 // THÈME ANGULAR MATERIAL PERSONNALISÉ
 // Charte graphique : Bleu Nuit, Blanc, Cyan
 // ========================================
-
 @use '@angular/material' as mat;
+
 
 // Include les styles de base Angular Material (obligatoire, une seule fois)
 @include mat.core();

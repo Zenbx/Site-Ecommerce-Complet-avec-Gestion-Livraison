@@ -1,6 +1,59 @@
-<!-- src/app/shared/navbar/navbar.component.html -->
-
 <header class="navbar">
-  <h1>TechStorm Admin</h1>
-  <button (click)="logout()">Déconnexion</button>
+
+  <!-- LEFT -->
+  <div class="navbar-left">
+    <h1 class="page-title">TechStorm Admin</h1>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="navbar-right">
+
+    <!-- Notifications -->
+    <div class="notifications-container">
+      <button class="icon-btn" (click)="toggleNotifications()">
+        <span class="notification-icon">🔔</span>
+        <span
+          class="notification-badge"
+          *ngIf="notifications.length > 0"
+        >
+          {{ notifications.length }}
+        </span>
+      </button>
+
+      <!-- Dropdown -->
+      <div class="notifications-dropdown" *ngIf="showNotifications">
+        <div class="dropdown-header">
+          <h3>Notifications</h3>
+          <span class="count">{{ notifications.length }}</span>
+        </div>
+
+        <div class="notifications-list">
+          <div
+            class="notification-item notification-{{ n.type }}"
+            *ngFor="let n of notifications"
+          >
+            <div class="notification-content">
+              <p class="notification-message">{{ n.message }}</p>
+              <span class="notification-time">{{ n.time }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="notifications.length === 0" class="notification-item">
+            Aucune notification
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User menu -->
+    <div class="user-menu" (click)="logout()">
+      <div class="user-avatar-small">
+        <!-- {{ authService.currentUser$?.name?.charAt(0) || 'A' }} -->
+      </div>
+      <span class="user-name-small">
+        <!-- {{ authService.currentUser$?.name || 'Admin' }} -->
+      </span>
+    </div>
+
+  </div>
 </header>

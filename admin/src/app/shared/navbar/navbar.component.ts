@@ -1,4 +1,3 @@
-// src/app/shared/navbar/navbar.component.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
@@ -11,9 +10,11 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
-  currentTime = new Date();
-  showNotifications = false;
+  currentTime = new Date(); // L'heure actuelle
+  showNotifications = false; // Affichage des notifications
+  notificationsCount = 0; // Compte des notifications non lues
 
+  // Liste des notifications
   notifications = [
     { 
       id: 1, 
@@ -36,16 +37,27 @@ export class NavbarComponent {
   ];
 
   constructor(public authService: AuthService) {
+    // Mise à jour de l'heure toutes les secondes
     setInterval(() => {
       this.currentTime = new Date();
     }, 1000);
+    
+    // Compte des notifications non lues
+    this.notificationsCount = this.notifications.length;
   }
 
+  // Fonction pour basculer l'affichage des notifications
   toggleNotifications(): void {
     this.showNotifications = !this.showNotifications;
   }
 
+  // Fonction pour effacer toutes les notifications
+  clearNotifications(): void {
+    this.notifications = [];
+    this.notificationsCount = 0;
+  }
 
+  // Fonction de déconnexion
   logout(): void {
     this.authService.logout();
   }

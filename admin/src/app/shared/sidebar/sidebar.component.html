@@ -1,10 +1,48 @@
-<!-- src/app/shared/sidebar/sidebar.component.html -->
-
 <nav class="sidebar">
-  <ul>
-    <li routerLink="/dashboard">Dashboard</li>
-    <li routerLink="/deliveries">Livraisons</li>
-    <li routerLink="/couriers">Livreurs</li>
-    <li routerLink="/reports">Reporting</li>
-  </ul>
+
+  <!-- HEADER -->
+  <div class="sidebar-header">
+    <div class="logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">TechStorm</span>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="sidebar-nav">
+    <a
+      *ngFor="let item of menuItems"
+      class="nav-item"
+      [routerLink]="item.route"
+      routerLinkActive="active"
+    >
+      <span class="nav-icon">{{ item.icon }}</span>
+      <span class="nav-label">{{ item.label }}</span>
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="sidebar-footer">
+
+    <div class="user-info">
+      <div class="user-avatar">
+        <!-- {{ authService.currentUser?.name?.charAt(0) || 'A' }} -->
+      </div>
+
+      <div class="user-details">
+        <div class="user-name">
+          <!-- {{ authService.currentUser?.name || 'Admin' }} -->
+        </div>
+        <div class="user-role">
+          <!-- {{ authService.currentUser?.role || 'administrateur' }} -->
+        </div>
+      </div>
+    </div>
+
+    <button class="logout-btn" (click)="logout()">
+      <span class="logout-icon">⏻</span>
+      <span>Déconnexion</span>
+    </button>
+
+  </div>
 </nav>
