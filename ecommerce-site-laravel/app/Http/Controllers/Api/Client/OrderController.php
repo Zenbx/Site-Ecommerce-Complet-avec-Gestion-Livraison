@@ -18,6 +18,11 @@ use Illuminate\Support\Facades\DB;
  * Ce controller permet aux clients de créer des commandes à partir de leur panier,
  * de consulter leurs commandes passées, de suivre le statut de leurs livraisons,
  * et d'annuler des commandes si elles sont encore dans un statut qui le permet.
+ *
+ * @OA\Tag(
+ *     name="Orders",
+ *     description="Order management for clients"
+ * )
  */
 class OrderController extends Controller
 {
@@ -26,11 +31,25 @@ class OrderController extends Controller
      * 
      * GET /api/client/orders
      * 
-     * Cette méthode retourne l'historique complet des commandes du client
-     * avec pagination et possibilité de filtrer par statut
-     * 
-     * @param Request $request
-     * @return JsonResponse
+     * @OA\Get(
+     *      path="/api/client/orders",
+     *      operationId="getClientOrders",
+     *      tags={"Orders"},
+     *      summary="List orders",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="page", in="query", description="Page number", required=false, @OA\Schema(type="integer", default=1)),
+     *      @OA\Parameter(name="per_page", in="query", description="Items per page", required=false, @OA\Schema(type="integer", default=10)),
+     *      @OA\Parameter(name="status", in="query", description="Filter by status (comma separated)", required=false, @OA\Schema(type="string")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="List of orders",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Order")),
+     *              @OA\Property(property="meta", type="object")
+     *          )
+     *      )
+     * )
      */
     public function index(Request $request): JsonResponse
     {
@@ -76,9 +95,23 @@ class OrderController extends Controller
      * 
      * GET /api/client/orders/{order}
      * 
-     * @param Request $request
-     * @param Order $order
-     * @return JsonResponse
+     * @OA\Get(
+     *      path="/api/client/orders/{order}",
+     *      operationId="getClientOrder",
+     *      tags={"Orders"},
+     *      summary="Get order details",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="order", in="path", description="Order ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Order details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/Order")
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="Order not found")
+     * )
      */
     public function show(Request $request, Order $order): JsonResponse
     {
@@ -112,23 +145,33 @@ class OrderController extends Controller
      * 
      * POST /api/client/orders
      * 
-     * Cette méthode est le cœur de votre système e-commerce. Elle transforme
-     * un panier temporaire en une commande permanente et facturable.
-     * 
-     * Le processus implique plusieurs étapes critiques :
-     * 1. Vérifier que le panier existe et contient des articles
-     * 2. Vérifier que tous les produits sont toujours disponibles en stock
-     * 3. Calculer le montant total de la commande
-     * 4. Créer l'enregistrement de commande
-     * 5. Créer les lignes de commande à partir des lignes de panier
-     * 6. Décrémenter le stock des produits
-     * 7. Marquer le panier comme converti
-     * 
-     * Toutes ces opérations doivent réussir ensemble ou échouer ensemble,
-     * d'où l'utilisation d'une transaction de base de données.
-     * 
-     * @param Request $request
-     * @return JsonResponse
+     * @OA\Post(
+     *      path="/api/client/orders",
+     *      operationId="createOrder",
+     *      tags={"Orders"},
+     *      summary="Create order from cart",
+     *      description="Converts the active cart into a new order.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"delivery_address"},
+     *              @OA\Property(property="delivery_address", type="string", example="123 Main St, City"),
+     *              @OA\Property(property="delivery_fee", type="number", example=10.00),
+     *              @OA\Property(property="notes", type="string", example="Please leave at door")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Order created",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Commande créée avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Order")
+     *          )
+     *      ),
+     *      @OA\Response(response=400, description="Cart is empty or invalid stock")
+     * )
      */
     public function store(Request $request): JsonResponse
     {
@@ -273,13 +316,31 @@ class OrderController extends Controller
      * 
      * POST /api/client/orders/{order}/cancel
      * 
-     * Un client ne peut annuler que les commandes qui sont encore en statut
-     * PENDING ou CONFIRMED. Une fois qu'une commande est en PROCESSING
-     * (préparation) ou plus loin dans le processus, seul un admin peut l'annuler.
-     * 
-     * @param Request $request
-     * @param Order $order
-     * @return JsonResponse
+     * @OA\Post(
+     *      path="/api/client/orders/{order}/cancel",
+     *      operationId="cancelOrder",
+     *      tags={"Orders"},
+     *      summary="Cancel order",
+     *      description="Cancel an order if status is PENDING or CONFIRMED.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="order", in="path", description="Order ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="reason", type="string", example="Changed my mind")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Order cancelled",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Commande annulée avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Order")
+     *          )
+     *      ),
+     *      @OA\Response(response=400, description="Order cannot be cancelled")
+     * )
      */
     public function cancel(Request $request, Order $order): JsonResponse
     {
@@ -360,12 +421,28 @@ class OrderController extends Controller
      * 
      * GET /api/client/orders/{order}/tracking
      * 
-     * Cette méthode retourne les informations de suivi en temps réel
-     * de la livraison si elle existe
-     * 
-     * @param Request $request
-     * @param Order $order
-     * @return JsonResponse
+     * @OA\Get(
+     *      path="/api/client/orders/{order}/tracking",
+     *      operationId="trackOrder",
+     *      tags={"Orders"},
+     *      summary="Track order",
+     *      description="Get real-time tracking information.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="order", in="path", description="Order ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Tracking info",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="order_number", type="string"),
+     *                  @OA\Property(property="status", type="string"),
+     *                  @OA\Property(property="tracking_available", type="boolean"),
+     *                  @OA\Property(property="delivery", ref="#/components/schemas/Delivery")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function tracking(Request $request, Order $order): JsonResponse
     {

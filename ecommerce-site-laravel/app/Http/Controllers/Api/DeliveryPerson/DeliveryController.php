@@ -24,6 +24,11 @@ use Illuminate\Support\Facades\Storage;
  * - Scanner les QR codes de confirmation
  * - Soumettre les preuves de livraison (photo, signature)
  * - Consulter l'historique et les statistiques
+ *
+ * @OA\Tag(
+ *     name="DeliveryPerson Deliveries",
+ *     description="Delivery person delivery management"
+ * )
  */
 class DeliveryController extends Controller
 {
@@ -32,9 +37,24 @@ class DeliveryController extends Controller
      * 
      * GET /api/delivery-person/deliveries
      * 
-     * Paramètres :
-     * - status : filtrer par statut (ASSIGNED, PICKED_UP, IN_TRANSIT, etc.)
-     * - date : filtrer par date (format Y-m-d)
+     * @OA\Get(
+     *      path="/api/delivery-person/deliveries",
+     *      operationId="getOwnDeliveries",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="List own deliveries",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="status", in="query", description="Filter by status (comma separated)", required=false, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="date", in="query", description="Filter by date (YYYY-MM-DD)", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="List of deliveries",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Delivery")),
+     *              @OA\Property(property="statistics", type="object")
+     *          )
+     *      )
+     * )
      */
     public function index(Request $request): JsonResponse
     {
@@ -90,6 +110,23 @@ class DeliveryController extends Controller
      * Détails d'une livraison spécifique
      * 
      * GET /api/delivery-person/deliveries/{delivery}
+     * 
+     * @OA\Get(
+     *      path="/api/delivery-person/deliveries/{delivery}",
+     *      operationId="getOwnDelivery",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Get delivery details",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/Delivery")
+     *          )
+     *      )
+     * )
      */
     public function show(Request $request, Delivery $delivery): JsonResponse
     {
@@ -115,6 +152,24 @@ class DeliveryController extends Controller
      * Accepte une livraison assignée
      * 
      * POST /api/delivery-person/deliveries/{delivery}/accept
+     * 
+     * @OA\Post(
+     *      path="/api/delivery-person/deliveries/{delivery}/accept",
+     *      operationId="acceptDelivery",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Accept delivery",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery accepted",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livraison acceptée avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Delivery")
+     *          )
+     *      )
+     * )
      */
     public function accept(Request $request, Delivery $delivery): JsonResponse
     {
@@ -147,6 +202,29 @@ class DeliveryController extends Controller
      * Refuse une livraison assignée
      * 
      * POST /api/delivery-person/deliveries/{delivery}/decline
+     * 
+     * @OA\Post(
+     *      path="/api/delivery-person/deliveries/{delivery}/decline",
+     *      operationId="declineDelivery",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Decline delivery",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="reason", type="string", example="Véhicule en panne")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery declined",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livraison refusée.")
+     *          )
+     *      )
+     * )
      */
     public function decline(Request $request, Delivery $delivery): JsonResponse
     {
@@ -189,6 +267,31 @@ class DeliveryController extends Controller
      * Marque le colis comme récupéré
      * 
      * POST /api/delivery-person/deliveries/{delivery}/pickup
+     * 
+     * @OA\Post(
+     *      path="/api/delivery-person/deliveries/{delivery}/pickup",
+     *      operationId="markDeliveryPickedUp",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Mark delivery as picked up",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="latitude", type="number", format="float", example=48.8566),
+     *              @OA\Property(property="longitude", type="number", format="float", example=2.3522)
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery picked up",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Colis marqué comme récupéré"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Delivery")
+     *          )
+     *      )
+     * )
      */
     public function markAsPickedUp(Request $request, Delivery $delivery): JsonResponse
     {
@@ -233,6 +336,24 @@ class DeliveryController extends Controller
      * Démarre la livraison (en route vers le client)
      * 
      * POST /api/delivery-person/deliveries/{delivery}/start
+     * 
+     * @OA\Post(
+     *      path="/api/delivery-person/deliveries/{delivery}/start",
+     *      operationId="startDelivery",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Start delivery transit",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery started",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livraison démarrée. En route vers le client."),
+     *              @OA\Property(property="data", ref="#/components/schemas/Delivery")
+     *          )
+     *      )
+     * )
      */
     public function start(Request $request, Delivery $delivery): JsonResponse
     {
@@ -269,10 +390,32 @@ class DeliveryController extends Controller
      * 
      * POST /api/delivery-person/deliveries/{delivery}/location
      * 
-     * Cette méthode est appelée régulièrement par l'app mobile (ex: toutes les 30 secondes)
-     * pour permettre le suivi en temps réel
+     * @OA\Post(
+     *      path="/api/delivery-person/deliveries/{delivery}/location",
+     *      operationId="updateDeliveryLocation",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Update realtime location",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="latitude", type="number", format="float"),
+     *              @OA\Property(property="longitude", type="number", format="float"),
+     *              @OA\Property(property="speed", type="number", format="float"),
+     *              @OA\Property(property="heading", type="number", format="float")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Location updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Position mise à jour et diffusée en temps réel")
+     *          )
+     *      )
+     * )
      */
-
 public function updateLocation(Request $request, Delivery $delivery): JsonResponse
 {
     $deliveryPerson = $request->user('delivery-api');
@@ -308,6 +451,32 @@ public function updateLocation(Request $request, Delivery $delivery): JsonRespon
      * Scanne le QR code de confirmation de livraison
      * 
      * POST /api/delivery-person/deliveries/{delivery}/scan-qr
+     * 
+     * @OA\Post(
+     *      path="/api/delivery-person/deliveries/{delivery}/scan-qr",
+     *      operationId="scanDeliveryQR",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Scan confirmation QR code",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="qr_code_data", type="string")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="QR code verified",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="QR code validé avec succès"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="verified", type="boolean", example=true)
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function scanQRCode(Request $request, Delivery $delivery): JsonResponse
     {
@@ -361,6 +530,39 @@ public function updateLocation(Request $request, Delivery $delivery): JsonRespon
      * Soumet une preuve de livraison (photo, signature)
      * 
      * POST /api/delivery-person/deliveries/{delivery}/proof
+     * 
+     * @OA\Post(
+     *      path="/api/delivery-person/deliveries/{delivery}/proof",
+     *      operationId="submitDeliveryProof",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Submit delivery proof",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\MediaType(
+     *              mediaType="multipart/form-data",
+     *              @OA\Schema(
+     *                  @OA\Property(property="proof_type", type="string", enum={"signature", "photo"}),
+     *                  @OA\Property(property="proof_file", type="string", format="binary"),
+     *                  @OA\Property(property="recipient_name", type="string"),
+     *                  @OA\Property(property="notes", type="string")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Proof submitted",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Preuve de livraison enregistrée"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="proof_url", type="string"),
+     *                  @OA\Property(property="type", type="string")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function submitProof(Request $request, Delivery $delivery): JsonResponse
     {
@@ -404,6 +606,28 @@ public function updateLocation(Request $request, Delivery $delivery): JsonRespon
      * Marque la livraison comme complétée
      * 
      * POST /api/delivery-person/deliveries/{delivery}/complete
+     * 
+     * @OA\Post(
+     *      path="/api/delivery-person/deliveries/{delivery}/complete",
+     *      operationId="completeDelivery",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Complete delivery key",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery completed",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livraison complétée avec succès"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="delivery_id", type="integer"),
+     *                  @OA\Property(property="status", type="string", example="DELIVERED"),
+     *                  @OA\Property(property="delivery_time", type="string")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function complete(Request $request, Delivery $delivery): JsonResponse
     {
@@ -478,6 +702,37 @@ public function updateLocation(Request $request, Delivery $delivery): JsonRespon
      * Signale un problème de livraison (client absent, adresse incorrecte, etc.)
      * 
      * POST /api/delivery-person/deliveries/{delivery}/report-issue
+     * 
+     * @OA\Post(
+     *      path="/api/delivery-person/deliveries/{delivery}/report-issue",
+     *      operationId="reportDeliveryIssue",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Report delivery issue",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\MediaType(
+     *              mediaType="multipart/form-data",
+     *              @OA\Schema(
+     *                  @OA\Property(property="issue_type", type="string", enum={"customer_unavailable", "address_not_found", "refused_package", "damaged_package", "other"}),
+     *                  @OA\Property(property="description", type="string"),
+     *                  @OA\Property(property="photo", type="string", format="binary"),
+     *                  @OA\Property(property="latitude", type="number", format="float"),
+     *                  @OA\Property(property="longitude", type="number", format="float")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Issue reported",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Problème signalé. Un administrateur sera notifié."),
+     *              @OA\Property(property="data", ref="#/components/schemas/Delivery")
+     *          )
+     *      )
+     * )
      */
     public function reportIssue(Request $request, Delivery $delivery): JsonResponse
     {
@@ -535,6 +790,26 @@ public function updateLocation(Request $request, Delivery $delivery): JsonRespon
      * Historique des livraisons complétées
      * 
      * GET /api/delivery-person/deliveries/history
+     * 
+     * @OA\Get(
+     *      path="/api/delivery-person/deliveries/history",
+     *      operationId="getDeliveryHistory",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Get delivery history",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="date_from", in="query", description="From date", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="date_to", in="query", description="To date", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="per_page", in="query", description="Items per page", required=false, @OA\Schema(type="integer", default=25)),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery history",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Delivery")),
+     *              @OA\Property(property="summary", type="object")
+     *          )
+     *      )
+     * )
      */
     public function history(Request $request): JsonResponse
     {
@@ -578,18 +853,34 @@ public function updateLocation(Request $request, Delivery $delivery): JsonRespon
     }
 
     /**
- * Obtient l'itinéraire optimisé pour une livraison
- * 
- * GET /api/delivery-person/deliveries/{delivery}/route
- * 
- * Query params:
- * - current_lat: Latitude actuelle du livreur (required)
- * - current_lon: Longitude actuelle du livreur (required)
- * 
- * Cette méthode simplifie l'obtention d'un itinéraire pour le livreur.
- * Au lieu que l'app mobile doive géocoder l'adresse de destination elle-même,
- * elle donne simplement sa position actuelle et reçoit l'itinéraire complet.
- */
+     * Obtient l'itinéraire optimisé pour une livraison
+     * 
+     * GET /api/delivery-person/deliveries/{delivery}/route
+     * 
+     * @OA\Get(
+     *      path="/api/delivery-person/deliveries/{delivery}/route",
+     *      operationId="getDeliveryRoute",
+     *      tags={"DeliveryPerson Deliveries"},
+     *      summary="Get optimized route",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="delivery", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="current_lat", in="query", description="Current Latitude", required=true, @OA\Schema(type="number", format="float")),
+     *      @OA\Parameter(name="current_lon", in="query", description="Current Longitude", required=true, @OA\Schema(type="number", format="float")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Route details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="delivery_id", type="integer"),
+     *                  @OA\Property(property="current_position", type="object"),
+     *                  @OA\Property(property="destination", type="object"),
+     *                  @OA\Property(property="route", type="object")
+     *              )
+     *          )
+     *      )
+     * )
+     */
 public function getRoute(Request $request, Delivery $delivery): JsonResponse
 {
     $deliveryPerson = $request->user('delivery-api');

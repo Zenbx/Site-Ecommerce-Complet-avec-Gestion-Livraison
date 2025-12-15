@@ -1,9 +1,4 @@
-
 <?php
-// ============================================
-// 9. UPDATE ORDER STATUS REQUEST
-// app/Http/Requests/UpdateOrderStatusRequest.php
-// ============================================
 
 namespace App\Http\Requests\Admin;
 

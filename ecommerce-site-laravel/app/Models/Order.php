@@ -5,6 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @OA\Schema(
+ *     schema="Order",
+ *     @OA\Property(property="id", type="integer", readOnly=true, example=101),
+ *     @OA\Property(property="client_id", type="integer", example=1),
+ *     @OA\Property(property="total_amount", type="number", format="float", example=150.50),
+ *     @OA\Property(property="delivery_fee", type="number", format="float", example=10.00),
+ *     @OA\Property(property="status", type="string", enum={"PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"}, example="PENDING"),
+ *     @OA\Property(property="payment_status", type="string", enum={"PENDING", "PAID", "FAILED"}, example="PAID"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true)
+ * )
+ */
 class Order extends Model
 {
     use HasFactory;

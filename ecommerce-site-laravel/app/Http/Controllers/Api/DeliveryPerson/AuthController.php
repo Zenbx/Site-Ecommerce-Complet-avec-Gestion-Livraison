@@ -15,6 +15,36 @@ class AuthController extends Controller
 {
     /**
      * Connecter un livreur
+     *
+     * @OA\Post(
+     *      path="/api/auth/delivery-person/login",
+     *      operationId="loginDeliveryPerson",
+     *      tags={"Authentication"},
+     *      summary="Login delivery person",
+     *      description="Authenticate a delivery person and return an access token.",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"email", "password"},
+     *              @OA\Property(property="email", type="string", format="email", example="driver@example.com"),
+     *              @OA\Property(property="password", type="string", format="password", example="secret123")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Login successful",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Connexion réussie"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="delivery_person", ref="#/components/schemas/DeliveryPerson"),
+     *                  @OA\Property(property="token", type="string", example="1|AbCdEf123456..."),
+     *                  @OA\Property(property="token_type", type="string", example="Bearer")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(response=401, description="Invalid credentials")
+     * )
      */
     public function login(Request $request)
     {
@@ -51,6 +81,22 @@ class AuthController extends Controller
 
     /**
      * Déconnecter le livreur
+     *
+     * @OA\Post(
+     *      path="/api/auth/delivery-person/logout",
+     *      operationId="logoutDeliveryPerson",
+     *      tags={"Authentication"},
+     *      summary="Logout delivery person",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Logout successful",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Déconnexion réussie")
+     *          )
+     *      )
+     * )
      */
     public function logout(Request $request)
     {
@@ -64,6 +110,22 @@ class AuthController extends Controller
 
     /**
      * Récupérer le profil du livreur connecté
+     *
+     * @OA\Get(
+     *      path="/api/auth/delivery-person/me",
+     *      operationId="meDeliveryPerson",
+     *      tags={"Authentication"},
+     *      summary="Get delivery person profile",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Profile retrieved",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/DeliveryPerson")
+     *          )
+     *      )
+     * )
      */
     public function me(Request $request)
     {
@@ -75,28 +137,5 @@ class AuthController extends Controller
         ], 200);
     }
 
-    /**
-     * Mettre à jour la disponibilité du livreur
-     * 
-     * Les livreurs peuvent marquer qu'ils sont disponibles ou non
-     * pour recevoir de nouvelles livraisons
-     */
-    public function updateAvailability(Request $request)
-    {
-        $request->validate([
-            'is_available' => 'required|boolean',
-        ]);
 
-        $deliveryPerson = $request->user('delivery-api');
-        $deliveryPerson->is_available = $request->is_available;
-        $deliveryPerson->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Disponibilité mise à jour',
-            'data' => [
-                'is_available' => $deliveryPerson->is_available,
-            ],
-        ], 200);
-    }
 }

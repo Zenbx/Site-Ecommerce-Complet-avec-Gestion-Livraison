@@ -17,6 +17,11 @@ use Illuminate\Http\JsonResponse;
  * Ce controller implémente toutes les opérations CRUD (Create, Read, Update, Delete)
  * pour les produits. Il est protégé par le middleware auth:admin-api qui garantit
  * que seuls les administrateurs authentifiés peuvent accéder à ces endpoints.
+ *
+ * @OA\Tag(
+ *     name="Admin Products",
+ *     description="Product management for admins"
+ * )
  */
 class ProductController extends Controller
 {
@@ -25,19 +30,29 @@ class ProductController extends Controller
      * 
      * GET /api/admin/products
      * 
-     * Cette méthode supporte plusieurs paramètres de requête optionnels :
-     * - page : numéro de la page pour la pagination
-     * - per_page : nombre de produits par page (défaut 15, max 100)
-     * - search : recherche textuelle dans le nom et la description
-     * - category : filtrer par catégorie
-     * - brand : filtrer par marque
-     * - is_active : filtrer par statut actif/inactif
-     * - in_stock : filtrer par disponibilité en stock
-     * - sort_by : champ de tri (name, price, quantity, created_at)
-     * - sort_order : ordre de tri (asc ou desc)
-     * 
-     * @param Request $request
-     * @return JsonResponse
+     * @OA\Get(
+     *      path="/api/admin/products",
+     *      operationId="getAdminProducts",
+     *      tags={"Admin Products"},
+     *      summary="List products (Admin)",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="page", in="query", description="Page number", required=false, @OA\Schema(type="integer", default=1)),
+     *      @OA\Parameter(name="per_page", in="query", description="Items per page", required=false, @OA\Schema(type="integer", default=15)),
+     *      @OA\Parameter(name="search", in="query", description="Search term", required=false, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="category", in="query", description="Category ID", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="brand", in="query", description="Brand name", required=false, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="is_active", in="query", description="Filter by active status", required=false, @OA\Schema(type="boolean")),
+     *      @OA\Parameter(name="in_stock", in="query", description="Filter by stock availability", required=false, @OA\Schema(type="boolean")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="List of products",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Product")),
+     *              @OA\Property(property="meta", type="object")
+     *          )
+     *      )
+     * )
      */
     public function index(Request $request): JsonResponse
     {
@@ -126,8 +141,27 @@ class ProductController extends Controller
      * 
      * POST /api/admin/products
      * 
-     * @param StoreProductRequest $request Les données validées du nouveau produit
-     * @return JsonResponse
+     * @OA\Post(
+     *      path="/api/admin/products",
+     *      operationId="createProduct",
+     *      tags={"Admin Products"},
+     *      summary="Create product",
+     *      description="Add a new product to the catalog.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/Product")
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Product created",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Produit créé avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Product")
+     *          )
+     *      )
+     * )
      */
     public function store(StoreProductRequest $request): JsonResponse
     {
@@ -160,8 +194,23 @@ class ProductController extends Controller
      * 
      * GET /api/admin/products/{id}
      * 
-     * @param Product $product Le produit à afficher (injecté automatiquement par Laravel)
-     * @return JsonResponse
+     * @OA\Get(
+     *      path="/api/admin/products/{id}",
+     *      operationId="getAdminProduct",
+     *      tags={"Admin Products"},
+     *      summary="Get product details (Admin)",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Product ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Product details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/Product")
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="Product not found")
+     * )
      */
     public function show(Product $product): JsonResponse
     {
@@ -184,9 +233,27 @@ class ProductController extends Controller
      * 
      * PUT/PATCH /api/admin/products/{id}
      * 
-     * @param UpdateProductRequest $request Les données validées de mise à jour
-     * @param Product $product Le produit à mettre à jour
-     * @return JsonResponse
+     * @OA\Put(
+     *      path="/api/admin/products/{id}",
+     *      operationId="updateProduct",
+     *      tags={"Admin Products"},
+     *      summary="Update product",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Product ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/Product")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Product updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Produit mis à jour avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Product")
+     *          )
+     *      )
+     * )
      */
     public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
@@ -214,8 +281,22 @@ class ProductController extends Controller
      * 
      * DELETE /api/admin/products/{id}
      * 
-     * @param Product $product Le produit à supprimer
-     * @return JsonResponse
+     * @OA\Delete(
+     *      path="/api/admin/products/{id}",
+     *      operationId="deleteProduct",
+     *      tags={"Admin Products"},
+     *      summary="Delete product",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Product ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Product deleted or deactivated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Produit supprimé avec succès")
+     *          )
+     *      )
+     * )
      */
     public function destroy(Product $product): JsonResponse
     {
@@ -252,12 +333,32 @@ class ProductController extends Controller
      * 
      * PATCH /api/admin/products/{id}/stock
      * 
-     * Cette méthode démontre comment ajouter des endpoints personnalisés
-     * au-delà des sept méthodes RESTful standard
-     * 
-     * @param Request $request
-     * @param Product $product
-     * @return JsonResponse
+     * @OA\Patch(
+     *      path="/api/admin/products/{id}/stock",
+     *      operationId="updateProductStock",
+     *      tags={"Admin Products"},
+     *      summary="Update product stock",
+     *      description="Update quantity of a product.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Product ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"quantity"},
+     *              @OA\Property(property="quantity", type="integer", example=50),
+     *              @OA\Property(property="operation", type="string", enum={"set", "add", "subtract"}, default="set")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Stock updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Stock mis à jour avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Product")
+     *          )
+     *      )
+     * )
      */
     public function updateStock(Request $request, Product $product): JsonResponse
     {

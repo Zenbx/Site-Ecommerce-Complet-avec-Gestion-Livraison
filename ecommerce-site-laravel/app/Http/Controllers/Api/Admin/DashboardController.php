@@ -18,11 +18,16 @@ use Illuminate\Http\JsonResponse;
  * Ce controller est un excellent exemple de "thin controller".
  * Il ne contient presque aucune logique métier. Toute la complexité
  * du calcul des statistiques est déléguée au StatisticsService.
- * Le controller se contente d'appeler les méthodes appropriées du service
+ * Link controller se contente d'appeler les méthodes appropriées du service
  * et de formater les réponses.
  * 
  * Cette approche rend le code très testable car on peut tester le
  * StatisticsService indépendamment du controller.
+ *
+ * @OA\Tag(
+ *     name="Admin Dashboard",
+ *     description="Admin dashboard statistics and metrics"
+ * )
  */
 class DashboardController extends Controller
 {
@@ -43,12 +48,26 @@ class DashboardController extends Controller
      * 
      * GET /api/admin/dashboard/overview
      * 
-     * Query params:
-     * - period: today, week, month, year, all (défaut: today)
-     * 
-     * Cette méthode retourne une vue d'ensemble complète avec toutes
-     * les métriques principales : chiffre d'affaires, commandes, clients,
-     * livraisons, taux de conversion, etc.
+     * @OA\Get(
+     *      path="/api/admin/dashboard/overview",
+     *      operationId="getDashboardOverview",
+     *      tags={"Admin Dashboard"},
+     *      summary="Get dashboard overview stats",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="period", in="query", description="Period (today, week, month, year, all)", required=false, @OA\Schema(type="string", default="today")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Dashboard statistics",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="period", type="string", example="today"),
+     *                  @OA\Property(property="statistics", type="object"),
+     *                  @OA\Property(property="generated_at", type="string", format="date-time")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function overview(Request $request): JsonResponse
     {
@@ -82,13 +101,27 @@ class DashboardController extends Controller
      * 
      * GET /api/admin/dashboard/sales-chart
      * 
-     * Query params:
-     * - period: week, month, year (défaut: month)
-     * - group_by: day, week, month (défaut: day)
-     * 
-     * Cette méthode retourne des données formatées spécifiquement
-     * pour être affichées dans un graphique Chart.js ou similaire
-     * dans l'application Angular.
+     * @OA\Get(
+     *      path="/api/admin/dashboard/sales-chart",
+     *      operationId="getSalesChart",
+     *      tags={"Admin Dashboard"},
+     *      summary="Get sales chart data",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="period", in="query", description="Period (week, month, year)", required=false, @OA\Schema(type="string", default="month")),
+     *      @OA\Parameter(name="group_by", in="query", description="Group by (day, week, month)", required=false, @OA\Schema(type="string", default="day")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Sales chart data",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="labels", type="array", @OA\Items(type="string")),
+     *                  @OA\Property(property="orders", type="array", @OA\Items(type="integer")),
+     *                  @OA\Property(property="revenue", type="array", @OA\Items(type="number"))
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function salesChart(Request $request): JsonResponse
     {
@@ -130,9 +163,30 @@ class DashboardController extends Controller
      * 
      * GET /api/admin/dashboard/top-products
      * 
-     * Query params:
-     * - limit: nombre de produits (défaut: 10)
-     * - period: today, week, month, year (défaut: month)
+     * @OA\Get(
+     *      path="/api/admin/dashboard/top-products",
+     *      operationId="getTopProducts",
+     *      tags={"Admin Dashboard"},
+     *      summary="Get top selling products",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="limit", in="query", description="Number of products", required=false, @OA\Schema(type="integer", default=10)),
+     *      @OA\Parameter(name="period", in="query", description="Period (today, week, month, year)", required=false, @OA\Schema(type="string", default="month")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Top products list",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(
+     *                  @OA\Property(property="id", type="integer"),
+     *                  @OA\Property(property="name", type="string"),
+     *                  @OA\Property(property="image_url", type="string"),
+     *                  @OA\Property(property="total_sold", type="integer"),
+     *                  @OA\Property(property="total_revenue", type="string"),
+     *                  @OA\Property(property="total_revenue_raw", type="number")
+     *              ))
+     *          )
+     *      )
+     * )
      */
     public function topProducts(Request $request): JsonResponse
     {
@@ -168,7 +222,26 @@ class DashboardController extends Controller
      * 
      * GET /api/admin/dashboard/delivery-performance
      * 
-     * Cette méthode retourne un classement des livreurs par performance.
+     * @OA\Get(
+     *      path="/api/admin/dashboard/delivery-performance",
+     *      operationId="getDeliveryPerformance",
+     *      tags={"Admin Dashboard"},
+     *      summary="Get delivery performance ranking",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="period", in="query", description="Period (month, etc)", required=false, @OA\Schema(type="string", default="month")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery performance list",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(
+     *                  @OA\Property(property="id", type="integer"),
+     *                  @OA\Property(property="name", type="string"),
+     *                  @OA\Property(property="statistics", type="object")
+     *              ))
+     *          )
+     *      )
+     * )
      */
     public function deliveryPerformance(Request $request): JsonResponse
     {
@@ -202,8 +275,28 @@ class DashboardController extends Controller
      * 
      * GET /api/admin/dashboard/recent-activity
      * 
-     * Cette méthode retourne les derniers événements importants :
-     * nouvelles commandes, livraisons complétées, alertes de stock faible, etc.
+     * @OA\Get(
+     *      path="/api/admin/dashboard/recent-activity",
+     *      operationId="getRecentActivity",
+     *      tags={"Admin Dashboard"},
+     *      summary="Get recent activity feed",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="limit", in="query", description="Limit results", required=false, @OA\Schema(type="integer", default=20)),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Recent activity list",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(
+     *                  @OA\Property(property="type", type="string", example="new_order"),
+     *                  @OA\Property(property="title", type="string"),
+     *                  @OA\Property(property="message", type="string"),
+     *                  @OA\Property(property="timestamp", type="string", format="date-time"),
+     *                  @OA\Property(property="time_ago", type="string")
+     *              ))
+     *          )
+     *      )
+     * )
      */
     public function recentActivity(Request $request): JsonResponse
     {

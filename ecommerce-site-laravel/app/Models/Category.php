@@ -1,15 +1,22 @@
 <?php
 
-// ============================================
-// 2. CATEGORY MODEL (NOUVEAU)
-// app/Models/Category.php
-// ============================================
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @OA\Schema(
+ *     schema="Category",
+ *     required={"name"},
+ *     @OA\Property(property="id", type="integer", readOnly=true, example=1),
+ *     @OA\Property(property="name", type="string", example="Electronics"),
+ *     @OA\Property(property="description", type="string", nullable=true, example="Electronic gadgets and devices"),
+ *     @OA\Property(property="image_url", type="string", nullable=true, example="http://example.com/cat.jpg"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true)
+ * )
+ */
 class Category extends Model
 {
     use HasFactory;

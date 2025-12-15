@@ -1,10 +1,5 @@
 <?php
 
-// ============================================
-// 1. DELIVERY CONTROLLER - GESTION DES LIVRAISONS UNIQUEMENT
-// app/Http/Controllers/Api/Admin/DeliveryController.php
-// ============================================
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -27,6 +22,11 @@ use Illuminate\Support\Facades\DB;
  * 
  * Philosophie : Un controller = Une ressource principale
  * Ici, la ressource c'est Delivery, donc on ne gère que ça.
+ *
+ * @OA\Tag(
+ *     name="Admin Deliveries",
+ *     description="Delivery management"
+ * )
  */
 class DeliveryController extends Controller
 {
@@ -42,15 +42,27 @@ class DeliveryController extends Controller
      * 
      * GET /api/admin/deliveries
      * 
-     * Cette méthode permet de filtrer les livraisons selon plusieurs critères.
-     * C'est très utile pour l'interface Angular où on veut pouvoir afficher
-     * différentes vues : livraisons en cours, livrées, échouées, etc.
-     * 
-     * Filtres disponibles :
-     * - status : PENDING, ASSIGNED, PICKED_UP, IN_TRANSIT, DELIVERED, FAILED
-     * - delivery_person_id : pour voir les livraisons d'un livreur spécifique
-     * - date_from / date_to : plage de dates
-     * - search : recherche par tracking_code
+     * @OA\Get(
+     *      path="/api/admin/deliveries",
+     *      operationId="getDeliveries",
+     *      tags={"Admin Deliveries"},
+     *      summary="List deliveries",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="status", in="query", description="Filter by status (comma separated)", required=false, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="delivery_person_id", in="query", description="Filter by delivery person ID", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="date_from", in="query", description="Date from (YYYY-MM-DD)", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="date_to", in="query", description="Date to (YYYY-MM-DD)", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="search", in="query", description="Search by tracking code", required=false, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="per_page", in="query", description="Items per page", required=false, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="List of deliveries",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Delivery"))
+     *          )
+     *      )
+     * )
      */
     public function index(Request $request): JsonResponse
     {
@@ -153,13 +165,23 @@ class DeliveryController extends Controller
      * 
      * GET /api/admin/deliveries/{id}
      * 
-     * Retourne TOUTES les informations d'une livraison :
-     * - Détails de la commande
-     * - Liste des produits
-     * - Informations du client
-     * - Informations du livreur
-     * - Timeline des événements
-     * - Preuves de livraison
+     * @OA\Get(
+     *      path="/api/admin/deliveries/{id}",
+     *      operationId="getDelivery",
+     *      tags={"Admin Deliveries"},
+     *      summary="Get delivery details",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/Delivery")
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="Delivery not found")
+     * )
      */
     public function show($id): JsonResponse
     {
@@ -243,15 +265,23 @@ class DeliveryController extends Controller
      * 
      * POST /api/admin/deliveries/{id}/auto-assign
      * 
-     * Cette méthode implémente un algorithme d'assignation intelligent.
-     * Elle cherche le meilleur livreur disponible selon plusieurs critères :
-     * 1. Disponibilité (is_available = true)
-     * 2. Pas de livraison en cours
-     * 3. (Optionnel) Proximité géographique
-     * 4. (Optionnel) Performance historique
-     * 
-     * C'est une fonctionnalité très utile pour automatiser la gestion
-     * et réduire le temps de traitement des commandes.
+     * @OA\Post(
+     *      path="/api/admin/deliveries/{id}/auto-assign",
+     *      operationId="autoAssignDelivery",
+     *      tags={"Admin Deliveries"},
+     *      summary="Auto assign delivery",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery auto-assigned",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livreur assigné automatiquement avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Delivery")
+     *          )
+     *      )
+     * )
      */
     public function autoAssign($id): JsonResponse
     {
@@ -352,10 +382,30 @@ class DeliveryController extends Controller
      * 
      * POST /api/admin/deliveries/{id}/manual-assign
      * 
-     * Permet à l'admin de choisir manuellement le livreur.
-     * Utile quand l'algorithme automatique ne convient pas,
-     * ou quand on veut assigner à un livreur spécifique pour
-     * des raisons particulières (connaissance du quartier, etc.)
+     * @OA\Post(
+     *      path="/api/admin/deliveries/{id}/manual-assign",
+     *      operationId="manualAssignDelivery",
+     *      tags={"Admin Deliveries"},
+     *      summary="Manual assign delivery",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="delivery_person_id", type="integer", example=1),
+     *              @OA\Property(property="notes", type="string", example="Assignation prioritaire")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery manually assigned",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livreur assigné manuellement avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Delivery")
+     *          )
+     *      )
+     * )
      */
     public function manualAssign(Request $request, $id): JsonResponse
     {
@@ -438,13 +488,30 @@ class DeliveryController extends Controller
      * 
      * POST /api/admin/deliveries/{id}/reassign
      * 
-     * Permet de changer le livreur d'une livraison déjà assignée.
-     * Cas d'usage :
-     * - Le livreur est tombé malade
-     * - Le livreur a un problème avec son véhicule
-     * - On veut optimiser les trajets
-     * 
-     * Une réassignation nécessite une raison (pour l'historique)
+     * @OA\Post(
+     *      path="/api/admin/deliveries/{id}/reassign",
+     *      operationId="reassignDelivery",
+     *      tags={"Admin Deliveries"},
+     *      summary="Reassign delivery",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Delivery ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="new_delivery_person_id", type="integer", example=2),
+     *              @OA\Property(property="reason", type="string", example="Livreur indisponible")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery reassigned",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livraison réassignée avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Delivery")
+     *          )
+     *      )
+     * )
      */
     public function reassign(Request $request, $id): JsonResponse
     {

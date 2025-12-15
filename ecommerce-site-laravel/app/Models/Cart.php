@@ -5,6 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @OA\Schema(
+ *     schema="Cart",
+ *     required={"client_id"},
+ *     @OA\Property(property="id", type="integer", readOnly=true, example=10),
+ *     @OA\Property(property="client_id", type="integer", example=1),
+ *     @OA\Property(property="status", type="string", enum={"ACTIVE", "ABANDONED", "CONVERTED"}, example="ACTIVE"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true)
+ * )
+ */
 class Cart extends Model
 {
     use HasFactory;

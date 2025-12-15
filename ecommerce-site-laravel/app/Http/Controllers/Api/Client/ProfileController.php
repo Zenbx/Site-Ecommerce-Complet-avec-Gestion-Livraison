@@ -24,6 +24,11 @@ use Illuminate\Validation\Rules\Password;
  * Architecture :
  * Ce controller utilise l'injection de dépendances pour le NotificationService.
  * Il utilise également plusieurs helpers pour formater les données.
+ *
+ * @OA\Tag(
+ *     name="Client Profile",
+ *     description="Client profile management"
+ * )
  */
 class ProfileController extends Controller
 {
@@ -42,8 +47,29 @@ class ProfileController extends Controller
      * 
      * GET /api/client/profile
      * 
-     * Cette méthode retourne toutes les informations du profil client,
-     * enrichies avec des statistiques calculées et des données formatées.
+     * @OA\Get(
+     *      path="/api/client/profile",
+     *      operationId="getClientProfile",
+     *      tags={"Client Profile"},
+     *      summary="Get client profile",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Client profile details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="id", type="integer"),
+     *                  @OA\Property(property="name", type="string"),
+     *                  @OA\Property(property="email", type="string"),
+     *                  @OA\Property(property="address", type="string"),
+     *                  @OA\Property(property="profile_picture", type="string"),
+     *                  @OA\Property(property="statistics", type="object"),
+     *                  @OA\Property(property="member_since", type="string")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function show(Request $request): JsonResponse
     {
@@ -95,8 +121,31 @@ class ProfileController extends Controller
      * 
      * PUT /api/client/profile
      * 
-     * Cette méthode permet au client de modifier son nom, son email,
-     * son téléphone et son adresse.
+     * @OA\Put(
+     *      path="/api/client/profile",
+     *      operationId="updateClientProfile",
+     *      tags={"Client Profile"},
+     *      summary="Update client profile",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="name", type="string"),
+     *              @OA\Property(property="email", type="string"),
+     *              @OA\Property(property="phone", type="string"),
+     *              @OA\Property(property="address", type="string")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Profile updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Profil mis à jour avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Client")
+     *          )
+     *      )
+     * )
      */
     public function update(Request $request): JsonResponse
     {
@@ -150,7 +199,33 @@ class ProfileController extends Controller
      * 
      * POST /api/client/profile/photo
      * 
-     * Cette méthode gère l'upload d'une nouvelle photo de profil.
+     * @OA\Post(
+     *      path="/api/client/profile/photo",
+     *      operationId="updateClientPhoto",
+     *      tags={"Client Profile"},
+     *      summary="Update profile photo",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\MediaType(
+     *              mediaType="multipart/form-data",
+     *              @OA\Schema(
+     *                  @OA\Property(property="photo", type="string", format="binary")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Photo updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Photo de profil mise à jour"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="profile_picture", type="string")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function updatePhoto(Request $request): JsonResponse
     {
@@ -184,9 +259,29 @@ class ProfileController extends Controller
      * 
      * PUT /api/client/profile/password
      * 
-     * Cette méthode permet au client de changer son mot de passe.
-     * Elle vérifie que le mot de passe actuel est correct avant
-     * d'autoriser le changement.
+     * @OA\Put(
+     *      path="/api/client/profile/password",
+     *      operationId="changeClientPassword",
+     *      tags={"Client Profile"},
+     *      summary="Change password",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="current_password", type="string"),
+     *              @OA\Property(property="new_password", type="string"),
+     *              @OA\Property(property="new_password_confirmation", type="string")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Password changed",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Mot de passe modifié avec succès")
+     *          )
+     *      )
+     * )
      */
     public function changePassword(Request $request): JsonResponse
     {
@@ -235,8 +330,27 @@ class ProfileController extends Controller
      * 
      * GET /api/client/profile/orders
      * 
-     * Cette méthode retourne toutes les commandes du client
-     * avec pagination et filtres optionnels.
+     * @OA\Get(
+     *      path="/api/client/profile/orders",
+     *      operationId="getClientOrderHistory",
+     *      tags={"Client Profile"},
+     *      summary="Get order history",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="page", in="query", description="Page number", required=false, @OA\Schema(type="integer", default=1)),
+     *      @OA\Parameter(name="per_page", in="query", description="Items per page", required=false, @OA\Schema(type="integer", default=10)),
+     *      @OA\Parameter(name="status", in="query", description="Filter by status", required=false, @OA\Schema(type="string")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Order history",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="orders", type="array", @OA\Items(ref="#/components/schemas/Order")),
+     *                  @OA\Property(property="pagination", type="object")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function orderHistory(Request $request): JsonResponse
     {

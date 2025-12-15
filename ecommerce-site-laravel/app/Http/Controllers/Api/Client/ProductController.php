@@ -15,11 +15,11 @@ use Illuminate\Support\Facades\Cache;
  * Ce controller fournit les endpoints publics pour consulter le catalogue.
  * Les clients peuvent lister les produits, rechercher, filtrer par catégorie,
  * et voir les détails des produits.
- * 
- * Performance :
- * Ce controller utilise intensivement le cache car le catalogue est consulté
- * très fréquemment mais change relativement peu. Mettre en cache les listes
- * de produits améliore considérablement les performances.
+ *
+ * @OA\Tag(
+ *     name="Catalog",
+ *     description="Public product catalog and categories"
+ * )
  */
 class ProductController extends Controller
 {
@@ -28,18 +28,35 @@ class ProductController extends Controller
      * 
      * GET /api/client/products
      * 
-     * Query params :
-     * - page : numéro de page (pagination)
-     * - per_page : nombre d'éléments par page
-     * - search : terme de recherche dans nom et description
-     * - category_id : filtrer par catégorie
-     * - min_price : prix minimum
-     * - max_price : prix maximum
-     * - sort_by : price, name, popularity, newest
-     * - sort_order : asc, desc
-     * 
-     * Cette méthode montre comment gérer des filtres et une recherche
-     * complexes tout en gardant le code lisible et performant.
+     * @OA\Get(
+     *      path="/api/client/products",
+     *      operationId="getProducts",
+     *      tags={"Catalog"},
+     *      summary="List products",
+     *      description="Get a paginated list of products with optional filters.",
+     *      @OA\Parameter(name="page", in="query", description="Page number", required=false, @OA\Schema(type="integer", default=1)),
+     *      @OA\Parameter(name="per_page", in="query", description="Items per page", required=false, @OA\Schema(type="integer", default=20)),
+     *      @OA\Parameter(name="search", in="query", description="Search term", required=false, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="category_id", in="query", description="Filter by category ID", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="min_price", in="query", description="Minimum price", required=false, @OA\Schema(type="number")),
+     *      @OA\Parameter(name="max_price", in="query", description="Maximum price", required=false, @OA\Schema(type="number")),
+     *      @OA\Parameter(name="sort_by", in="query", description="Sort field (price, name, created_at)", required=false, @OA\Schema(type="string", default="created_at")),
+     *      @OA\Parameter(name="sort_order", in="query", description="Sort order (asc, desc)", required=false, @OA\Schema(type="string", default="desc")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="List of products",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="products", type="array", @OA\Items(ref="#/components/schemas/Product")),
+     *              @OA\Property(property="pagination", type="object",
+     *                  @OA\Property(property="current_page", type="integer", example=1),
+     *                  @OA\Property(property="total", type="integer", example=50),
+     *                  @OA\Property(property="per_page", type="integer", example=20),
+     *                  @OA\Property(property="last_page", type="integer", example=3)
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function index(Request $request): JsonResponse
     {
@@ -145,8 +162,23 @@ class ProductController extends Controller
      * 
      * GET /api/client/products/{id}
      * 
-     * Cette méthode retourne toutes les informations détaillées d'un produit,
-     * incluant ses spécifications, ses avis clients, et des produits similaires.
+     * @OA\Get(
+     *      path="/api/client/products/{id}",
+     *      operationId="getProduct",
+     *      tags={"Catalog"},
+     *      summary="Get product details",
+     *      description="Get detailed information about a specific product.",
+     *      @OA\Parameter(name="id", in="path", description="Product ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Product details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/Product")
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="Product not found")
+     * )
      */
     public function show(Product $product): JsonResponse
     {
@@ -213,9 +245,23 @@ class ProductController extends Controller
      * 
      * GET /api/client/products/search
      * 
-     * Cette méthode est optimisée pour l'autocomplete dans l'interface.
-     * Elle retourne rapidement des résultats partiels pour afficher
-     * des suggestions pendant que l'utilisateur tape.
+     * @OA\Get(
+     *      path="/api/client/products/search",
+     *      operationId="searchProducts",
+     *      tags={"Catalog"},
+     *      summary="Quick search products",
+     *      description="Optimized search for autocomplete.",
+     *      @OA\Parameter(name="q", in="query", description="Search query (min 2 chars)", required=true, @OA\Schema(type="string")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Search results",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Product"))
+     *          )
+     *      ),
+     *      @OA\Response(response=400, description="Invalid query")
+     * )
      */
     public function search(Request $request): JsonResponse
     {
@@ -263,8 +309,21 @@ class ProductController extends Controller
      * 
      * GET /api/client/categories
      * 
-     * Cette méthode retourne la liste des catégories avec le nombre
-     * de produits disponibles dans chacune.
+     * @OA\Get(
+     *      path="/api/client/categories",
+     *      operationId="getCategories",
+     *      tags={"Catalog"},
+     *      summary="List categories",
+     *      description="Get all categories with product counts.",
+     *      @OA\Response(
+     *          response=200,
+     *          description="List of categories",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Category"))
+     *          )
+     *      )
+     * )
      */
     public function categories(): JsonResponse
     {
@@ -293,7 +352,22 @@ class ProductController extends Controller
      * 
      * GET /api/client/products/popular
      * 
-     * Cette méthode retourne les produits les plus vendus récemment.
+     * @OA\Get(
+     *      path="/api/client/products/popular",
+     *      operationId="getPopularProducts",
+     *      tags={"Catalog"},
+     *      summary="Get popular products",
+     *      description="Get most sold products recently.",
+     *      @OA\Parameter(name="limit", in="query", description="Number of products", required=false, @OA\Schema(type="integer", default=10)),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Popular products",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Product"))
+     *          )
+     *      )
+     * )
      */
     public function popular(Request $request): JsonResponse
     {

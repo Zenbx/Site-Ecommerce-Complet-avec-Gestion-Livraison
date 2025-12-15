@@ -19,6 +19,11 @@ use Illuminate\Support\Facades\DB;
  * de finaliser leur commande. Ce controller gère toutes les opérations
  * sur le panier : ajouter des produits, modifier les quantités, retirer
  * des produits, et vider complètement le panier.
+ *
+ * @OA\Tag(
+ *     name="Client Cart",
+ *     description="Shopping cart management"
+ * )
  */
 class CartController extends Controller
 {
@@ -27,12 +32,35 @@ class CartController extends Controller
      * 
      * GET /api/client/cart
      * 
-     * Un client ne peut avoir qu'un seul panier ACTIVE à la fois.
-     * Si le client n'a pas encore de panier actif, cette méthode
-     * en crée un automatiquement.
-     * 
-     * @param Request $request
-     * @return JsonResponse
+     * @OA\Get(
+     *      path="/api/client/cart",
+     *      operationId="getCart",
+     *      tags={"Client Cart"},
+     *      summary="Get active cart",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Cart details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="cart", ref="#/components/schemas/Cart"),
+     *                  @OA\Property(property="items", type="array", @OA\Items(
+     *                      @OA\Property(property="id", type="integer"),
+     *                      @OA\Property(property="product", type="object"),
+     *                      @OA\Property(property="quantity", type="integer"),
+     *                      @OA\Property(property="unit_price", type="string"),
+     *                      @OA\Property(property="subtotal", type="string")
+     *                  )),
+     *                  @OA\Property(property="summary", type="object",
+     *                      @OA\Property(property="items_count", type="integer"),
+     *                      @OA\Property(property="subtotal", type="string"),
+     *                      @OA\Property(property="total", type="string")
+     *                  )
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function show(Request $request): JsonResponse
     {
@@ -97,8 +125,29 @@ class CartController extends Controller
      * 
      * POST /api/client/cart/items
      * 
-     * @param Request $request
-     * @return JsonResponse
+     * @OA\Post(
+     *      path="/api/client/cart/items",
+     *      operationId="addToCart",
+     *      tags={"Client Cart"},
+     *      summary="Add item to cart",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="product_id", type="integer", example=1),
+     *              @OA\Property(property="quantity", type="integer", example=1)
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Item added to cart",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Produit ajouté au panier"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Cart")
+     *          )
+     *      )
+     * )
      */
     public function addItem(Request $request): JsonResponse
     {
@@ -200,9 +249,29 @@ class CartController extends Controller
      * 
      * PATCH /api/client/cart/items/{cartLine}
      * 
-     * @param Request $request
-     * @param CartLine $cartLine
-     * @return JsonResponse
+     * @OA\Patch(
+     *      path="/api/client/cart/items/{cartLine}",
+     *      operationId="updateCartItem",
+     *      tags={"Client Cart"},
+     *      summary="Update cart item quantity",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="cartLine", in="path", description="Cart Line ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="quantity", type="integer", example=2)
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Cart item updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Quantité mise à jour"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Cart")
+     *          )
+     *      )
+     * )
      */
     public function updateItem(Request $request, CartLine $cartLine): JsonResponse
     {
@@ -248,9 +317,23 @@ class CartController extends Controller
      * 
      * DELETE /api/client/cart/items/{cartLine}
      * 
-     * @param Request $request
-     * @param CartLine $cartLine
-     * @return JsonResponse
+     * @OA\Delete(
+     *      path="/api/client/cart/items/{cartLine}",
+     *      operationId="removeCartItem",
+     *      tags={"Client Cart"},
+     *      summary="Remove item from cart",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="cartLine", in="path", description="Cart Line ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Item removed",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Article retiré du panier"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Cart")
+     *          )
+     *      )
+     * )
      */
     public function removeItem(Request $request, CartLine $cartLine): JsonResponse
     {
@@ -284,8 +367,21 @@ class CartController extends Controller
      * 
      * DELETE /api/client/cart
      * 
-     * @param Request $request
-     * @return JsonResponse
+     * @OA\Delete(
+     *      path="/api/client/cart",
+     *      operationId="clearCart",
+     *      tags={"Client Cart"},
+     *      summary="Clear cart",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Cart cleared",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Panier vidé avec succès")
+     *          )
+     *      )
+     * )
      */
     public function clear(Request $request): JsonResponse
     {

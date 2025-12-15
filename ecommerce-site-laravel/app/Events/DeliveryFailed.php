@@ -1,10 +1,5 @@
 <?php
 
-// ============================================
-// 6. DELIVERY FAILED EVENT
-// app/Events/DeliveryFailed.php
-// ============================================
-
 namespace App\Events;
 
 use App\Models\Delivery;

@@ -1,10 +1,5 @@
 <?php
 
-// ============================================
-// 2. ORDER CANCELLED EVENT
-// app/Events/OrderCancelled.php
-// ============================================
-
 namespace App\Events;
 
 use App\Models\Order;

@@ -7,6 +7,21 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+
+/**
+ * @OA\Schema(
+ *     schema="Admin",
+ *     type="object",
+ *     title="Admin",
+ *     description="Administrateur du système",
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="name", type="string", example="Admin Product"),
+ *     @OA\Property(property="email", type="string", example="admin@example.com"),
+ *     @OA\Property(property="role", type="string", enum={"ADMIN", "GESTIONNAIRE", "SUPERVISEUR"}, example="ADMIN"),
+ *     @OA\Property(property="created_at", type="string", format="date-time"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time")
+ * )
+ */
 class Admin extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;

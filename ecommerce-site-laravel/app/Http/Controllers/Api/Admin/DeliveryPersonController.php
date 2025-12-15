@@ -18,6 +18,11 @@ use Illuminate\Validation\Rule;
  * - Modifier les informations des livreurs
  * - Activer/désactiver des livreurs
  * - Suivre les performances et la disponibilité
+ *
+ * @OA\Tag(
+ *     name="Admin Delivery People",
+ *     description="Delivery person management"
+ * )
  */
 class DeliveryPersonController extends Controller
 {
@@ -26,10 +31,24 @@ class DeliveryPersonController extends Controller
      * 
      * GET /api/admin/delivery-persons
      * 
-     * Paramètres de requête acceptés :
-     * - is_available : filtrer par disponibilité (true/false)
-     * - search : rechercher par nom ou email
-     * - sort_by : trier par (name, created_at, deliveries_count)
+     * @OA\Get(
+     *      path="/api/admin/delivery-persons",
+     *      operationId="getDeliveryPeople",
+     *      tags={"Admin Delivery People"},
+     *      summary="List delivery people",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="is_available", in="query", description="Filter by availability", required=false, @OA\Schema(type="boolean")),
+     *      @OA\Parameter(name="search", in="query", description="Search by name or email", required=false, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="sort_by", in="query", description="Sort by field", required=false, @OA\Schema(type="string")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="List of delivery people",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/DeliveryPerson"))
+     *          )
+     *      )
+     * )
      */
     public function index(Request $request): JsonResponse
     {
@@ -101,6 +120,27 @@ class DeliveryPersonController extends Controller
      * Crée un nouveau livreur dans le système
      * 
      * POST /api/admin/delivery-persons
+     * 
+     * @OA\Post(
+     *      path="/api/admin/delivery-persons",
+     *      operationId="createDeliveryPerson",
+     *      tags={"Admin Delivery People"},
+     *      summary="Create delivery person",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/DeliveryPerson")
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Delivery person created",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livreur créé avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/DeliveryPerson")
+     *          )
+     *      )
+     * )
      */
     public function store(Request $request): JsonResponse
     {
@@ -127,6 +167,24 @@ class DeliveryPersonController extends Controller
      * Affiche les détails complets d'un livreur
      * 
      * GET /api/admin/delivery-persons/{deliveryPerson}
+     * 
+     * @OA\Get(
+     *      path="/api/admin/delivery-persons/{deliveryPerson}",
+     *      operationId="getDeliveryPerson",
+     *      tags={"Admin Delivery People"},
+     *      summary="Get delivery person details",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="deliveryPerson", in="path", description="Delivery Person ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery person details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/DeliveryPerson")
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="Delivery person not found")
+     * )
      */
     public function show(DeliveryPerson $deliveryPerson): JsonResponse
     {
@@ -156,6 +214,28 @@ class DeliveryPersonController extends Controller
      * Met à jour les informations d'un livreur
      * 
      * PUT/PATCH /api/admin/delivery-persons/{deliveryPerson}
+     * 
+     * @OA\Put(
+     *      path="/api/admin/delivery-persons/{deliveryPerson}",
+     *      operationId="updateDeliveryPerson",
+     *      tags={"Admin Delivery People"},
+     *      summary="Update delivery person",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="deliveryPerson", in="path", description="Delivery Person ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/DeliveryPerson")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery person updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livreur mis à jour avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/DeliveryPerson")
+     *          )
+     *      )
+     * )
      */
     public function update(Request $request, DeliveryPerson $deliveryPerson): JsonResponse
     {
@@ -196,6 +276,23 @@ class DeliveryPersonController extends Controller
      * Supprime ou désactive un livreur
      * 
      * DELETE /api/admin/delivery-persons/{deliveryPerson}
+     * 
+     * @OA\Delete(
+     *      path="/api/admin/delivery-persons/{deliveryPerson}",
+     *      operationId="deleteDeliveryPerson",
+     *      tags={"Admin Delivery People"},
+     *      summary="Delete delivery person",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="deliveryPerson", in="path", description="Delivery Person ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery person deleted",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livreur supprimé avec succès")
+     *          )
+     *      )
+     * )
      */
     public function destroy(DeliveryPerson $deliveryPerson): JsonResponse
     {

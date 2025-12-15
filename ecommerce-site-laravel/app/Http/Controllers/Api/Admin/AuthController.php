@@ -22,13 +22,36 @@ class AuthController extends Controller
 {
     /**
      * Connecter un administrateur
-     * 
-     * Cette méthode reçoit un email et un mot de passe, vérifie les credentials,
-     * et si tout est valide, génère un token Sanctum qui permet à l'admin
-     * d'accéder aux routes protégées.
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     *
+     * @OA\Post(
+     *      path="/api/auth/admin/login",
+     *      operationId="loginAdmin",
+     *      tags={"Authentication"},
+     *      summary="Login admin",
+     *      description="Authenticate an admin and return an access token.",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"email", "password"},
+     *              @OA\Property(property="email", type="string", format="email", example="admin@ecommerce.com"),
+     *              @OA\Property(property="password", type="string", format="password", example="secret123")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Login successful",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Connexion réussie"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="admin", ref="#/components/schemas/Admin"),
+     *                  @OA\Property(property="token", type="string", example="1|AbCdEf123456..."),
+     *                  @OA\Property(property="token_type", type="string", example="Bearer")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(response=401, description="Invalid credentials")
+     * )
      */
     public function login(LoginRequest $request)
     {
@@ -86,12 +109,22 @@ class AuthController extends Controller
 
     /**
      * Déconnecter l'administrateur actuellement authentifié
-     * 
-     * Cette méthode supprime le token actuel de l'admin, ce qui le déconnecte
-     * effectivement. Le token ne sera plus valide pour les requêtes futures.
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     *
+     * @OA\Post(
+     *      path="/api/auth/admin/logout",
+     *      operationId="logoutAdmin",
+     *      tags={"Authentication"},
+     *      summary="Logout admin",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Logout successful",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Déconnexion réussie")
+     *          )
+     *      )
+     * )
      */
     public function logout(Request $request)
     {
@@ -113,16 +146,22 @@ class AuthController extends Controller
 
     /**
      * Récupérer le profil de l'administrateur actuellement authentifié
-     * 
-     * Cette méthode est typiquement appelée par le frontend pour obtenir
-     * les informations de l'utilisateur connecté, par exemple pour afficher
-     * son nom dans la barre de navigation.
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    /**
-     * Récupérer le profil de l'admin connecté
+     *
+     * @OA\Get(
+     *      path="/api/auth/admin/me",
+     *      operationId="meAdmin",
+     *      tags={"Authentication"},
+     *      summary="Get admin profile",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Admin profile retrieved",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/Admin")
+     *          )
+     *      )
+     * )
      */
     public function me(Request $request)
     {

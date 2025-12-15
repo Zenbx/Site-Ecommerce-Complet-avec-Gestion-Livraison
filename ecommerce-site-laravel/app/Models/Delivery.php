@@ -5,6 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @OA\Schema(
+ *     schema="Delivery",
+ *     required={"order_id"},
+ *     @OA\Property(property="id", type="integer", readOnly=true, example=500),
+ *     @OA\Property(property="order_id", type="integer", example=101),
+ *     @OA\Property(property="delivery_person_id", type="integer", nullable=true, example=5),
+ *     @OA\Property(property="status", type="string", enum={"PENDING", "ASSIGNED", "PICKED_UP", "IN_TRANSIT", "DELIVERED", "FAILED"}, example="PENDING"),
+ *     @OA\Property(property="tracking_code", type="string", example="TRK-12345678"),
+ *     @OA\Property(property="pickup_time", type="string", format="date-time", nullable=true),
+ *     @OA\Property(property="delivered_time", type="string", format="date-time", nullable=true),
+ *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true)
+ * )
+ */
 class Delivery extends Model
 {
     use HasFactory;

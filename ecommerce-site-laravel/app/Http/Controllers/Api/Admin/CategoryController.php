@@ -1,10 +1,5 @@
 <?php
 
-// ============================================
-// 4. CATEGORY CONTROLLER
-// app/Http/Controllers/CategoryController.php
-// ============================================
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -15,10 +10,39 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Controller pour la gestion des catégories par les administrateurs
+ * 
+ * Permet de créer, modifier, supprimer et lister les catégories de produits.
+ * Les catégories servent à organiser le catalogue pour les clients.
+ *
+ * @OA\Tag(
+ *     name="Admin Categories",
+ *     description="Category management for admins"
+ * )
+ */
 class CategoryController extends Controller
 {
     /**
-     * LISTE DES CATÉGORIES
+     * Liste toutes les catégories
+     * 
+     * GET /api/admin/categories
+     * 
+     * @OA\Get(
+     *      path="/api/admin/categories",
+     *      operationId="getAdminCategories",
+     *      tags={"Admin Categories"},
+     *      summary="List categories (Admin)",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="List of categories",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Category"))
+     *          )
+     *      )
+     * )
      */
     public function index(Request $request)
     {
@@ -56,6 +80,26 @@ class CategoryController extends Controller
 
     /**
      * DÉTAILS D'UNE CATÉGORIE
+     * 
+     * GET /api/admin/categories/{category}
+     * 
+     * @OA\Get(
+     *      path="/api/admin/categories/{id}",
+     *      operationId="getAdminCategory",
+     *      tags={"Admin Categories"},
+     *      summary="Get category details",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Category ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Category details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/Category")
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="Category not found")
+     * )
      */
     public function show($id)
     {
@@ -98,6 +142,29 @@ class CategoryController extends Controller
 
     /**
      * CRÉER UNE CATÉGORIE
+     * 
+     * POST /api/admin/categories
+     * 
+     * @OA\Post(
+     *      path="/api/admin/categories",
+     *      operationId="createCategory",
+     *      tags={"Admin Categories"},
+     *      summary="Create category",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/Category")
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Category created",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Catégorie créée avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Category")
+     *          )
+     *      )
+     * )
      */
     public function store(Request $request)
     {
@@ -136,6 +203,30 @@ class CategoryController extends Controller
 
     /**
      * MODIFIER UNE CATÉGORIE
+     * 
+     * PUT/PATCH /api/admin/categories/{category}
+     * 
+     * @OA\Put(
+     *      path="/api/admin/categories/{id}",
+     *      operationId="updateCategory",
+     *      tags={"Admin Categories"},
+     *      summary="Update category",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Category ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/Category")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Category updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Catégorie mise à jour avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Category")
+     *          )
+     *      )
+     * )
      */
     public function update(Request $request, $id)
     {
@@ -193,6 +284,25 @@ class CategoryController extends Controller
 
     /**
      * SUPPRIMER UNE CATÉGORIE
+     * 
+     * DELETE /api/admin/categories/{category}
+     * 
+     * @OA\Delete(
+     *      path="/api/admin/categories/{id}",
+     *      operationId="deleteCategory",
+     *      tags={"Admin Categories"},
+     *      summary="Delete category",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="id", in="path", description="Category ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Category deleted",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Catégorie supprimée avec succès")
+     *          )
+     *      )
+     * )
      */
     public function destroy($id)
     {

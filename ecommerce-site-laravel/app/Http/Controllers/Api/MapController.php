@@ -50,26 +50,34 @@ class MapController extends Controller
      * 
      * POST /api/map/geocode
      * 
-     * Body JSON:
-     * {
-     *   "address": "123 Main Street, Douala, Cameroun"
-     * }
-     * 
-     * Response 200:
-     * {
-     *   "success": true,
-     *   "data": {
-     *     "latitude": 4.0511,
-     *     "longitude": 9.7679,
-     *     "display_name": "123 Main Street, Akwa, Douala, Littoral, Cameroun",
-     *     "address_details": {...}
-     *   }
-     * }
-     * 
-     * Cas d'usage typique :
-     * Quand un client entre son adresse de livraison sous forme de texte,
-     * nous devons la convertir en coordonnées GPS précises pour pouvoir
-     * calculer des itinéraires et afficher la position sur une carte.
+     * @OA\Post(
+     *      path="/api/map/geocode",
+     *      operationId="geocodeAddress",
+     *      tags={"Map"},
+     *      summary="Geocode address",
+     *      description="Convert text address to GPS coordinates",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"address"},
+     *              @OA\Property(property="address", type="string", example="123 Main Street, Douala, Cameroun")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Geocoding successful",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="latitude", type="number", format="float"),
+     *                  @OA\Property(property="longitude", type="number", format="float"),
+     *                  @OA\Property(property="display_name", type="string"),
+     *                  @OA\Property(property="address_details", type="object")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="Address not found")
+     * )
      */
     public function geocode(Request $request): JsonResponse
     {
@@ -106,38 +114,44 @@ class MapController extends Controller
      * 
      * POST /api/map/route
      * 
-     * Body JSON:
-     * {
-     *   "start": {
-     *     "latitude": 4.0500,
-     *     "longitude": 9.7650
-     *   },
-     *   "end": {
-     *     "latitude": 4.0511,
-     *     "longitude": 9.7679
-     *   },
-     *   "profile": "driving"  // optionnel: driving, walking, cycling
-     * }
-     * 
-     * Response 200:
-     * {
-     *   "success": true,
-     *   "data": {
-     *     "distance": 1523.5,
-     *     "distance_text": "1.5 km",
-     *     "duration": 287,
-     *     "duration_text": "5 minutes",
-     *     "geometry": [[9.7650, 4.0500], [9.7652, 4.0502], ...],
-     *     "steps": [...],
-     *     "bounds": {...}
-     *   }
-     * }
-     * 
-     * Cas d'usage typique :
-     * Quand un livreur ouvre les détails d'une livraison dans son app mobile,
-     * celle-ci appelle cet endpoint pour obtenir l'itinéraire depuis sa position
-     * actuelle jusqu'à l'adresse de livraison. L'app affiche ensuite cet
-     * itinéraire sur une carte Leaflet et peut guider le livreur pas à pas.
+     * @OA\Post(
+     *      path="/api/map/route",
+     *      operationId="calculateRoute",
+     *      tags={"Map"},
+     *      summary="Calculate route",
+     *      description="Calculate optimal route between two points",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"start", "end"},
+     *              @OA\Property(property="start", type="object",
+     *                  @OA\Property(property="latitude", type="number", format="float"),
+     *                  @OA\Property(property="longitude", type="number", format="float")
+     *              ),
+     *              @OA\Property(property="end", type="object",
+     *                  @OA\Property(property="latitude", type="number", format="float"),
+     *                  @OA\Property(property="longitude", type="number", format="float")
+     *              ),
+     *              @OA\Property(property="profile", type="string", enum={"driving", "walking", "cycling"}, default="driving")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Route calculated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="distance", type="number", format="float"),
+     *                  @OA\Property(property="distance_text", type="string"),
+     *                  @OA\Property(property="duration", type="integer"),
+     *                  @OA\Property(property="duration_text", type="string"),
+     *                  @OA\Property(property="geometry", type="array", @OA\Items(type="array", @OA\Items(type="number"))),
+     *                  @OA\Property(property="steps", type="array", @OA\Items(type="object"))
+     *              ),
+     *              @OA\Property(property="meta", type="object")
+     *          )
+     *      )
+     * )
      */
     public function calculateRoute(Request $request): JsonResponse
     {
@@ -183,25 +197,38 @@ class MapController extends Controller
      * 
      * POST /api/map/distance
      * 
-     * Body JSON:
-     * {
-     *   "point1": {"latitude": 4.0500, "longitude": 9.7650},
-     *   "point2": {"latitude": 4.0511, "longitude": 9.7679}
-     * }
-     * 
-     * Response 200:
-     * {
-     *   "success": true,
-     *   "data": {
-     *     "distance": 1234.56,
-     *     "distance_text": "1.2 km"
-     *   }
-     * }
-     * 
-     * Cas d'usage typique :
-     * Calcul rapide de distance sans avoir besoin d'un itinéraire complet.
-     * Utile pour vérifier si un livreur est proche de sa destination (< 100m)
-     * ou pour trier les livreurs disponibles par distance à une nouvelle livraison.
+     * @OA\Post(
+     *      path="/api/map/distance",
+     *      operationId="calculateDistance",
+     *      tags={"Map"},
+     *      summary="Calculate distance",
+     *      description="Calculate straight line distance between two points",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"point1", "point2"},
+     *              @OA\Property(property="point1", type="object",
+     *                  @OA\Property(property="latitude", type="number", format="float"),
+     *                  @OA\Property(property="longitude", type="number", format="float")
+     *              ),
+     *              @OA\Property(property="point2", type="object",
+     *                  @OA\Property(property="latitude", type="number", format="float"),
+     *                  @OA\Property(property="longitude", type="number", format="float")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Distance calculated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="distance", type="number", format="float"),
+     *                  @OA\Property(property="distance_text", type="string")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function calculateDistance(Request $request): JsonResponse
     {

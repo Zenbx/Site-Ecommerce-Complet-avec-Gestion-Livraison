@@ -5,6 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @OA\Schema(
+ *     schema="Product",
+ *     required={"name", "price", "quantity", "category_id"},
+ *     @OA\Property(property="id", type="integer", readOnly=true, example=1),
+ *     @OA\Property(property="name", type="string", example="Smartphone X"),
+ *     @OA\Property(property="description", type="string", example="Latest model with high res camera..."),
+ *     @OA\Property(property="price", type="number", format="float", example=999.99),
+ *     @OA\Property(property="quantity", type="integer", example=50),
+ *     @OA\Property(property="category_id", type="integer", example=2),
+ *     @OA\Property(property="image_url", type="string", example="http://example.com/image.jpg"),
+ *     @OA\Property(property="is_active", type="boolean", example=true),
+ *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true)
+ * )
+ */
 class Product extends Model
 {
     use HasFactory;

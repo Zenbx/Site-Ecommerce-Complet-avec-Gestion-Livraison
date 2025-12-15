@@ -19,6 +19,11 @@ use Illuminate\Support\Str;
  * Ce controller donne aux admins un contrôle total sur toutes les commandes
  * du système : consultation, modification de statut, assignation de livraisons,
  * génération de rapports, etc.
+ *
+ * @OA\Tag(
+ *     name="Admin Orders",
+ *     description="Order management for admins"
+ * )
  */
 class OrderController extends Controller
 {
@@ -26,6 +31,32 @@ class OrderController extends Controller
      * Liste toutes les commandes avec filtres et recherche
      * 
      * GET /api/admin/orders
+     *
+     * @OA\Get(
+     *      path="/api/admin/orders",
+     *      operationId="getAdminOrders",
+     *      tags={"Admin Orders"},
+     *      summary="List orders (Admin)",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="page", in="query", description="Page number", required=false, @OA\Schema(type="integer", default=1)),
+     *      @OA\Parameter(name="per_page", in="query", description="Items per page", required=false, @OA\Schema(type="integer", default=25)),
+     *      @OA\Parameter(name="status", in="query", description="Filter by status", required=false, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="payment_status", in="query", description="Filter by payment status", required=false, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="client_id", in="query", description="Filter by client ID", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="date_from", in="query", description="Date from (YYYY-MM-DD)", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="date_to", in="query", description="Date to (YYYY-MM-DD)", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="search", in="query", description="Search by order ID or client info", required=false, @OA\Schema(type="string")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="List of orders",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Order")),
+     *              @OA\Property(property="meta", type="object"),
+     *              @OA\Property(property="statistics", type="object")
+     *          )
+     *      )
+     * )
      */
     public function index(Request $request): JsonResponse
     {
@@ -109,6 +140,24 @@ class OrderController extends Controller
      * Affiche les détails complets d'une commande
      * 
      * GET /api/admin/orders/{order}
+     *
+     * @OA\Get(
+     *      path="/api/admin/orders/{order}",
+     *      operationId="getAdminOrder",
+     *      tags={"Admin Orders"},
+     *      summary="Get order details (Admin)",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="order", in="path", description="Order ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Order details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/Order")
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="Order not found")
+     * )
      */
     public function show(Order $order): JsonResponse
     {
@@ -131,9 +180,32 @@ class OrderController extends Controller
      * 
      * PATCH /api/admin/orders/{order}/status
      * 
-     * Cette méthode permet aux admins de faire progresser manuellement
-     * une commande dans son cycle de vie : de PENDING à CONFIRMED,
-     * de CONFIRMED à PROCESSING, de PROCESSING à SHIPPED, etc.
+     * @OA\Patch(
+     *      path="/api/admin/orders/{order}/status",
+     *      operationId="updateOrderStatus",
+     *      tags={"Admin Orders"},
+     *      summary="Update order status",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="order", in="path", description="Order ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"status"},
+     *              @OA\Property(property="status", type="string", enum={"PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"}),
+     *              @OA\Property(property="note", type="string")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Status updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Statut de commande mis à jour"),
+     *              @OA\Property(property="data", ref="#/components/schemas/Order")
+     *          )
+     *      ),
+     *      @OA\Response(response=400, description="Invalid status transition")
+     * )
      */
     public function updateStatus(Request $request, Order $order): JsonResponse
     {
@@ -217,8 +289,38 @@ class OrderController extends Controller
      * 
      * POST /api/admin/orders/{order}/assign-delivery
      * 
-     * Cette méthode crée un enregistrement Delivery et l'assigne à un livreur
-     * disponible. Elle génère également un code de suivi unique et un token QR.
+     * @OA\Post(
+     *      path="/api/admin/orders/{order}/assign-delivery",
+     *      operationId="assignDelivery",
+     *      tags={"Admin Orders"},
+     *      summary="Assign delivery driver",
+     *      description="Create a delivery entry and assign a driver.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="order", in="path", description="Order ID", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"delivery_person_id", "delivery_address"},
+     *              @OA\Property(property="delivery_person_id", type="integer", example=5),
+     *              @OA\Property(property="delivery_address", type="string", example="123 Main St, City"),
+     *              @OA\Property(property="scheduled_date", type="string", format="date", example="2023-12-25"),
+     *              @OA\Property(property="notes", type="string")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Delivery assigned",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Livraison assignée avec succès"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="delivery_id", type="integer"),
+     *                  @OA\Property(property="tracking_code", type="string")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(response=400, description="Delivery already assigned or driver unavailable")
+     * )
      */
     public function assignDelivery(Request $request, Order $order): JsonResponse
     {

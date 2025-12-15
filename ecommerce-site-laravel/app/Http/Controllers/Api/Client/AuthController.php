@@ -11,6 +11,11 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Controller d'authentification pour les clients
+ * 
+ * @OA\Tag(
+ *     name="Authentication",
+ *     description="API Endpoints for user authentication"
+ * )
  */
 class AuthController extends Controller
 {
@@ -19,6 +24,42 @@ class AuthController extends Controller
      * 
      * Contrairement aux admins qui sont créés manuellement par un super-admin,
      * les clients peuvent s'inscrire eux-mêmes via cette méthode.
+     *
+     * @OA\Post(
+     *      path="/api/auth/client/register",
+     *      operationId="registerClient",
+     *      tags={"Authentication"},
+     *      summary="Register a new client",
+     *      description="Create a new client account and return an access token.",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"name", "email", "password", "address"},
+     *              @OA\Property(property="name", type="string", example="John Doe"),
+     *              @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *              @OA\Property(property="password", type="string", format="password", example="secret123"),
+     *              @OA\Property(property="address", type="string", example="123 Main St, City")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Client registered successfully",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Inscription réussie"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="client", type="object",
+     *                      @OA\Property(property="id", type="integer", example=1),
+     *                      @OA\Property(property="name", type="string", example="John Doe"),
+     *                      @OA\Property(property="email", type="string", example="john@example.com")
+     *                  ),
+     *                  @OA\Property(property="token", type="string", example="1|AbCdEf123456..."),
+     *                  @OA\Property(property="token_type", type="string", example="Bearer")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(response=422, description="Validation error")
+     * )
      */
     public function register(RegisterRequest $request)
     {
@@ -53,6 +94,40 @@ class AuthController extends Controller
 
     /**
      * Connecter un client
+     *
+     * @OA\Post(
+     *      path="/api/auth/client/login",
+     *      operationId="loginClient",
+     *      tags={"Authentication"},
+     *      summary="Login client",
+     *      description="Authenticate a client and return an access token.",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"email", "password"},
+     *              @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *              @OA\Property(property="password", type="string", format="password", example="secret123")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Login successful",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Connexion réussie"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="client", type="object",
+     *                      @OA\Property(property="id", type="integer", example=1),
+     *                      @OA\Property(property="name", type="string", example="John Doe"),
+     *                      @OA\Property(property="email", type="string", example="john@example.com")
+     *                  ),
+     *                  @OA\Property(property="token", type="string", example="1|AbCdEf123456..."),
+     *                  @OA\Property(property="token_type", type="string", example="Bearer")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(response=401, description="Invalid credentials")
+     * )
      */
     public function login(Request $request)
     {
@@ -88,6 +163,23 @@ class AuthController extends Controller
 
     /**
      * Déconnecter le client
+     *
+     * @OA\Post(
+     *      path="/api/auth/client/logout",
+     *      operationId="logoutClient",
+     *      tags={"Authentication"},
+     *      summary="Logout client",
+     *      description="Invalidate the current access token.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Logout successful",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Déconnexion réussie")
+     *          )
+     *      )
+     * )
      */
     public function logout(Request $request)
     {
@@ -101,6 +193,23 @@ class AuthController extends Controller
 
     /**
      * Récupérer le profil du client connecté
+     *
+     * @OA\Get(
+     *      path="/api/auth/client/me",
+     *      operationId="meClient",
+     *      tags={"Authentication"},
+     *      summary="Get client profile",
+     *      description="Retrieve information about the currently authenticated client.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Client profile retrieved",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", ref="#/components/schemas/Client")
+     *          )
+     *      )
+     * )
      */
     public function me(Request $request)
     {

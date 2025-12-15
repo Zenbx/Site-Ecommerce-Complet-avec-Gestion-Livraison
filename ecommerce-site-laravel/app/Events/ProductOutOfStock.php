@@ -1,10 +1,5 @@
 <?php
 
-// ============================================
-// 7. PRODUCT OUT OF STOCK EVENT
-// app/Events/ProductOutOfStock.php
-// ============================================
-
 namespace App\Events;
 
 use App\Models\Product;

@@ -1,10 +1,4 @@
-
 <?php
-
-// ============================================
-// 7. CREATE ORDER REQUEST
-// app/Http/Requests/CreateOrderRequest.php
-// ============================================
 
 namespace App\Http\Requests\Client;
 

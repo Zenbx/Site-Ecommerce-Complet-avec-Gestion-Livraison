@@ -1,10 +1,5 @@
 <?php
 
-// ============================================
-// 5. DELIVERY COMPLETED EVENT
-// app/Events/DeliveryCompleted.php
-// ============================================
-
 namespace App\Events;
 
 use App\Models\Delivery;

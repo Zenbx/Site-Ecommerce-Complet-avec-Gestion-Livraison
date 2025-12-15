@@ -1,10 +1,5 @@
 <?php
 
-// ============================================
-// 8. PAYMENT COMPLETED EVENT
-// app/Events/PaymentCompleted.php
-// ============================================
-
 namespace App\Events;
 
 use App\Models\Payment;

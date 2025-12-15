@@ -1,10 +1,5 @@
 <?php
 
-// ============================================
-// 3. ORDER STATUS UPDATED EVENT
-// app/Events/OrderStatusUpdated.php
-// ============================================
-
 namespace App\Events;
 
 use App\Models\Order;

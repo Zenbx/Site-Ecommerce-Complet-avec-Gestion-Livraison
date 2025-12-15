@@ -1,10 +1,5 @@
 <?php
 
-// ============================================
-// 1. ORDER CREATED EVENT
-// app/Events/OrderCreated.php
-// ============================================
-
 namespace App\Events;
 
 use App\Models\Order;

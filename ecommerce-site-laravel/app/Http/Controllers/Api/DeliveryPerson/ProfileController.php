@@ -23,6 +23,11 @@ use Illuminate\Validation\Rules\Password;
  * Ce controller injecte deux services :
  * - NotificationService pour les notifications
  * - StatisticsService pour calculer les performances du livreur
+ *
+ * @OA\Tag(
+ *     name="DeliveryPerson Profile",
+ *     description="Delivery person profile management"
+ * )
  */
 class ProfileController extends Controller
 {
@@ -48,9 +53,27 @@ class ProfileController extends Controller
      * 
      * GET /api/delivery-person/profile
      * 
-     * Cette méthode retourne non seulement les informations basiques
-     * du livreur, mais aussi ses statistiques de performance calculées
-     * par le StatisticsService.
+     * @OA\Get(
+     *      path="/api/delivery-person/profile",
+     *      operationId="getDeliveryPersonProfile",
+     *      tags={"DeliveryPerson Profile"},
+     *      summary="Get profile details",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Profile details",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="id", type="integer"),
+     *                  @OA\Property(property="name", type="string"),
+     *                  @OA\Property(property="email", type="string"),
+     *                  @OA\Property(property="is_available", type="boolean"),
+     *                  @OA\Property(property="statistics", type="object")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function show(Request $request): JsonResponse
     {
@@ -88,6 +111,32 @@ class ProfileController extends Controller
      * Met à jour le profil du livreur
      * 
      * PUT /api/delivery-person/profile
+     * 
+     * @OA\Put(
+     *      path="/api/delivery-person/profile",
+     *      operationId="updateDeliveryPersonProfile",
+     *      tags={"DeliveryPerson Profile"},
+     *      summary="Update profile",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="name", type="string"),
+     *              @OA\Property(property="email", type="string"),
+     *              @OA\Property(property="phone", type="string"),
+     *              @OA\Property(property="address", type="string")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Profile updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Profil mis à jour avec succès"),
+     *              @OA\Property(property="data", ref="#/components/schemas/DeliveryPerson")
+     *          )
+     *      )
+     * )
      */
     public function update(Request $request): JsonResponse
     {
@@ -140,10 +189,32 @@ class ProfileController extends Controller
      * 
      * PATCH /api/delivery-person/profile/availability
      * 
-     * Cette méthode est cruciale pour que les livreurs puissent indiquer
-     * s'ils sont disponibles pour recevoir de nouvelles livraisons.
-     * Quand un livreur se met indisponible, le système arrête de lui
-     * assigner de nouvelles livraisons.
+     * @OA\Patch(
+     *      path="/api/delivery-person/profile/availability",
+     *      operationId="updateAvailability",
+     *      tags={"DeliveryPerson Profile"},
+     *      summary="Update availability status",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="is_available", type="boolean", example=true),
+     *              @OA\Property(property="reason", type="string", example="Prêt à livrer")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Availability updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="is_available", type="boolean"),
+     *                  @OA\Property(property="updated_at", type="string")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function updateAvailability(Request $request): JsonResponse
     {
@@ -185,6 +256,34 @@ class ProfileController extends Controller
      * Met à jour la photo de profil du livreur
      * 
      * POST /api/delivery-person/profile/photo
+     * 
+     * @OA\Post(
+     *      path="/api/delivery-person/profile/photo",
+     *      operationId="updateDeliveryPersonPhoto",
+     *      tags={"DeliveryPerson Profile"},
+     *      summary="Update profile photo",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\MediaType(
+     *              mediaType="multipart/form-data",
+     *              @OA\Schema(
+     *                  @OA\Property(property="photo", type="string", format="binary")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Photo updated",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Photo de profil mise à jour"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="photo_url", type="string")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function updatePhoto(Request $request): JsonResponse
     {
@@ -213,6 +312,30 @@ class ProfileController extends Controller
      * Change le mot de passe du livreur
      * 
      * PUT /api/delivery-person/profile/password
+     * 
+     * @OA\Put(
+     *      path="/api/delivery-person/profile/password",
+     *      operationId="changeDeliveryPersonPassword",
+     *      tags={"DeliveryPerson Profile"},
+     *      summary="Change password",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="current_password", type="string"),
+     *              @OA\Property(property="new_password", type="string"),
+     *              @OA\Property(property="new_password_confirmation", type="string")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Password changed",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Mot de passe modifié avec succès")
+     *          )
+     *      )
+     * )
      */
     public function changePassword(Request $request): JsonResponse
     {
@@ -258,8 +381,27 @@ class ProfileController extends Controller
      * 
      * GET /api/delivery-person/profile/deliveries
      * 
-     * Cette méthode est similaire à orderHistory pour les clients,
-     * mais retourne l'historique des livraisons effectuées par le livreur.
+     * @OA\Get(
+     *      path="/api/delivery-person/profile/deliveries",
+     *      operationId="getDeliveryPersonHistory",
+     *      tags={"DeliveryPerson Profile"},
+     *      summary="Get delivery history",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="page", in="query", description="Page", required=false, @OA\Schema(type="integer", default=1)),
+     *      @OA\Parameter(name="per_page", in="query", description="Per page", required=false, @OA\Schema(type="integer", default=15)),
+     *      @OA\Parameter(name="status", in="query", description="Status filter", required=false, @OA\Schema(type="string")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery history",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="deliveries", type="array", @OA\Items(ref="#/components/schemas/Delivery")),
+     *                  @OA\Property(property="pagination", type="object")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function deliveryHistory(Request $request): JsonResponse
     {
@@ -316,8 +458,22 @@ class ProfileController extends Controller
      * 
      * GET /api/delivery-person/profile/statistics
      * 
-     * Cette méthode utilise intensivement le StatisticsService pour
-     * calculer toutes les métriques de performance du livreur.
+     * @OA\Get(
+     *      path="/api/delivery-person/profile/statistics",
+     *      operationId="getMyStatistics",
+     *      tags={"DeliveryPerson Profile"},
+     *      summary="Get performance stats",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="period", in="query", description="Period", required=false, @OA\Schema(type="string", default="month")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Performance stats",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object")
+     *          )
+     *      )
+     * )
      */
     public function statistics(Request $request): JsonResponse
     {

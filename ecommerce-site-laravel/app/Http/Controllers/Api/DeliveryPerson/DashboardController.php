@@ -13,6 +13,11 @@ use Illuminate\Http\JsonResponse;
  * Ce controller fournit les statistiques personnelles pour les livreurs.
  * Contrairement au dashboard admin qui voit tout le système, ce dashboard
  * est centré sur les performances individuelles du livreur connecté.
+ *
+ * @OA\Tag(
+ *     name="DeliveryPerson Dashboard",
+ *     description="Delivery person dashboard"
+ * )
  */
 class DashboardController extends Controller
 {
@@ -28,8 +33,26 @@ class DashboardController extends Controller
      * 
      * GET /api/delivery-person/dashboard/overview
      * 
-     * Query params:
-     * - period: today, week, month, year, all (défaut: today)
+     * @OA\Get(
+     *      path="/api/delivery-person/dashboard/overview",
+     *      operationId="getDeliveryPersonDashboardOverview",
+     *      tags={"DeliveryPerson Dashboard"},
+     *      summary="Get personal stats",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="period", in="query", description="Period (today, week, month, year, all)", required=false, @OA\Schema(type="string", default="today")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Dashboard stats",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="period", type="string"),
+     *                  @OA\Property(property="statistics", type="object"),
+     *                  @OA\Property(property="generated_at", type="string", format="date-time")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function overview(Request $request): JsonResponse
     {
@@ -60,8 +83,32 @@ class DashboardController extends Controller
      * 
      * GET /api/delivery-person/dashboard/daily-summary
      * 
-     * Cette méthode retourne un résumé des livraisons du jour,
-     * optimisé pour être affiché sur l'écran d'accueil de l'app mobile.
+     * @OA\Get(
+     *      path="/api/delivery-person/dashboard/daily-summary",
+     *      operationId="getDailySummary",
+     *      tags={"DeliveryPerson Dashboard"},
+     *      summary="Get daily summary",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Daily summary",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="date", type="string", format="date"),
+     *                  @OA\Property(property="deliveries", type="object",
+     *                      @OA\Property(property="total", type="integer"),
+     *                      @OA\Property(property="completed", type="integer"),
+     *                      @OA\Property(property="pending", type="integer"),
+     *                      @OA\Property(property="failed", type="integer")
+     *                  ),
+     *                  @OA\Property(property="earnings", type="string"),
+     *                  @OA\Property(property="earnings_raw", type="number"),
+     *                  @OA\Property(property="is_available", type="boolean")
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function dailySummary(Request $request): JsonResponse
     {

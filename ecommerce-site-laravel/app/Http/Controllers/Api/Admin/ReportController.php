@@ -1,10 +1,5 @@
 <?php
 
-// ============================================
-// 2. REPORT CONTROLLER - GÉNÉRATION DE RAPPORTS
-// app/Http/Controllers/Api/Admin/ReportController.php
-// ============================================
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -28,6 +23,11 @@ use Carbon\Carbon;
  * 
  * Cette séparation permet de garder chaque controller focalisé sur
  * une seule responsabilité (principe SOLID).
+ *
+ * @OA\Tag(
+ *     name="Admin Reports",
+ *     description="Reports and exports"
+ * )
  */
 class ReportController extends Controller
 {
@@ -43,9 +43,31 @@ class ReportController extends Controller
      * 
      * GET /api/admin/reports/deliveries
      * 
-     * Ce endpoint génère des statistiques détaillées sur les livraisons
-     * pour une période donnée. Il peut être consommé directement par
-     * Angular pour afficher les stats, ou utilisé pour générer un export.
+     * @OA\Get(
+     *      path="/api/admin/reports/deliveries",
+     *      operationId="getDeliveriesReport",
+     *      tags={"Admin Reports"},
+     *      summary="Get deliveries report stats",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="period", in="query", description="Period (today, week, month, year, custom)", required=true, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="start_date", in="query", description="Start date (if custom)", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="end_date", in="query", description="End date (if custom)", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Deliveries report data",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="period", type="object"),
+     *                  @OA\Property(property="totals", type="object"),
+     *                  @OA\Property(property="rates", type="object"),
+     *                  @OA\Property(property="timing", type="object"),
+     *                  @OA\Property(property="by_delivery_person", type="array", @OA\Items(type="object")),
+     *                  @OA\Property(property="by_day", type="array", @OA\Items(type="object"))
+     *              )
+     *          )
+     *      )
+     * )
      */
     public function deliveriesReport(Request $request): JsonResponse
     {
@@ -118,8 +140,21 @@ class ReportController extends Controller
      * 
      * GET /api/admin/reports/deliveries/export/pdf
      * 
-     * Ce endpoint utilise le ExportService pour générer un PDF
-     * bien formaté avec toutes les statistiques.
+     * @OA\Get(
+     *      path="/api/admin/reports/deliveries/export/pdf",
+     *      operationId="exportDeliveriesPDF",
+     *      tags={"Admin Reports"},
+     *      summary="Export deliveries report to PDF",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="period", in="query", description="Period (today, week, month, year, custom)", required=true, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="start_date", in="query", description="Start date", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="end_date", in="query", description="End date", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="PDF file download",
+     *          @OA\MediaType(mediaType="application/pdf", @OA\Schema(type="string", format="binary"))
+     *      )
+     * )
      */
     public function exportDeliveriesPDF(Request $request)
     {
@@ -148,6 +183,22 @@ class ReportController extends Controller
      * Exporte un rapport de livraisons en Excel
      * 
      * GET /api/admin/reports/deliveries/export/excel
+     * 
+     * @OA\Get(
+     *      path="/api/admin/reports/deliveries/export/excel",
+     *      operationId="exportDeliveriesExcel",
+     *      tags={"Admin Reports"},
+     *      summary="Export deliveries report to Excel",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="period", in="query", description="Period", required=true, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="start_date", in="query", description="Start date", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="end_date", in="query", description="End date", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Excel file download",
+     *          @OA\MediaType(mediaType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", @OA\Schema(type="string", format="binary"))
+     *      )
+     * )
      */
     public function exportDeliveriesExcel(Request $request)
     {
@@ -174,6 +225,29 @@ class ReportController extends Controller
      * Rapport de performance des livreurs
      * 
      * GET /api/admin/reports/delivery-persons
+     * 
+     * @OA\Get(
+     *      path="/api/admin/reports/delivery-persons",
+     *      operationId="getDeliveryPersonsReport",
+     *      tags={"Admin Reports"},
+     *      summary="Get delivery persons performance report",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="period", in="query", description="Period", required=true, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="start_date", in="query", description="Start date", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="end_date", in="query", description="End date", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Delivery persons stats",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="array", @OA\Items(
+     *                  @OA\Property(property="id", type="integer"),
+     *                  @OA\Property(property="name", type="string"),
+     *                  @OA\Property(property="statistics", type="object")
+     *              ))
+     *          )
+     *      )
+     * )
      */
     public function deliveryPersonsReport(Request $request): JsonResponse
     {
@@ -229,6 +303,24 @@ class ReportController extends Controller
 
     /**
      * Exporte le rapport des livreurs en PDF
+     * 
+     * GET /api/admin/reports/delivery-persons/export/pdf
+     * 
+     * @OA\Get(
+     *      path="/api/admin/reports/delivery-persons/export/pdf",
+     *      operationId="exportDeliveryPersonsPDF",
+     *      tags={"Admin Reports"},
+     *      summary="Export delivery persons report to PDF",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Parameter(name="period", in="query", description="Period", required=true, @OA\Schema(type="string")),
+     *      @OA\Parameter(name="start_date", in="query", description="Start date", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="end_date", in="query", description="End date", required=false, @OA\Schema(type="string", format="date")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="PDF file download",
+     *          @OA\MediaType(mediaType="application/pdf", @OA\Schema(type="string", format="binary"))
+     *      )
+     * )
      */
     public function exportDeliveryPersonsPDF(Request $request)
     {
