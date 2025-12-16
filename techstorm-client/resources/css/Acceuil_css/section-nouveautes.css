@@ -1,0 +1,109 @@
+/* ------------------------- */
+/* SECTION NOUVEAUTÉS        */
+/* ------------------------- */
+.new-section {
+  background: linear-gradient(135deg, #0066FF 0%, #8A2BE2 100%);
+  width: 100%;
+  padding: 120px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.new-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.03) 2px,
+    rgba(255, 255, 255, 0.03) 4px
+  );
+  animation: grid-move 20s linear infinite;
+}
+
+@keyframes grid-move {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(50px);
+  }
+}
+
+.glitch-effect {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.new-title-R,
+.new-title-V,
+.new-title-B {
+  position: absolute;
+  font-size: 5rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  /*-webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;*/
+}
+
+.new-title-R {
+  left: 180px;
+  color: #00E6E6;
+  animation: glitch-r 1s infinite;
+}
+
+.new-title-V {
+  color: #FFFFFF;
+  z-index: 1;
+}
+
+.new-title-B {
+  right: 180px;
+  color: #FF11DB;
+  animation: glitch-b 2s infinite;
+}
+
+@keyframes glitch-r {
+  0%, 90%, 100% {
+    transform: translate(0);
+  }
+  92% {
+    transform: translate(-4px, -4px);
+  }
+  94% {
+    transform: translate(4px, 4px);
+  }
+}
+
+@keyframes glitch-b {
+  0%, 90%, 100% {
+    transform: translate(0);
+  }
+  92% {
+    transform: translate(4px, 4px);
+  }
+  94% {
+    transform: translate(-4px, -4px);
+  }
+}
+
+.new-content h3 {
+  font-size: 2rem;
+  color: #ffffff;
+  margin-top: 100px;
+  margin-bottom: 10px;
+}
+
+.new-content p {
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 20px;
+}

@@ -1,0 +1,53 @@
+/* ===== RESUME ===== */
+.cart-summary {
+  background: #1a1a1c;
+  border-radius: 12px;
+  padding: 24px;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.summary-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #0066FF;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+.summary-line.total {
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding-top: 16px;
+  border-top: 1px solid #2a2a2c;
+  margin-top: 16px;
+  color: #0066FF;
+}
+
+.checkout-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(90deg, #0066FF, #8A2BE2);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4);
+  align-items: center;
+}
+
+.checkout-btn :hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
+}

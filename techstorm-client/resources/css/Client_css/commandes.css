@@ -1,0 +1,187 @@
+/* Barre de recherche et filtres */
+.order-search-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  background: #1a1a1c;
+  border-radius: 10px;
+  padding: 10px 20px;
+  gap: 10px;
+}
+
+.order-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.order-search-input:focus {
+  outline: none;
+}
+
+.order-filter {
+  background: #1c1c1e;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* Liste des commandes */
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Carte commande */
+.order-card {
+  background: #1c1c1e;
+  border-radius: 12px;
+  padding: 20px 30px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* 
+.order-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
+} */
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.order-header h3 {
+  color: #0066ff;
+  font-size: 1.2rem;
+}
+
+.order-status {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.status-en-cours {
+  background-color: #ff9800;
+  color: #fff;
+}
+
+.status-livrée {
+  background-color: #4caf50;
+  color: #fff;
+}
+
+.status-annulée {
+  background-color: #e53935;
+  color: #fff;
+}
+
+.order-date,
+.order-total {
+  font-size: 0.95rem;
+  color: #bbb;
+  margin-bottom: 5px;
+}
+
+/* Produits dans la commande */
+.order-products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.product-item {
+  display: flex;
+  align-items: center;
+  background: #111;
+  border-radius: 10px;
+  padding: 10px;
+  gap: 10px;
+}
+
+.product-item img {
+  width: 70px;
+  height: 70px;
+  font-size: small;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.product-info h4 {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.product-info p {
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+/* Boutons commande */
+.order-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.order-actions button {
+  background: linear-gradient(90deg, #0066ff, #8a2be2);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.order-actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(138, 43, 226, 0.6);
+}
+
+/* ===========================
+   RESPONSIVE MOBILE
+=========================== */
+@media screen and (max-width: 600px) {
+  .order-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .order-status {
+    align-self: flex-start;
+  }
+  
+  .order-products {
+    flex-direction: column;
+  }
+  
+  .product-item {
+    width: 100%;
+  }
+
+  .order-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .order-actions button {
+    width: 100%;
+    text-align: center;
+  }
+}

@@ -1,0 +1,167 @@
+
+/* ===== HEADER ===== */
+/* Visually hidden helper */
+.visually-hidden {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+}
+
+/* ===== HEADER (inchangé visuellement mais s'assure d'être au top) ===== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1C1C1E;
+  color: #FFFFFF;
+  padding: 8px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+}
+
+/* petites améliorations boutons */
+.buttons { display:flex; gap:10px; align-items:center; }
+.cart-count {
+  display: inline-block;
+  background: #33ffcc;
+  color: #001;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  margin-left: 8px;
+  font-size: 0.85rem;
+}
+
+/* ===== Catalogue layout ===== */
+main { flex: 1; }
+.catalogue {
+  --bg-dark:#1C1C1E;
+  --panel:#0f0f10;
+  --text:#fff;
+  --muted:#bfbfbf;
+  --stroke:#222;
+  --accent1:#0066FF;
+  --accent2:#8A2BE2;
+  display:grid;
+  grid-template-columns: 300px 1fr;
+  gap:24px;
+  padding:32px 24px 72px;
+  background:#0a0a0b;
+  align-items:start;
+}
+
+/* ===== Filters (sidebar) ===== */
+.filters {
+  background:var(--bg-dark);
+  border-radius:16px;
+  padding:20px 18px;
+  position:sticky;
+  top:16px;
+  height: fit-content;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+}
+
+.filters h3 { font-size:16px; font-weight:700; color:#eaeaea; margin-bottom:14px; }
+
+.filter-group { margin-bottom:18px; }
+.filter-list { list-style:none; display:grid; gap:12px; padding-left:0; }
+.filter-list label{ display:flex; align-items:center; gap:10px; color:#dfe6ea; font-size:14px; cursor:pointer; }
+.filter-list input[type="checkbox"]{
+  appearance:none; width:18px; height:18px; border:2px solid #28e0d6; border-radius:4px; position:relative; cursor:pointer; background:transparent;
+}
+.filter-list input[type="checkbox"]:checked{ background:#0e1618; }
+.filter-list input[type="checkbox"]:checked::after{ content:""; position:absolute; inset:3px; background:#28e0d6; border-radius:2px; }
+
+/* Search */
+.filters input[type="search"] {
+  width:100%; padding:10px 12px; border-radius:10px; border:1px solid #222; background:#0f1012; color:#fff;
+  font-size:0.95rem;
+}
+.filters input[type="range"] { width:100%; accent-color: #33ffcc; }
+
+/* Filter actions */
+.filter-actions { display:flex; gap:10px; justify-content:flex-end; }
+.btn-small { padding:8px 12px; border-radius:8px; border:1px solid #333; background:transparent; color:#fff; cursor:pointer; font-weight:600; }
+.btn-small.primary { background: linear-gradient(90deg, var(--accent1), var(--accent2)); border:none; box-shadow: 0 4px 12px rgba(0,102,255,0.15); }
+
+/* ===== Catalogue header / controls ===== */
+.catalogue-body{ overflow:hidden; }
+.catalogue-header{ display:flex; justify-content:space-between; align-items:center; padding:0 8px 8px; border-bottom:1px solid var(--stroke); margin-bottom:20px; }
+.catalogue-header h1{ font-size:36px; font-weight:800; color:#fff; margin:0; }
+.muted { color:#bfbfbf; font-size:0.95rem; margin-top:4px; }
+.controls select {
+  padding:8px 12px; border-radius:10px; border:1px solid #222; background:#0f1012; color:#fff; font-weight:600;
+}
+
+/* ===== Cards grid ===== */
+.cards{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap:28px 30px;
+  margin-top:20px;
+}
+
+/* Card design */
+.card{
+  background:#101113;
+  border-radius:12px;
+  box-shadow:0 6px 14px rgba(0,0,0,.35), 0 0 0 2px rgba(0,102,255,.06);
+  overflow:hidden;
+  transition:transform .15s ease, box-shadow .2s ease;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding: 0px 0px 0px 0px;
+}
+.card:hover{ transform:translateY(-6px); box-shadow:0 12px 26px rgba(0,0,0,.6), 0 0 8px rgba(0,102,255,.12); }
+
+.card-thumb{ height:180px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#0b0b0c; border-bottom:1px solid #17181a; }
+.card-thumb img{ width:100%; height:100%; object-fit:contain; display:block; }
+
+.card-body{ padding:14px 16px 18px; background:#16181b; display:flex; flex-direction:column; gap:12px; }
+.card-body h4{ font-size:16px; font-weight:700; color:#fff; margin-bottom:0; }
+.meta{ display:flex; align-items:baseline; justify-content:flex-start; gap:18px; margin-bottom:4px; }
+.qty span{ display:inline-block; font-weight:800; color:#33ffcc; letter-spacing:.04em; }
+.price span{ font-weight:800; color:#33ffcc; margin-right:6px; letter-spacing:.04em; }
+.price small{ color:#33ffcc; opacity:.9; }
+
+/* Card actions */
+.card-actions{ display:flex; gap:10px; margin-top:6px; }
+.btn-add{
+  flex:1; padding:10px 12px; border:none; border-radius:8px; color:#fff; font-weight:700; cursor:pointer;
+  background:linear-gradient(90deg, var(--accent1), var(--accent2)); box-shadow:0 0 10px rgba(0,102,255,.25);
+}
+.btn-quiet{ padding:10px 12px; background:transparent; color:#cfcfcf; border-radius:8px; border:1px solid #222; cursor:pointer; font-weight:700; }
+
+/* Empty state */
+.empty { padding:40px; text-align:center; color:#bfbfbf; background:#0f0f10; border-radius:10px; }
+
+/* Pagination */
+.pagination{ display:flex; gap:10px; justify-content:center; align-items:center; margin:28px 0 0; }
+.page-btn { padding:8px 12px; border-radius:8px; border:1px solid #222; background:transparent; cursor:pointer; color:#fff; }
+.page-btn.active { background: linear-gradient(90deg, var(--accent1), var(--accent2)); border:none; color:#fff; }
+
+
+
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .cards{ grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+  .catalogue { grid-template-columns: 1fr; padding:20px; }
+  .filters { order:2; position:relative; top:0; }
+  .catalogue-header { flex-direction: column; align-items:flex-start; gap:10px; }
+}
+
+@media (max-width: 720px) {
+  .cards{ grid-template-columns: 1fr; gap:18px; }
+  .quick-grid { grid-template-columns: 1fr; }
+  .modal-content { padding:12px; }
+}
+
+@media (max-width: 1024px) {
+  .footer-top { flex-direction: column; align-items: flex-start; }
+  .footer-newsletter { text-align: left; margin-right: 0; }
+  .newsletter-form { justify-content: flex-start; }
+}

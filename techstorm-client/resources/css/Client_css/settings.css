@@ -1,0 +1,246 @@
+/* Generic section */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.section-header h2 {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.section-header .icon {
+  width: 22px;
+  height: 22px;
+  color: #bfbfbf;
+  flex-shrink: 0;
+}
+
+.section-sub {
+  color: #bfbfbf;
+  font-size: 0.92rem;
+  margin-top: 2px;
+}
+
+/* Card */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.03);
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+
+/* vertical cards */
+.card-vertical {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* forms */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group select {
+  background: #121212;
+  border: 1px solid rgba(255,255,255,0.03);
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #fff;
+}
+
+/* file uploader */
+.uploader-row {
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.avatar-preview {
+  width:72px;
+  height:72px;
+  border-radius: 10px;
+  overflow:hidden;
+  background:#111;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.avatar-preview img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* buttons */
+.form-actions,
+.card-actions {
+  display:flex;
+  gap:12px;
+  margin-top:8px;
+}
+
+.btn {
+  padding:8px 12px;
+  border-radius:8px;
+  border: none;
+  cursor: pointer;
+  font-weight:600;
+  background: linear-gradient(90deg, #0066ff, #8a2be2);
+  color:#fff;
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.04);
+  color: #fff;
+}
+
+.btn.outline {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+.btn.small {
+  padding:6px 8px;
+  font-size:0.9rem;
+}
+
+.btn.danger {
+  background: linear-gradient(90deg, #e53935, #c62828);
+}
+
+.btn.primary { background: linear-gradient(90deg,#0066ff,#8a2be2); }
+
+/* switches */
+.switch-row {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:8px 6px;
+  border-radius:8px;
+}
+
+.switch-row.no-border { padding:0; }
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width:46px;
+  height:26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #333;
+  border-radius: 999px;
+  transition: background 180ms;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.02);
+}
+
+.slider::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translateX(0);
+  transition: transform 180ms;
+}
+
+.switch input:checked + .slider {
+  background: linear-gradient(90deg,#0066ff,#8a2be2);
+}
+
+.switch input:checked + .slider::after {
+  transform: translateX(20px);
+}
+
+/* switch info */
+.switch-info { display:flex; flex-direction:column; gap:4px; }
+.switch-info .muted { color:#bfbfbf; font-size:0.92rem; }
+
+/* address / payments lists */
+.address-list,
+.payment-list,
+.session-list {
+  list-style:none;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin:0;
+  padding:0;
+}
+
+.address-item,
+.payment-item,
+.session-item {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  background: rgba(255,255,255,0.01);
+  padding:10px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.02);
+}
+
+/* sessions */
+.sessions-title { font-size:1rem; margin-top:8px; color:#fff; }
+
+/* accessibility */
+.range-value { margin-top:8px; color:#bfbfbf; font-size:0.95rem; }
+
+/* privacy */
+.privacy-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; }
+
+/* responsive */
+@media (max-width: 920px) {
+  .form-grid, .form-grid-2 { grid-template-columns: 1fr; }
+  .main-section { padding:20px; }
+  .card { padding:12px; }
+}
