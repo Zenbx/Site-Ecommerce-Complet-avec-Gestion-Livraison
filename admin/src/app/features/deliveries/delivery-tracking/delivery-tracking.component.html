@@ -25,12 +25,9 @@
     <div class="tracking-content">
         <!-- Carte -->
         <div class="map-section">
-            <div class="map-section">
-                <app-delivery-map [delivery]="delivery" [driverLocation]="driverLocation" [loading]="loading"
-                    [error]="error">
-                </app-delivery-map>
-            </div>
-
+            <app-delivery-map [delivery]="delivery" [driverLocation]="driverLocation" [loading]="loading"
+                [error]="error">
+            </app-delivery-map>
 
             <!-- Chargement -->
             <div class="loading-state" *ngIf="loading">

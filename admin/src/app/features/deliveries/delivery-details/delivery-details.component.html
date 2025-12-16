@@ -34,28 +34,6 @@
         </span>
         <span class="order-number">{{ delivery.orderNumber }}</span>
       </div>
-
-      <div class="button-group">
-        <button 
-          class="btn btn-secondary" 
-          (click)="goToTracking()"
-          *ngIf="canTrack()"
-          title="Suivre en temps réel"
-        >
-          <i class="icon-map"></i>
-          Suivre
-        </button>
-
-        <button 
-          class="btn btn-secondary" 
-          (click)="goToProof()"
-          *ngIf="canShowProof()"
-          title="Voir la preuve de livraison"
-        >
-          <i class="icon-check-circle"></i>
-          Preuve
-        </button>
-      </div>
     </div>
 
     <!-- Grille de contenu -->
