@@ -1,160 +1,86 @@
 <!-- src/app/features/deliveries/delivery-proof/delivery-proof.component.html -->
 
-<div class="proof-container">
+<div class="delivery-proof-page">
+
+  <!-- HEADER -->
   <div class="page-header">
-    <h1>Validation de la preuve de livraison</h1>
-    <p class="subtitle">Vérifiez et validez la preuve de livraison</p>
+    <div>
+      <h1>Preuves de livraison</h1>
+      <p *ngIf="delivery">
+        Commande <strong>#{{ delivery.orderNumber }}</strong> — {{ delivery.customer.name }}
+      </p>
+    </div>
+
+    <button class="btn btn-secondary" (click)="goBack()">
+      ← Retour
+    </button>
   </div>
 
-  <div *ngIf="error" class="alert alert-danger">
+  <!-- LOADING -->
+  <div *ngIf="loading" class="state loading">
+    Chargement des preuves…
+  </div>
+
+  <!-- ERROR -->
+  <div *ngIf="error" class="state error">
     {{ error }}
   </div>
 
-  <div *ngIf="loading" class="loading-container">
-    <div class="spinner"></div>
-    <p>Chargement...</p>
+  <!-- EMPTY -->
+  <div *ngIf="!loading && proofs.length === 0" class="state empty">
+    Aucune preuve envoyée par le livreur.
   </div>
 
-  <div *ngIf="!loading && delivery" class="proof-content">
-    <div class="content-grid">
-      
-      <!-- Proof Display -->
-      <div class="proof-section">
-        <div class="proof-card">
-          <div class="proof-header">
-            <h2>Preuve de livraison</h2>
-            <span class="proof-type-badge">
-              {{ delivery.proof ? getProofTypeLabel(delivery.proof.type) : 'Aucune preuve' }}
-            </span>
-          </div>
-          
-          <div *ngIf="delivery.proof" class="proof-display">
-            <!-- Signature -->
-            <div *ngIf="delivery.proof.type === ProofType.SIGNATURE" class="signature-container">
-              <img [src]="delivery.proof.data" alt="Signature" class="signature-image" />
-            </div>
+  <!-- PROOFS LIST -->
+  <div *ngIf="!loading && proofs.length > 0" class="proofs-grid">
 
-            <!-- QR Code -->
-            <div *ngIf="delivery.proof.type === ProofType.QR_CODE" class="qr-container">
-              <img [src]="delivery.proof.data" alt="QR Code" class="qr-image" />
-              <p class="qr-note">Code QR scanné par le client</p>
-            </div>
+    <div class="proof-card" *ngFor="let proof of proofs">
 
-            <!-- Photo -->
-            <div *ngIf="delivery.proof.type === ProofType.PHOTO" class="photo-container">
-              <img [src]="delivery.proof.data" alt="Photo de livraison" class="delivery-photo" />
-            </div>
+      <!-- CARD HEADER -->
+      <div class="proof-header">
+        <span class="proof-type" [ngClass]="proof.type.toLowerCase()">
+          {{ getProofLabel(proof.type) }}
+        </span>
 
-            <div class="proof-metadata">
-              <div class="metadata-item">
-                <i class="icon-calendar"></i>
-                <span>{{ formatTimestamp(delivery.proof.timestamp) }}</span>
-              </div>
-              <button class="btn-download" (click)="downloadProof()">
-                <i class="icon-download"></i>
-                Télécharger
-              </button>
-            </div>
-          </div>
-
-          <div *ngIf="!delivery.proof" class="no-proof">
-            <i class="icon-alert"></i>
-            <p>Aucune preuve de livraison disponible</p>
-          </div>
-        </div>
+        <span class="proof-status" [ngClass]="proof.status.toLowerCase()">
+          {{ proof.status }}
+        </span>
       </div>
 
-      <!-- Delivery Details -->
-      <div class="details-section">
-        <!-- Delivery Info -->
-        <div class="info-card">
-          <h3>Détails de la livraison</h3>
-          <div class="info-list">
-            <div class="info-item">
-              <span class="label">Numéro :</span>
-              <span class="value">#{{ delivery.orderNumber }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Client :</span>
-              <span class="value">{{ delivery.customer.name }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Téléphone :</span>
-              <span class="value">{{ delivery.customer.phone }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Adresse :</span>
-              <span class="value">
-                {{ delivery.address.street }}<br>
-                {{ delivery.address.city }}, {{ delivery.address.postalCode }}
-              </span>
-            </div>
-          </div>
-        </div>
+      <!-- IMAGE / SIGNATURE -->
+      <div class="proof-preview">
+        <img [src]="proof.url" [alt]="proof.type" />
+      </div>
 
-        <!-- Driver Info -->
-        <div class="info-card" *ngIf="delivery.driver">
-          <h3>Livreur</h3>
-          <div class="driver-info">
-            <div class="driver-avatar">
-              {{ delivery.driver.firstName.charAt(0) }}{{ delivery.driver.lastName.charAt(0) }}
-            </div>
-            <div class="driver-details">
-              <h4>{{ delivery.driver.firstName }} {{ delivery.driver.lastName }}</h4>
-              <p>{{ delivery.driver.phone }}</p>
-              <p class="vehicle">{{ delivery.driver.vehicleType }} - {{ delivery.driver.vehiclePlate }}</p>
-            </div>
-          </div>
-        </div>
+      <!-- META -->
+      <div class="proof-meta">
+        <div><strong>Destinataire :</strong> {{ proof.recipientName || '—' }}</div>
+        <div><strong>Livreur :</strong> {{ proof.driver?.firstName }} {{ proof.driver?.lastName }}</div>
+        <div><strong>Date :</strong> {{ proof.createdAt | date:'short' }}</div>
+      </div>
 
-        <!-- Timeline -->
-        <div class="info-card">
-          <h3>Chronologie</h3>
-          <div class="timeline">
-            <div class="timeline-item" *ngIf="delivery.assignedAt">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <strong>Assignée</strong>
-                <span>{{ formatTimestamp(delivery.assignedAt) }}</span>
-              </div>
-            </div>
-            <div class="timeline-item" *ngIf="delivery.pickedUpAt">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <strong>Récupérée</strong>
-                <span>{{ formatTimestamp(delivery.pickedUpAt) }}</span>
-              </div>
-            </div>
-            <div class="timeline-item" *ngIf="delivery.deliveredAt">
-              <div class="timeline-dot completed"></div>
-              <div class="timeline-content">
-                <strong>Livrée</strong>
-                <span>{{ formatTimestamp(delivery.deliveredAt) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- ACTIONS -->
+      <div class="proof-actions" *ngIf="proof.status === 'PENDING'">
+        <button class="btn btn-success" (click)="validateProof(proof)">
+          ✔ Valider
+        </button>
 
-        <!-- Notes -->
-        <div class="info-card" *ngIf="delivery.notes">
-          <h3>Notes</h3>
-          <p class="notes-content">{{ delivery.notes }}</p>
-        </div>
+        <button class="btn btn-danger" (click)="rejectProof(proof)">
+          ✖ Rejeter
+        </button>
+      </div>
+
+      <!-- VALIDATION INFO -->
+      <div class="proof-validation-info" *ngIf="proof.status !== 'PENDING'">
+        <span *ngIf="proof.status === 'VALIDATED'">
+          Validée le {{ proof.validatedAt | date:'short' }}
+        </span>
+        <span *ngIf="proof.status === 'REJECTED'">
+          Rejetée : {{ proof.rejectionReason }}
+        </span>
       </div>
 
     </div>
-
-    <!-- Action Buttons -->
-    <div class="actions-bar" *ngIf="delivery.proof && delivery.status === 'delivered'">
-      <button class="btn btn-reject" (click)="rejectProof()" [disabled]="validating">
-        <i class="icon-x"></i>
-        Rejeter
-      </button>
-      <button class="btn btn-validate" (click)="validateProof()" [disabled]="validating">
-        <span *ngIf="validating" class="spinner-border spinner-border-sm"></span>
-        <i *ngIf="!validating" class="icon-check"></i>
-        {{ validating ? 'Validation...' : 'Valider la livraison' }}
-      </button>
-    </div>
   </div>
+
 </div>

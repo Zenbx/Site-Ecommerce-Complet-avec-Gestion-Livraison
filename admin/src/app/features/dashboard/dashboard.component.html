@@ -1,9 +1,37 @@
 <!-- src/app/features/dashboard/dashboard.component.html -->
 
 <div class="dashboard-container">
+  <!-- Header avec refresh et dernière mise à jour -->
   <div class="dashboard-header">
-    <h1>Tableau de bord logistique</h1>
-    <p class="subtitle">Vue d'ensemble en temps réel</p>
+    <div class="header-left">
+      <h1>Tableau de bord logistique</h1>
+      <p class="subtitle">Vue d'ensemble en temps réel</p>
+    </div>
+    <div class="header-right">
+      <span class="last-update">
+        <i class="icon-clock"></i>
+        Mis à jour il y a {{ getTimeSinceLastUpdate() }}
+      </span>
+      <button class="refresh-btn" (click)="manualRefresh()" [disabled]="loading">
+        <i class="icon-refresh">🔄</i>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Alertes -->
+  <div class="alerts-container" *ngIf="alerts.length > 0">
+    <div 
+      *ngFor="let alert of alerts" 
+      class="alert-item"
+      [ngClass]="getAlertClass(alert.type)"
+    >
+      <span class="alert-icon">
+        {{ alert.type === 'warning' ? '⚠️' : alert.type === 'error' ? '❌' : alert.type === 'success' ? '✅' : 'ℹ️' }}
+      </span>
+      <span class="alert-message">{{ alert.message }}</span>
+      <span class="alert-time">{{ alert.timestamp | date: 'HH:mm' }}</span>
+    </div>
   </div>
 
   <!-- Loading State -->
@@ -15,14 +43,26 @@
   <!-- Dashboard Content -->
   <div *ngIf="!loading && stats" class="dashboard-content">
     
-    <!-- Stats Cards -->
+    <!-- Stats Cards avec indicateurs de tendance -->
     <div class="stats-grid">
       <div class="stat-card ready-to-ship">
         <div class="stat-icon">
           <i class="icon-package"></i>
         </div>
         <div class="stat-content">
-          <h3>{{ stats.readyToShip }}</h3>
+          <div class="stat-header">
+            <h3>{{ stats.readyToShip }}</h3>
+            <span class="trend" *ngIf="previousStats">
+              <span class="trend-icon">
+                {{ getTrendIcon(stats.readyToShip, previousStats.readyToShip) }}
+              </span>
+              <span class="trend-value" 
+                    [class.positive]="hasIncreased(stats.readyToShip, previousStats.readyToShip)"
+                    [class.negative]="hasDecreased(stats.readyToShip, previousStats.readyToShip)">
+                {{ Math.abs(getChangePercentage(stats.readyToShip, previousStats.readyToShip)) }}%
+              </span>
+            </span>
+          </div>
           <p>Prêtes à expédier</p>
         </div>
       </div>
@@ -32,7 +72,19 @@
           <i class="icon-truck"></i>
         </div>
         <div class="stat-content">
-          <h3>{{ stats.inTransit }}</h3>
+          <div class="stat-header">
+            <h3>{{ stats.inTransit }}</h3>
+            <span class="trend" *ngIf="previousStats">
+              <span class="trend-icon">
+                {{ getTrendIcon(stats.inTransit, previousStats.inTransit) }}
+              </span>
+              <span class="trend-value"
+                    [class.positive]="hasIncreased(stats.inTransit, previousStats.inTransit)"
+                    [class.negative]="hasDecreased(stats.inTransit, previousStats.inTransit)">
+                {{ Math.abs(getChangePercentage(stats.inTransit, previousStats.inTransit)) }}%
+              </span>
+            </span>
+          </div>
           <p>En cours de livraison</p>
         </div>
       </div>
@@ -42,7 +94,19 @@
           <i class="icon-check"></i>
         </div>
         <div class="stat-content">
-          <h3>{{ stats.delivered }}</h3>
+          <div class="stat-header">
+            <h3>{{ stats.delivered }}</h3>
+            <span class="trend" *ngIf="previousStats">
+              <span class="trend-icon">
+                {{ getTrendIcon(stats.delivered, previousStats.delivered) }}
+              </span>
+              <span class="trend-value"
+                    [class.positive]="hasIncreased(stats.delivered, previousStats.delivered)"
+                    [class.negative]="hasDecreased(stats.delivered, previousStats.delivered)">
+                {{ Math.abs(getChangePercentage(stats.delivered, previousStats.delivered)) }}%
+              </span>
+            </span>
+          </div>
           <p>Livrées avec succès</p>
         </div>
       </div>
@@ -52,7 +116,19 @@
           <i class="icon-alert"></i>
         </div>
         <div class="stat-content">
-          <h3>{{ stats.failed }}</h3>
+          <div class="stat-header">
+            <h3>{{ stats.failed }}</h3>
+            <span class="trend" *ngIf="previousStats">
+              <span class="trend-icon">
+                {{ getTrendIcon(stats.failed, previousStats.failed) }}
+              </span>
+              <span class="trend-value"
+                    [class.positive]="hasIncreased(stats.failed, previousStats.failed)"
+                    [class.negative]="hasDecreased(stats.failed, previousStats.failed)">
+                {{ Math.abs(getChangePercentage(stats.failed, previousStats.failed)) }}%
+              </span>
+            </span>
+          </div>
           <p>Livraisons échouées</p>
         </div>
       </div>
@@ -72,7 +148,36 @@
         <span class="label">Livreurs actifs :</span>
         <span class="value">{{ stats.activeDrivers }}/{{ stats.activeDrivers + stats.availableDrivers }}</span>
       </div>
+      <div class="info-card" *ngIf="wsConnected">
+        <span class="label">WebSocket :</span>
+        <span class="value ws-status">
+          <span class="ws-dot connected"></span>
+          Connecté
+        </span>
+      </div>
     </div>
+
+    <!-- Filtres de période (prévu pour plus tard) -->
+    <!-- <div class="period-filters">
+      <button 
+        class="period-btn" 
+        [class.active]="selectedPeriod === 'today'"
+        (click)="changePeriod('today')">
+        Aujourd'hui
+      </button>
+      <button 
+        class="period-btn" 
+        [class.active]="selectedPeriod === 'week'"
+        (click)="changePeriod('week')">
+        Cette semaine
+      </button>
+      <button 
+        class="period-btn" 
+        [class.active]="selectedPeriod === 'month'"
+        (click)="changePeriod('month')">
+        Ce mois
+      </button>
+    </div> -->
 
     <!-- Two Column Layout -->
     <div class="content-grid">
@@ -113,7 +218,7 @@
       <!-- Driver Performance -->
       <div class="panel driver-performance">
         <div class="panel-header">
-          <h2>Performances des livreurs</h2>
+          <h2>🏆 Top 5 Livreurs</h2>
         </div>
         <div class="panel-content">
           <div *ngIf="driverPerformance.length === 0" class="empty-state">
@@ -121,7 +226,9 @@
           </div>
           <div class="performance-list">
             <div *ngFor="let driver of driverPerformance; let i = index" class="performance-item">
-              <div class="rank">{{ i + 1 }}</div>
+              <div class="rank" [class.top-rank]="i < 3">
+                {{ i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) }}
+              </div>
               <div class="driver-details">
                 <div class="driver-name">{{ driver.driverName }}</div>
                 <div class="metrics">

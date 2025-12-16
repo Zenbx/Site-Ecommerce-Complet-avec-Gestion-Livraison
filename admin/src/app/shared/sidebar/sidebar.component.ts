@@ -34,14 +34,14 @@ export class SidebarComponent {
       route: '/drivers' 
     },
     { 
+      icon: '⚙️', 
+      label: 'Carte', 
+      route: '/map' 
+    },
+    { 
       icon: '📈', 
       label: 'Rapports', 
       route: '/reports' 
-    },
-    { 
-      icon: '⚙️', 
-      label: 'Paramètres', 
-      route: '/settings' 
     }
   ];
 

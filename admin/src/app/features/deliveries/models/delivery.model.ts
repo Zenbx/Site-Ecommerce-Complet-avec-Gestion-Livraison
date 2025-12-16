@@ -15,14 +15,27 @@ export enum ProofType {
   PHOTO = 'photo'
 }
 
+export enum ProofStatus {
+  PENDING = 'PENDING',
+  VALIDATED = 'VALIDATED',
+  REJECTED = 'REJECTED'
+}
+
 export interface DeliveryDriver {
   id: number;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  vehicleType: string;
-  vehiclePlate: string;
+  // Champs legacy
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  vehicleType?: string;
+  vehiclePlate?: string;
+  // Champs nouvelle API
+  name?: string;
+  email?: string;
+  is_available?: boolean;
+  // Champs communs
   isAvailable: boolean;
+  statistics?: any;
   currentLocation?: {
     latitude: number;
     longitude: number;
@@ -35,15 +48,30 @@ export interface DeliveryAddress {
   city: string;
   postalCode: string;
   country: string;
-  latitude?: number;
-  longitude?: number;
+  latitude: number;
+  longitude: number;
   instructions?: string;
 }
 
 export interface DeliveryProof {
+  id: number;
   type: ProofType;
-  data: string; // Base64 ou URL
-  timestamp: string;
+  url: string;
+
+  recipientName?: string;
+  createdAt: string;
+
+  status: ProofStatus;
+
+  validatedAt?: string;
+  validatedBy?: string;
+  rejectionReason?: string;
+
+  driver?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+  };
 }
 
 export interface Delivery {

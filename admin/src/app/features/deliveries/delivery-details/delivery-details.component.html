@@ -1,0 +1,281 @@
+<!-- src/app/features/deliveries/delivery-details/delivery-details.component.html -->
+
+<div class="delivery-details-container">
+  <!-- En-tête avec bouton retour -->
+  <div class="details-header">
+    <button class="btn-back" (click)="goBack()">
+      <i class="icon-chevron-left"></i>
+      Retour à la liste
+    </button>
+    <h1>Détails de la livraison</h1>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- Chargement -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Chargement de la livraison...</p>
+  </div>
+
+  <!-- Erreur -->
+  <div class="error-state" *ngIf="error && !loading">
+    <i class="icon-alert-circle"></i>
+    <p>{{ error }}</p>
+    <button class="btn btn-primary" (click)="goBack()">Retourner à la liste</button>
+  </div>
+
+  <!-- Contenu -->
+  <div class="details-content" *ngIf="delivery && !loading && !error">
+    <!-- Barre d'actions -->
+    <div class="actions-bar">
+      <div class="status-section">
+        <span class="status-badge" [ngClass]="getStatusClass(delivery.status)">
+          {{ getStatusLabel(delivery.status) }}
+        </span>
+        <span class="order-number">{{ delivery.orderNumber }}</span>
+      </div>
+
+      <div class="button-group">
+        <button 
+          class="btn btn-secondary" 
+          (click)="goToTracking()"
+          *ngIf="canTrack()"
+          title="Suivre en temps réel"
+        >
+          <i class="icon-map"></i>
+          Suivre
+        </button>
+
+        <button 
+          class="btn btn-secondary" 
+          (click)="goToProof()"
+          *ngIf="canShowProof()"
+          title="Voir la preuve de livraison"
+        >
+          <i class="icon-check-circle"></i>
+          Preuve
+        </button>
+      </div>
+    </div>
+
+    <!-- Grille de contenu -->
+    <div class="details-grid">
+      <!-- Section Informations Client -->
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <i class="icon-user"></i>
+            Informations Client
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="info-group">
+            <label>Nom</label>
+            <p>{{ delivery.customer.name }}</p>
+          </div>
+
+          <div class="info-group">
+            <label>Téléphone</label>
+            <p>
+              <a [href]="'tel:' + delivery.customer.phone">
+                {{ delivery.customer.phone }}
+              </a>
+            </p>
+          </div>
+
+          <div class="info-group">
+            <label>Email</label>
+            <p *ngIf="delivery.customer.email">
+              <a [href]="'mailto:' + delivery.customer.email">
+                {{ delivery.customer.email }}
+              </a>
+            </p>
+            <p *ngIf="!delivery.customer.email">N/A</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Adresse de Livraison -->
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <i class="icon-map-pin"></i>
+            Adresse de Livraison
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="info-group">
+            <label>Rue</label>
+            <p>{{ delivery.address.street }}</p>
+          </div>
+
+          <div class="info-row">
+            <div class="info-group">
+              <label>Code Postal</label>
+              <p>{{ delivery.address.postalCode }}</p>
+            </div>
+
+            <div class="info-group">
+              <label>Ville</label>
+              <p>{{ delivery.address.city }}</p>
+            </div>
+          </div>
+
+          <div class="info-group">
+            <label>Pays</label>
+            <p>{{ delivery.address.country }}</p>
+          </div>
+
+          <div class="info-group" *ngIf="delivery.address.instructions">
+            <label>Instructions de livraison</label>
+            <p class="instructions">{{ delivery.address.instructions }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Informations Livraison -->
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <i class="icon-package"></i>
+            Informations Livraison
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="info-group">
+            <label>Priorité</label>
+            <p>
+              <span class="badge" [ngClass]="getPriorityClass(delivery.priority)">
+                {{ delivery.priority === 'high' ? 'Urgente' : delivery.priority === 'medium' ? 'Normale' : 'Basse' }}
+              </span>
+            </p>
+          </div>
+
+          <div class="info-group">
+            <label>Status</label>
+            <p>
+              <span class="badge" [ngClass]="getStatusClass(delivery.status)">
+                {{ getStatusLabel(delivery.status) }}
+              </span>
+            </p>
+          </div>
+
+          <div class="info-group">
+            <label>Date de création</label>
+            <p>{{ formatDate(delivery.createdAt) }}</p>
+          </div>
+
+          <div class="info-group" *ngIf="delivery.assignedAt">
+            <label>Date d'assignation</label>
+            <p>{{ formatDate(delivery.assignedAt) }}</p>
+          </div>
+
+          <div class="info-group" *ngIf="delivery.pickedUpAt">
+            <label>Date de collecte</label>
+            <p>{{ formatDate(delivery.pickedUpAt) }}</p>
+          </div>
+
+          <div class="info-group" *ngIf="delivery.deliveredAt">
+            <label>Date de livraison</label>
+            <p>{{ formatDate(delivery.deliveredAt) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Livreur -->
+      <div class="card" *ngIf="delivery.driver">
+        <div class="card-header">
+          <h2>
+            <i class="icon-truck"></i>
+            Informations Livreur
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="driver-header">
+            <div class="driver-avatar">
+              {{ delivery.driver.firstName?.charAt(0) }}{{ delivery.driver.lastName?.charAt(0) }}
+            </div>
+            <div class="driver-info">
+              <h3>{{ delivery.driver.firstName }} {{ delivery.driver.lastName }}</h3>
+              <p class="status" [class.available]="delivery.driver.isAvailable">
+                <span class="indicator"></span>
+                {{ delivery.driver.isAvailable ? 'Disponible' : 'Indisponible' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="info-group">
+            <label>Téléphone</label>
+            <p>
+              <a [href]="'tel:' + delivery.driver.phone">
+                {{ delivery.driver.phone }}
+              </a>
+            </p>
+          </div>
+
+          <div class="info-row">
+            <div class="info-group">
+              <label>Type de véhicule</label>
+              <p>{{ delivery.driver.vehicleType }}</p>
+            </div>
+
+            <div class="info-group">
+              <label>Immatriculation</label>
+              <p>{{ delivery.driver.vehiclePlate }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Aucun Livreur -->
+      <div class="card" *ngIf="!delivery.driver">
+        <div class="card-header">
+          <h2>
+            <i class="icon-truck"></i>
+            Livreur
+          </h2>
+        </div>
+        <div class="card-body">
+          <p class="no-driver">
+            <i class="icon-alert"></i>
+            Aucun livreur assigné
+          </p>
+        </div>
+      </div>
+
+      <!-- Section Localisation GPS -->
+      <div class="card" *ngIf="delivery.address.latitude && delivery.address.longitude">
+        <div class="card-header">
+          <h2>
+            <i class="icon-map"></i>
+            Localisation
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <div class="info-group">
+              <label>Latitude</label>
+              <p class="monospace">{{ delivery.address.latitude }}</p>
+            </div>
+
+            <div class="info-group">
+              <label>Longitude</label>
+              <p class="monospace">{{ delivery.address.longitude }}</p>
+            </div>
+          </div>
+
+          <a 
+            [href]="'https://maps.google.com/?q=' + delivery.address.latitude + ',' + delivery.address.longitude"
+            target="_blank"
+            class="btn btn-secondary btn-small"
+          >
+            <i class="icon-external-link"></i>
+            Ouvrir sur Google Maps
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

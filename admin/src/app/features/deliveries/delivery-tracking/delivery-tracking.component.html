@@ -1,216 +1,228 @@
 <!-- src/app/features/deliveries/delivery-tracking/delivery-tracking.component.html -->
 
 <div class="tracking-container">
-  <!-- En-tête -->
-  <div class="tracking-header">
-    <div class="header-content">
-      <h1>Suivi de livraison</h1>
-      <p class="subtitle" *ngIf="delivery">
-        Commande #{{ delivery.orderNumber }}
-      </p>
-    </div>
-    
-    <div class="header-status" *ngIf="delivery">
-      <span class="status-badge" [ngClass]="getStatusClass(delivery.status)">
-        {{ getStatusLabel(delivery.status) }}
-      </span>
-      <span class="ws-indicator" [class.connected]="wsConnected" [class.disconnected]="!wsConnected">
-        <span class="dot"></span>
-        {{ wsConnected ? 'En direct' : 'Hors ligne' }}
-      </span>
-    </div>
-  </div>
+    <!-- En-tête -->
+    <div class="tracking-header">
+        <div class="header-content">
+            <h1>Suivi de livraison</h1>
+            <p class="subtitle" *ngIf="delivery">
+                Commande #{{ delivery.orderNumber }}
+            </p>
+        </div>
 
-  <!-- Contenu principal -->
-  <div class="tracking-content">
-    <!-- Carte -->
-    <div class="map-section">
-      <div #mapContainer class="map-container" *ngIf="!loading && !error"></div>
-      
-      <!-- Chargement -->
-      <div class="loading-state" *ngIf="loading">
-        <div class="spinner"></div>
-        <p>Chargement de la livraison...</p>
-      </div>
-
-      <!-- Erreur -->
-      <div class="error-state" *ngIf="error">
-        <i class="icon-alert-circle"></i>
-        <p>{{ error }}</p>
-      </div>
+        <div class="header-status" *ngIf="delivery">
+            <span class="status-badge" [ngClass]="getStatusClass(delivery.status)">
+                {{ getStatusLabel(delivery.status) }}
+            </span>
+            <span class="ws-indicator" [class.connected]="wsConnected" [class.disconnected]="!wsConnected">
+                <span class="dot"></span>
+                {{ wsConnected ? 'En direct' : 'Hors ligne' }}
+            </span>
+        </div>
     </div>
 
-    <!-- Panneau d'informations -->
-    <div class="info-panel">
-      <!-- Livraison -->
-      <div class="panel-section" *ngIf="delivery">
-        <h3>Détails de la livraison</h3>
-        
-        <div class="info-item">
-          <label>Client</label>
-          <span>{{ delivery.customer.name }}</span>
-        </div>
-
-        <div class="info-item">
-          <label>Téléphone</label>
-          <span>{{ delivery.customer.phone }}</span>
-        </div>
-
-        <div class="info-item">
-          <label>Adresse</label>
-          <span>
-            {{ delivery.address.street }}<br>
-            {{ delivery.address.postalCode }} {{ delivery.address.city }}
-          </span>
-        </div>
-
-        <div class="info-item">
-          <label>Priorité</label>
-          <span class="priority-badge" [ngClass]="'priority-' + delivery.priority">
-            {{ delivery.priority === 'high' ? 'Urgente' : delivery.priority === 'medium' ? 'Normale' : 'Basse' }}
-          </span>
-        </div>
-
-        <div class="info-item">
-          <label>Date de création</label>
-          <span>{{ formatDate(delivery.createdAt) }}</span>
-        </div>
-      </div>
-
-      <!-- Livreur et position -->
-      <div class="panel-section" *ngIf="delivery?.driver || driverLocation">
-        <h3>Livreur et position</h3>
-
-        <div class="info-item" *ngIf="delivery?.driver">
-          <label>Livreur</label>
-          <span>{{ delivery?.driver?.firstName }} {{ delivery?.driver?.lastName }}</span>
-        </div>
-
-        <div class="info-item" *ngIf="delivery?.driver">
-          <label>Téléphone</label>
-          <span>{{ delivery?.driver?.phone }}</span>
-        </div>
-
-        <div class="info-item" *ngIf="delivery?.driver">
-          <label>Véhicule</label>
-          <span>{{ delivery?.driver?.vehicleType }} - {{ delivery?.driver?.vehiclePlate }}</span>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- GPS en temps réel -->
-        <div *ngIf="driverLocation" class="gps-info">
-          <div class="info-item">
-            <label>Vitesse actuelle</label>
-            <span class="speed-value">{{ driverLocation.speed }} km/h</span>
-          </div>
-
-          <div class="info-item">
-            <label>Précision GPS</label>
-            <span>±{{ driverLocation.accuracy }}m</span>
-          </div>
-
-          <div class="info-item">
-            <label>Dernière mise à jour</label>
-            <span>{{ formatDate(driverLocation.timestamp) }}</span>
-          </div>
-
-          <div class="divider"></div>
-
-          <!-- Estimation -->
-          <div class="estimation-box">
-            <div class="estimation-item">
-              <i class="icon-map-pin"></i>
-              <div>
-                <div class="label">Distance restante</div>
-                <div class="value">{{ calculateDistance() }} km</div>
-              </div>
+    <!-- Contenu principal -->
+    <div class="tracking-content">
+        <!-- Carte -->
+        <div class="map-section">
+            <div class="map-section">
+                <app-delivery-map [delivery]="delivery" [driverLocation]="driverLocation" [loading]="loading"
+                    [error]="error">
+                </app-delivery-map>
             </div>
 
-            <div class="estimation-item">
-              <i class="icon-clock"></i>
-              <div>
-                <div class="label">Temps estimé</div>
-                <div class="value">{{ estimateArrivalTime() }}</div>
-              </div>
+
+            <!-- Chargement -->
+            <div class="loading-state" *ngIf="loading">
+                <div class="spinner"></div>
+                <p>Chargement de la livraison...</p>
             </div>
-          </div>
+
+            <!-- Erreur -->
+            <div class="error-state" *ngIf="error">
+                <i class="icon-alert-circle"></i>
+                <p>{{ error }}</p>
+            </div>
         </div>
 
-        <div *ngIf="!driverLocation" class="no-data">
-          <i class="icon-alert"></i>
-          <p>Pas de position GPS disponible</p>
+        <!-- Panneau d'informations -->
+        <div class="info-panel">
+            <!-- Livraison -->
+            <div class="panel-section" *ngIf="delivery">
+                <h3>Détails de la livraison</h3>
+
+                <div class="info-item">
+                    <label>Client</label>
+                    <span>{{ delivery.customer.name }}</span>
+                </div>
+
+                <div class="info-item">
+                    <label>Téléphone</label>
+                    <span>{{ delivery.customer.phone }}</span>
+                </div>
+
+                <div class="info-item">
+                    <label>Adresse</label>
+                    <span>
+                        {{ delivery.address.street }}<br>
+                        {{ delivery.address.postalCode }} {{ delivery.address.city }}
+                    </span>
+                </div>
+
+                <div class="info-item">
+                    <label>Priorité</label>
+                    <span class="priority-badge" [ngClass]="'priority-' + delivery.priority">
+                        {{ delivery.priority === 'high' ? 'Urgente' : delivery.priority === 'medium' ? 'Normale' :
+                        'Basse' }}
+                    </span>
+                </div>
+
+                <div class="info-item">
+                    <label>Date de création</label>
+                    <span>{{ formatDate(delivery.createdAt) }}</span>
+                </div>
+            </div>
+
+            <!-- Livreur et position -->
+            <div class="panel-section" *ngIf="delivery?.driver || driverLocation">
+                <h3>Livreur et position</h3>
+
+                <div class="info-item" *ngIf="delivery?.driver">
+                    <label>Livreur</label>
+                    <span>{{ delivery?.driver?.firstName }} {{ delivery?.driver?.lastName }}</span>
+                </div>
+
+                <div class="info-item" *ngIf="delivery?.driver">
+                    <label>Téléphone</label>
+                    <span>{{ delivery?.driver?.phone }}</span>
+                </div>
+
+                <div class="info-item" *ngIf="delivery?.driver">
+                    <label>Véhicule</label>
+                    <span>{{ delivery?.driver?.vehicleType }} - {{ delivery?.driver?.vehiclePlate }}</span>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- GPS en temps réel -->
+                <div *ngIf="driverLocation" class="gps-info">
+                    <div class="info-item">
+                        <label>Vitesse actuelle</label>
+                        <span class="speed-value">{{ driverLocation.speed }} km/h</span>
+                    </div>
+
+                    <div class="info-item">
+                        <label>Précision GPS</label>
+                        <span>±{{ driverLocation.accuracy }}m</span>
+                    </div>
+
+                    <div class="info-item">
+                        <label>Dernière mise à jour</label>
+                        <span>{{ formatDate(driverLocation.timestamp) }}</span>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Estimation -->
+                    <div class="estimation-box">
+                        <div class="estimation-item">
+                            <i class="icon-map-pin"></i>
+                            <div>
+                                <div class="label">Distance restante</div>
+                                <div class="value">{{ calculateDistance() }} km</div>
+                            </div>
+                        </div>
+
+                        <div class="estimation-item">
+                            <i class="icon-clock"></i>
+                            <div>
+                                <div class="label">Temps estimé</div>
+                                <div class="value">{{ estimateArrivalTime() }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div *ngIf="!driverLocation" class="no-data">
+                    <i class="icon-alert"></i>
+                    <p>Pas de position GPS disponible</p>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="panel-section" *ngIf="delivery">
+                <h3>Historique</h3>
+
+                <div class="timeline">
+                    <!-- En attente -->
+                    <div class="timeline-item" [class.completed]="delivery.status !== 'pending'">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Livraison créée</div>
+                            <div class="timeline-date">{{ formatDate(delivery.createdAt) }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Assignée -->
+                    <div class="timeline-item"
+                        [class.completed]="delivery.status !== 'pending' && delivery.status !== 'assigned'"
+                        [class.active]="delivery.status === 'assigned'">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Assignée</div>
+                            <div class="timeline-date" *ngIf="delivery.assignedAt">
+                                {{ formatDate(delivery.assignedAt) }}
+                            </div>
+                            <div class="timeline-date" *ngIf="!delivery.assignedAt">
+                                En attente...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- En cours -->
+                    <div class="timeline-item"
+                        [class.completed]="delivery.status === 'delivered' || delivery.status === 'failed'"
+                        [class.active]="delivery.status === 'in_progress'">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">En cours de livraison</div>
+                            <div class="timeline-date" *ngIf="delivery.pickedUpAt">
+                                {{ formatDate(delivery.pickedUpAt) }}
+                            </div>
+                            <div class="timeline-date" *ngIf="!delivery.pickedUpAt">
+                                En attente...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Livrée -->
+                    <div class="timeline-item" [class.completed]="delivery.status === 'delivered'"
+                        [class.active]="delivery.status === 'delivered'">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Livrée</div>
+                            <div class="timeline-date" *ngIf="delivery.deliveredAt">
+                                {{ formatDate(delivery.deliveredAt) }}
+                            </div>
+                            <div class="timeline-date" *ngIf="!delivery.deliveredAt">
+                                En attente...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Échouée -->
+                    <div class="timeline-item" [class.completed]="delivery.status === 'failed'"
+                        [class.active]="delivery.status === 'failed'" *ngIf="delivery.status === 'failed'">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">Échec de livraison</div>
+                            <div class="timeline-date">
+                                {{ formatDate(delivery.deliveredAt) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-
-      <!-- Timeline -->
-      <div class="panel-section" *ngIf="delivery">
-        <h3>Historique</h3>
-
-        <div class="timeline">
-          <!-- En attente -->
-          <div class="timeline-item" [class.completed]="delivery.status !== 'pending'">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="timeline-title">Livraison créée</div>
-              <div class="timeline-date">{{ formatDate(delivery.createdAt) }}</div>
-            </div>
-          </div>
-
-          <!-- Assignée -->
-          <div class="timeline-item" [class.completed]="delivery.status !== 'pending' && delivery.status !== 'assigned'" [class.active]="delivery.status === 'assigned'">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="timeline-title">Assignée</div>
-              <div class="timeline-date" *ngIf="delivery.assignedAt">
-                {{ formatDate(delivery.assignedAt) }}
-              </div>
-              <div class="timeline-date" *ngIf="!delivery.assignedAt">
-                En attente...
-              </div>
-            </div>
-          </div>
-
-          <!-- En cours -->
-          <div class="timeline-item" [class.completed]="delivery.status === 'delivered' || delivery.status === 'failed'" [class.active]="delivery.status === 'in_progress'">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="timeline-title">En cours de livraison</div>
-              <div class="timeline-date" *ngIf="delivery.pickedUpAt">
-                {{ formatDate(delivery.pickedUpAt) }}
-              </div>
-              <div class="timeline-date" *ngIf="!delivery.pickedUpAt">
-                En attente...
-              </div>
-            </div>
-          </div>
-
-          <!-- Livrée -->
-          <div class="timeline-item" [class.completed]="delivery.status === 'delivered'" [class.active]="delivery.status === 'delivered'">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="timeline-title">Livrée</div>
-              <div class="timeline-date" *ngIf="delivery.deliveredAt">
-                {{ formatDate(delivery.deliveredAt) }}
-              </div>
-              <div class="timeline-date" *ngIf="!delivery.deliveredAt">
-                En attente...
-              </div>
-            </div>
-          </div>
-
-          <!-- Échouée -->
-          <div class="timeline-item" [class.completed]="delivery.status === 'failed'" [class.active]="delivery.status === 'failed'" *ngIf="delivery.status === 'failed'">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="timeline-title">Échec de livraison</div>
-              <div class="timeline-date">
-                {{ formatDate(delivery.deliveredAt) }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
 </div>

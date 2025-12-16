@@ -195,7 +195,7 @@
             (click)="selectedDriverId = driver.id"
           >
             <div class="driver-avatar">
-              {{ driver.firstName.charAt(0) }}{{ driver.lastName.charAt(0) }}
+              {{ driver.firstName?.charAt(0) }}{{ driver.lastName?.charAt(0) }}
             </div>
             <div class="driver-details">
               <div class="driver-name">

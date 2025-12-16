@@ -3,11 +3,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, delay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { 
-  Delivery, 
+import {
+  Delivery,
   DeliveryAssignmentRequest,
   DeliveryStatus,
-  DeliveryDriver
+  DeliveryDriver,
+  DeliveryProof,
+  ProofStatus,
+  ProofType
 } from './models/delivery.model';
 
 export interface DeliveriesListResponse {
@@ -37,15 +40,15 @@ export interface AutoAssignmentResult {
 })
 export class DeliveriesService {
   private apiUrl = `${environment.apiUrl}/deliveries`;
-  
+
   // MODE TEST
   private TEST_MODE = true;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getDeliveries(
-    page: number = 1, 
-    perPage: number = 10, 
+    page: number = 1,
+    perPage: number = 10,
     filters?: DeliveryFilters
   ): Observable<DeliveriesListResponse> {
     if (this.TEST_MODE) {
@@ -70,7 +73,17 @@ export class DeliveriesService {
 
   getDelivery(id: number): Observable<Delivery> {
     if (this.TEST_MODE) {
-      const mockDelivery = this.createMockDelivery(id);
+      const mockDelivery = this.createMockDelivery(id, DeliveryStatus.IN_PROGRESS);
+
+      // Ajouter une position GPS au livreur pour le tracking
+      if (mockDelivery.driver) {
+        mockDelivery.driver.currentLocation = {
+          latitude: mockDelivery.address.latitude! + 0.02, // ~2km de distance
+          longitude: mockDelivery.address.longitude! + 0.02,
+          updatedAt: new Date().toISOString()
+        };
+      }
+
       return of(mockDelivery).pipe(delay(300));
     }
 
@@ -94,15 +107,15 @@ export class DeliveriesService {
   assignDeliveryManually(deliveryId: number, driverId: number): Observable<Delivery> {
     if (this.TEST_MODE) {
       console.log(`🎯 Assignation manuelle - Livraison #${deliveryId} → Livreur #${driverId}`);
-      
+
       const delivery = this.createMockDelivery(deliveryId);
       delivery.status = DeliveryStatus.ASSIGNED;
       delivery.driver = this.getMockDriver(driverId);
       delivery.assignedAt = new Date().toISOString();
-      
+
       // Simuler la notification push
       this.notifyDriverPush(driverId, deliveryId, 'manual').subscribe();
-      
+
       return of(delivery).pipe(delay(500));
     }
 
@@ -122,13 +135,13 @@ export class DeliveriesService {
   assignDeliveryAutomatically(deliveryId: number): Observable<AutoAssignmentResult> {
     if (this.TEST_MODE) {
       console.log(`🤖 Assignation automatique - Livraison #${deliveryId}`);
-      
+
       return this.findBestDriverMock(deliveryId).pipe(
         delay(800),
         tap(result => {
           console.log(`✅ Meilleur livreur: ${result.driver.firstName} ${result.driver.lastName}`);
           console.log(`📊 Score: ${result.score} - Raison: ${result.reason}`);
-          
+
           // Notifier l'app mobile
           this.notifyDriverPush(result.driver.id, deliveryId, 'auto').subscribe();
         })
@@ -136,7 +149,7 @@ export class DeliveriesService {
     }
 
     return this.http.post<AutoAssignmentResult>(
-      `${this.apiUrl}/${deliveryId}/auto-assign`, 
+      `${this.apiUrl}/${deliveryId}/auto-assign`,
       {}
     ).pipe(
       tap(result => {
@@ -152,12 +165,12 @@ export class DeliveriesService {
   unassignDelivery(deliveryId: number): Observable<Delivery> {
     if (this.TEST_MODE) {
       console.log(`❌ Désassignation - Livraison #${deliveryId}`);
-      
+
       const delivery = this.createMockDelivery(deliveryId);
       delivery.status = DeliveryStatus.PENDING;
       delivery.driver = undefined;
       delivery.assignedAt = undefined;
-      
+
       return of(delivery).pipe(delay(300));
     }
 
@@ -169,17 +182,17 @@ export class DeliveriesService {
    * Envoie une notification au livreur sur son app React Native
    */
   private notifyDriverPush(
-    driverId: number, 
-    deliveryId: number, 
+    driverId: number,
+    deliveryId: number,
     assignmentType: 'manual' | 'auto'
   ): Observable<any> {
     if (this.TEST_MODE) {
       console.log(`📱 Notification push envoyée au livreur #${driverId}`);
       console.log(`   Type: ${assignmentType === 'manual' ? 'Manuelle' : 'Automatique'}`);
       console.log(`   Livraison: #${deliveryId}`);
-      
-      return of({ 
-        success: true, 
+
+      return of({
+        success: true,
         message: 'Notification envoyée',
         timestamp: new Date().toISOString()
       }).pipe(delay(200));
@@ -190,8 +203,8 @@ export class DeliveriesService {
       driverId,
       deliveryId,
       type: 'NEW_DELIVERY_ASSIGNED',
-      title: assignmentType === 'manual' 
-        ? 'Nouvelle livraison assignée' 
+      title: assignmentType === 'manual'
+        ? 'Nouvelle livraison assignée'
         : 'Livraison automatiquement assignée',
       body: `Livraison #${deliveryId} vous a été attribuée`,
       data: { deliveryId, assignmentType }
@@ -286,15 +299,55 @@ export class DeliveriesService {
     return this.http.post<Delivery>(`${this.apiUrl}/${id}/cancel`, { reason });
   }
 
-  validateDeliveryProof(id: number): Observable<Delivery> {
+  // ===================== DELIVERY PROOFS =====================
+
+  getDeliveryProofs(deliveryId: number): Observable<DeliveryProof[]> {
     if (this.TEST_MODE) {
-      const delivery = this.createMockDelivery(id);
-      delivery.status = DeliveryStatus.DELIVERED;
-      return of(delivery).pipe(delay(500));
+      return of<DeliveryProof[]>([
+        {
+          id: 1,
+          type: ProofType.SIGNATURE,
+          url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+          recipientName: 'Client Test',
+          createdAt: new Date().toISOString(),
+          status: ProofStatus.PENDING,
+          driver: {
+            id: 1,
+            firstName: 'Pierre',
+            lastName: 'Martin'
+          }
+        }
+      ]).pipe(delay(300));
     }
 
-    return this.http.post<Delivery>(`${this.apiUrl}/${id}/validate-proof`, {});
+    return this.http.get<DeliveryProof[]>(
+      `${this.apiUrl}/${deliveryId}/proofs`
+    );
   }
+
+  validateProof(proofId: number): Observable<void> {
+    if (this.TEST_MODE) {
+      return of(void 0).pipe(delay(300));
+    }
+
+    return this.http.post<void>(
+      `${environment.apiUrl}/delivery-proofs/${proofId}/validate`,
+      {}
+    );
+  }
+
+  rejectProof(proofId: number, reason: string): Observable<void> {
+    if (this.TEST_MODE) {
+      return of(void 0).pipe(delay(300));
+    }
+
+    return this.http.post<void>(
+      `${environment.apiUrl}/delivery-proofs/${proofId}/reject`,
+      { reason }
+    );
+  }
+
+
 
   getDeliveryRoute(id: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/${id}/route`);
@@ -315,7 +368,7 @@ export class DeliveriesService {
     }
     if (filters?.search) {
       const search = filters.search.toLowerCase();
-      deliveries = deliveries.filter(d => 
+      deliveries = deliveries.filter(d =>
         d.orderNumber.toLowerCase().includes(search) ||
         d.customer.name.toLowerCase().includes(search)
       );

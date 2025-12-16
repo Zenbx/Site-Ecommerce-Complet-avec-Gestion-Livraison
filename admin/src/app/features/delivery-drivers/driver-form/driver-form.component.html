@@ -1,0 +1,180 @@
+<!-- src/app/features/delivery-drivers/driver-form/driver-form.component.html -->
+
+<div class="driver-form-container">
+  <!-- En-tête -->
+  <div class="form-header">
+    <button class="btn-back" (click)="goBack()">
+      <i class="icon-chevron-left"></i>
+      Retour à la liste
+    </button>
+    <h1>{{ isEditMode ? 'Modifier le livreur' : 'Créer un nouveau livreur' }}</h1>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- Chargement -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Chargement du livreur...</p>
+  </div>
+
+  <!-- Formulaire -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!loading" class="driver-form">
+    <!-- Erreur -->
+    <div class="error-banner" *ngIf="error">
+      <i class="icon-alert-circle"></i>
+      {{ error }}
+    </div>
+
+    <!-- Sections du formulaire -->
+    <div class="form-content">
+      <!-- Section Informations Personnelles -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>
+            <i class="icon-user"></i>
+            Informations Personnelles
+          </h2>
+        </div>
+
+        <div class="form-group">
+          <label for="firstName">Prénom <span class="required">*</span></label>
+          <input
+            type="text"
+            id="firstName"
+            formControlName="firstName"
+            placeholder="Ex: Ahmed"
+            class="form-control"
+            [class.error]="hasError('firstName', 'required')"
+          />
+          <span class="error-message" *ngIf="hasError('firstName', 'required')">
+            {{ getErrorMessage('firstName') }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">Nom <span class="required">*</span></label>
+          <input
+            type="text"
+            id="lastName"
+            formControlName="lastName"
+            placeholder="Ex: Hassan"
+            class="form-control"
+            [class.error]="hasError('lastName', 'required')"
+          />
+          <span class="error-message" *ngIf="hasError('lastName', 'required')">
+            {{ getErrorMessage('lastName') }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Téléphone <span class="required">*</span></label>
+          <input
+            type="tel"
+            id="phone"
+            formControlName="phone"
+            placeholder="Ex: +212612345678"
+            class="form-control"
+            [class.error]="hasError('phone', 'required') || hasError('phone', 'pattern')"
+          />
+          <span class="error-message" *ngIf="hasError('phone', 'required') || hasError('phone', 'pattern')">
+            {{ getErrorMessage('phone') }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="Ex: ahmed@example.com"
+            class="form-control"
+            [class.error]="hasError('email', 'email')"
+          />
+          <span class="error-message" *ngIf="hasError('email', 'email')">
+            {{ getErrorMessage('email') }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Section Véhicule -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2>
+            <i class="icon-truck"></i>
+            Informations Véhicule
+          </h2>
+        </div>
+
+        <div class="form-group">
+          <label for="vehicleType">Type de véhicule <span class="required">*</span></label>
+          <select
+            id="vehicleType"
+            formControlName="vehicleType"
+            class="form-control"
+            [class.error]="hasError('vehicleType', 'required')"
+          >
+            <option value="">Sélectionner un type</option>
+            <option *ngFor="let type of vehicleTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+          <span class="error-message" *ngIf="hasError('vehicleType', 'required')">
+            {{ getErrorMessage('vehicleType') }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="vehiclePlate">Immatriculation <span class="required">*</span></label>
+          <input
+            type="text"
+            id="vehiclePlate"
+            formControlName="vehiclePlate"
+            placeholder="Ex: ABC-1234"
+            class="form-control"
+            [class.error]="hasError('vehiclePlate', 'required')"
+          />
+          <span class="error-message" *ngIf="hasError('vehiclePlate', 'required')">
+            {{ getErrorMessage('vehiclePlate') }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="licenseNumber">Numéro de permis <span class="required">*</span></label>
+          <input
+            type="text"
+            id="licenseNumber"
+            formControlName="licenseNumber"
+            placeholder="Ex: DL123456789"
+            class="form-control"
+            [class.error]="hasError('licenseNumber', 'required')"
+          />
+          <span class="error-message" *ngIf="hasError('licenseNumber', 'required')">
+            {{ getErrorMessage('licenseNumber') }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="goBack()" [disabled]="submitting">
+        Annuler
+      </button>
+      <button 
+        type="submit" 
+        class="btn btn-primary" 
+        [disabled]="!isFormValid() || submitting"
+      >
+        <span *ngIf="!submitting">
+          <i class="icon-check"></i>
+          {{ isEditMode ? 'Mettre à jour' : 'Créer le livreur' }}
+        </span>
+        <span *ngIf="submitting">
+          <i class="icon-loading"></i>
+          En cours...
+        </span>
+      </button>
+    </div>
+  </form>
+</div>
