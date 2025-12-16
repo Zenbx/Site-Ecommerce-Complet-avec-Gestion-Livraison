@@ -12,12 +12,7 @@ return [
     
     'allowed_methods' => ['*'],
     
-    'allowed_origins' => [
-        'http://localhost:4200',  // Angular
-        'http://localhost:3000',   // React Native web
-        'http://127.0.0.1:4200',
-        'http://127.0.0.1:3000',
-    ],
+    'allowed_origins' => ['*'],
     
     'allowed_origins_patterns' => [],
     
@@ -27,6 +22,6 @@ return [
     
     'max_age' => 0,
     
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];

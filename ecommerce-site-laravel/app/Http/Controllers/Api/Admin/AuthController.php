@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Http\Requests\Admin\LoginRequest;
+use App\Http\Requests\Admin\RegisterAdminRequest;
 use App\Http\Resources\AdminResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -173,4 +174,65 @@ class AuthController extends Controller
             'data' => new AdminResource($request->user('admin-api')),
         ], 200);
     }
+
+    
+    /**
+ * Créer un nouvel administrateur (réservé aux admins avec le rôle ADMIN)
+ * 
+ * Cette méthode permet à un admin authentifié avec le rôle ADMIN de créer
+ * un nouveau compte administrateur dans le système. C'est la seule façon
+ * sécurisée de créer des comptes admin en production, car elle nécessite
+ * qu'un admin existant soit déjà connecté et autorisé.
+ * 
+ * Le processus de création est simple et sécurisé. Nous prenons les données
+ * validées du FormRequest, nous créons un nouvel admin avec ces données,
+ * et Laravel se charge automatiquement de hasher le mot de passe grâce au
+ * mutator ou au cast 'hashed' que nous avons dans le modèle Admin.
+ *
+ * @param RegisterAdminRequest $request La requête validée contenant les données du nouvel admin
+ * @return \Illuminate\Http\JsonResponse La réponse JSON avec les détails de l'admin créé
+ */
+public function register(RegisterAdminRequest $request)
+{
+    // À ce stade, nous sommes certains que la requête est valide et autorisée
+    // Le FormRequest a déjà vérifié que l'admin connecté a le rôle ADMIN
+    // et que toutes les données respectent les règles de validation
+    
+    // Créer le nouvel admin avec les données validées
+    // La méthode create prend un tableau de données et crée un nouvel
+    // enregistrement dans la table admins de PostgreSQL
+    // IMPORTANT : Nous assignons le mot de passe en clair ici
+    // Le mutator/cast dans le modèle Admin va automatiquement le hasher
+    // avant de le sauvegarder dans la base de données
+    $admin = Admin::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => $request->password, // Sera automatiquement haché par le mutator
+        'role' => $request->role,
+    ]);
+
+    // Log l'événement de création pour des raisons de sécurité et d'audit
+    // En production, vous voudrez toujours savoir qui a créé quel compte admin
+    // Ces logs peuvent être essentiels pour des investigations de sécurité
+    \Log::info('Nouvel admin créé', [
+        'created_admin_id' => $admin->id,
+        'created_admin_email' => $admin->email,
+        'created_admin_role' => $admin->role,
+        'created_by_admin_id' => $request->user('admin-api')->id,
+        'created_by_admin_email' => $request->user('admin-api')->email,
+    ]);
+
+    // Retourner une réponse JSON avec les détails de l'admin créé
+    // Nous utilisons le code de statut HTTP 201 Created qui est le code
+    // standard pour indiquer qu'une nouvelle ressource a été créée avec succès
+    // Notez que nous utilisons AdminResource pour formater la réponse
+    // de manière cohérente avec le reste de votre API
+    return response()->json([
+        'success' => true,
+        'message' => 'Administrateur créé avec succès.',
+        'data' => [
+            'admin' => new AdminResource($admin),
+        ],
+    ], 201);
+}
 }

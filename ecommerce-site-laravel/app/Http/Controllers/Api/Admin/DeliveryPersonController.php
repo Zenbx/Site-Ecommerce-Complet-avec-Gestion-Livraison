@@ -142,27 +142,42 @@ class DeliveryPersonController extends Controller
      *      )
      * )
      */
-    public function store(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:delivery_persons,email',
-            'password' => 'required|string|min:8',
-            'id_card_number' => 'required|string|max:50|unique:delivery_persons,id_card_number',
-            'address' => 'required|string|max:500',
-            'photo_url' => 'nullable|url|max:500',
-        ]);
-        
-        // Le mot de passe sera automatiquement hashé par le mutateur dans le modèle
-        $deliveryPerson = DeliveryPerson::create($validated);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Livreur créé avec succès',
-            'data' => new DeliveryPersonResource($deliveryPerson),
-        ], 201);
-    }
+   // app/Http/Controllers/Api/Admin/DeliveryPersonController.php
+
+public function store(Request $request): JsonResponse
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:delivery_person,email',
+        'id_card_number' => 'required|string|max:50|unique:delivery_person,id_card_number',
+        'address' => 'required|string|max:500',
+        'photo_url' => 'nullable|url|max:500',
+    ]);
     
+    // Générer un mot de passe temporaire sécurisé
+    $temporaryPassword = 'Delivery' . rand(100000, 999999) . '!';
+    
+    $validated['password'] = Hash::make($temporaryPassword);
+    $validated['must_change_password'] = true; // Flag pour forcer le changement
+    
+    $deliveryPerson = DeliveryPerson::create($validated);
+    
+    // TODO: Envoyer le mot de passe par email/SMS
+    // Mail::to($deliveryPerson->email)->send(new DeliveryPersonWelcome($deliveryPerson, $temporaryPassword));
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Livreur créé avec succès',
+        'data' => [
+            'delivery_person' => new DeliveryPersonResource($deliveryPerson),
+            'credentials' => [
+                'email' => $deliveryPerson->email,
+                'temporary_password' => $temporaryPassword, // En production, ne pas retourner ça, envoyer par email
+            ],
+            'note' => 'Le livreur doit changer ce mot de passe à sa première connexion'
+        ],
+    ], 201);
+}
     /**
      * Affiche les détails complets d'un livreur
      * 

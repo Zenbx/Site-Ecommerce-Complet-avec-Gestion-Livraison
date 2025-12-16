@@ -76,7 +76,7 @@ class ProfileController extends Controller
         $client = $request->user('client-api');
         
         // Charger les relations nécessaires
-        $client->load(['addresses', 'orders']);
+        $client->load(['orders']);
         
         // Calculer des statistiques personnelles
         $totalSpent = $client->orders()

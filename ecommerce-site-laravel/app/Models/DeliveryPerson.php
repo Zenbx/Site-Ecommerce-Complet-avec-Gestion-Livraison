@@ -36,6 +36,7 @@ class DeliveryPerson extends Authenticatable
         'address',
         'photo_url',
         'is_available',
+        'must_change_password'
     ];
 
     protected $hidden = [
@@ -45,6 +46,7 @@ class DeliveryPerson extends Authenticatable
 
     protected $casts = [
         'is_available' => 'boolean',
+        'must_change_password' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

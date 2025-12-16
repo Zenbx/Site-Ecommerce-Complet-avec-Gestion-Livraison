@@ -41,7 +41,7 @@ class ProfileTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
             ->putJson('/api/client/profile', [
                 'name' => 'Updated Name',
-                'phone' => '+237600000000',
+                'email' => 'update@example.com',
                 'address' => '123 New Street'
             ]);
 
@@ -54,34 +54,42 @@ class ProfileTest extends TestCase
         $this->assertDatabaseHas('clients', [
             'id' => $client->id,
             'name' => 'Updated Name',
-            'phone' => '+237600000000'
+            'email' => 'update@example.com',
+            'address' => '123 New Street'
         ]);
     }
 
-    public function test_client_can_change_password()
-    {
-        $client = Client::factory()->create([
-            'password' => 'OldPass123!'
+   public function test_client_can_change_password()
+{
+    // 1. Setup : Créer le client avec un mot de passe initial HACHÉ.
+    // Même si le mutateur est là, cette méthode garantit que le mot de passe 
+    // en base de données est toujours un HASH valide.
+    $client = Client::factory()->create([
+        'password' => Hash::make('OldPass123!') 
+    ]);
+    $token = $client->createToken('test-token')->plainTextToken;
+
+    // 2. Action : Tenter de changer le mot de passe
+    $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        ->putJson('/api/client/profile/password', [
+            // On envoie le mot de passe EN CLAIR qui est censé correspondre au hash
+            'current_password' => 'OldPass123!', 
+            'new_password' => 'NewPass123!',
+            'new_password_confirmed' => 'NewPass123!'
         ]);
-        $token = $client->createToken('test-token')->plainTextToken;
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/client/profile/password', [
-                'current_password' => 'OldPass123!',
-                'new_password' => 'NewPass123!',
-                'new_password_confirmation' => 'NewPass123!'
-            ]);
+    // 3. Assertions HTTP
+    $response->assertStatus(200);
+    $response->assertJson([
+        'success' => true,
+        'message' => 'Mot de passe modifié avec succès'
+    ]);
 
-        $response->assertStatus(200);
-        $response->assertJson([
-            'success' => true,
-            'message' => 'Mot de passe modifié avec succès'
-        ]);
+    // 4. Assertion BDD : Vérifier que le nouveau mot de passe est bien enregistré et haché
+    $client->refresh();
+    $this->assertTrue(Hash::check('NewPass123!', $client->password), 'Le nouveau mot de passe n\'a pas été correctement enregistré ou haché.');
+}
 
-        // Verify password was changed
-        $client->refresh();
-        $this->assertTrue(Hash::check('NewPass123!', $client->password));
-    }
 
     public function test_cannot_change_password_with_wrong_current_password()
     {
@@ -120,16 +128,14 @@ class ProfileTest extends TestCase
         $response->assertJsonStructure([
             'success',
             'data' => [
-                '*' => [
-                    'id',
-                    'total_amount',
-                    'status',
-                    'created_at'
-                ]
+            'orders' => [
+                '*' => ['id', 'total_amount', 'status', 'created_at']
+            ],
+            'pagination'
             ]
         ]);
         
-        $this->assertCount(3, $response->json('data'));
+        $this->assertCount(3, $response->json('data.orders'));
     }
 
     public function test_client_cannot_update_email_to_existing_one()

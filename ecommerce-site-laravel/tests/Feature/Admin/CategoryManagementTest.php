@@ -82,32 +82,46 @@ class CategoryManagementTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_update_category()
-    {
-        $admin = Admin::factory()->admin()->create();
-        $token = $admin->createToken('test-token')->plainTextToken;
+   public function test_admin_can_update_category()
+{
+    $admin = Admin::factory()->admin()->create();
+    $token = $admin->createToken('test-token')->plainTextToken;
 
-        $category = Category::factory()->create([
-            'name' => 'Old Name'
+    $category = Category::factory()->create([
+        'name' => 'Old Name',
+        'description' => 'Old description'
+    ]);
+    
+    $newName = 'Updated Name Final';
+    $newDescription = 'Updated description final';
+
+    $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        ->putJson("/api/admin/categories/{$category->id}", [
+            'name' => $newName,
+            'description' => $newDescription
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson("/api/admin/categories/{$category->id}", [
-                'name' => 'Updated Name',
-                'description' => 'Updated description'
-            ]);
-
-        $response->assertStatus(200);
-        $response->assertJson([
-            'success' => true,
-            'message' => 'Catégorie mise à jour avec succès'
-        ]);
-
-        $this->assertDatabaseHas('categories', [
+    $response->assertStatus(200);
+    
+    // CORRECTION MAJEURE: Alignement du message et vérification de la clé 'data'
+    $response->assertJson([
+        'success' => true,
+        'message' => 'Catégorie mise à jour', // <-- Message aligné sur le contrôleur
+        'data' => [ // <-- Vérification de l'objet Category retourné
             'id' => $category->id,
-            'name' => 'Updated Name'
-        ]);
-    }
+            'name' => $newName,
+            'description' => $newDescription,
+            // Les autres champs (slug, is_active, parent_id, etc.) sont aussi dans 'data'
+        ]
+    ]);
+
+    // Vérification de la base de données
+    $this->assertDatabaseHas('categories', [
+        'id' => $category->id,
+        'name' => $newName,
+        'description' => $newDescription // On vérifie aussi la description
+    ]);
+}
 
     public function test_admin_can_delete_category()
     {

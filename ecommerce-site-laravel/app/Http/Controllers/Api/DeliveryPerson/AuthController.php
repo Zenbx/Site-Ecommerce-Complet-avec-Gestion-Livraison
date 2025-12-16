@@ -47,37 +47,53 @@ class AuthController extends Controller
      * )
      */
     public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
+{
+    $request->validate([
+        'email' => 'required|string|email',
+        'password' => 'required|string',
+    ]);
+
+    $deliveryPerson = DeliveryPerson::where('email', $request->email)->first();
+
+    if (!$deliveryPerson || !Hash::check($request->password, $deliveryPerson->password)) {
+        throw ValidationException::withMessages([
+            'email' => ['Les informations d\'identification fournies sont incorrectes.'],
         ]);
-
-        $deliveryPerson = DeliveryPerson::where('email', $request->email)->first();
-
-        if (!$deliveryPerson || !Hash::check($request->password, $deliveryPerson->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Les informations d\'identification fournies sont incorrectes.'],
-            ]);
-        }
-
-        $token = $deliveryPerson->createToken('delivery-token', ['*'])->plainTextToken;
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Connexion réussie',
-            'data' => [
-                'delivery_person' => [
-                    'id' => $deliveryPerson->id,
-                    'name' => $deliveryPerson->name,
-                    'email' => $deliveryPerson->email,
-                    'is_available' => $deliveryPerson->is_available,
-                ],
-                'token' => $token,
-                'token_type' => 'Bearer',
-            ],
-        ], 200);
     }
+
+    // Vérifier si le livreur est actif (optionnel)
+    // if (!$deliveryPerson->is_available) {
+    //     return response()->json([
+    //         'success' => false,
+    //         'message' => 'Votre compte est désactivé. Contactez l\'administrateur.',
+    //     ], 403);
+    // }
+
+    $token = $deliveryPerson->createToken('delivery-token', ['*'])->plainTextToken;
+
+    $response = [
+        'success' => true,
+        'message' => 'Connexion réussie',
+        'data' => [
+            'delivery_person' => [
+                'id' => $deliveryPerson->id,
+                'name' => $deliveryPerson->name,
+                'email' => $deliveryPerson->email,
+                'is_available' => $deliveryPerson->is_available,
+            ],
+            'token' => $token,
+            'token_type' => 'Bearer',
+        ],
+    ];
+
+    // ⚠️ IMPORTANT : Vérifier si le mot de passe doit être changé
+    if ($deliveryPerson->must_change_password) {
+        $response['must_change_password'] = true;
+        $response['warning'] = 'Vous devez changer votre mot de passe temporaire avant de continuer.';
+    }
+
+    return response()->json($response, 200);
+}
 
     /**
      * Déconnecter le livreur

@@ -58,11 +58,11 @@ Route::prefix('auth')->name('auth.')->group(function () {
     
     // Authentification Admin
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::post('/register', [AdminAuthController::class, 'register'])->name('register');
         Route::post('/login', [AdminAuthController::class, 'login'])->name('login');
         
         // Routes protégées admin auth
         Route::middleware('auth:admin-api')->group(function () {
+            Route::post('/register', [AdminAuthController::class, 'register'])->name('register');
             Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
             Route::post('/refresh', [AdminAuthController::class, 'refresh'])->name('refresh');
             Route::get('/me', [AdminAuthController::class, 'me'])->name('me');

@@ -45,9 +45,14 @@ class Client extends Authenticatable
     /**
      * Mutateur pour hasher automatiquement le mot de passe.
      */
-    public function setPasswordAttribute($value)
+      public function setPasswordAttribute($value)
     {
-        $this->attributes['password'] = bcrypt($value);
+        // Si la valeur commence par $2y$ (bcrypt) ou $2a$, c'est déjà hashé
+        if (preg_match('/^\$2[ayb]\$.{56}$/', $value)) {
+            $this->attributes['password'] = $value;
+        } else {
+            $this->attributes['password'] = bcrypt($value);
+        }
     }
 
 
