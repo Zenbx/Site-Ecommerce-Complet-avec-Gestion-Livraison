@@ -222,38 +222,6 @@
           </p>
         </div>
       </div>
-
-      <!-- Section Localisation GPS -->
-      <div class="card" *ngIf="delivery.address.latitude && delivery.address.longitude">
-        <div class="card-header">
-          <h2>
-            <i class="icon-map"></i>
-            Localisation
-          </h2>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-group">
-              <label>Latitude</label>
-              <p class="monospace">{{ delivery.address.latitude }}</p>
-            </div>
-
-            <div class="info-group">
-              <label>Longitude</label>
-              <p class="monospace">{{ delivery.address.longitude }}</p>
-            </div>
-          </div>
-
-          <a 
-            [href]="'https://maps.google.com/?q=' + delivery.address.latitude + ',' + delivery.address.longitude"
-            target="_blank"
-            class="btn btn-secondary btn-small"
-          >
-            <i class="icon-external-link"></i>
-            Ouvrir sur Google Maps
-          </a>
-        </div>
-      </div>
     </div>
   </div>
 </div>
