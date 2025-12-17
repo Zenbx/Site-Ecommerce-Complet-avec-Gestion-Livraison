@@ -9,31 +9,23 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useDeliveries } from '../../hooks/useDeliveries';
-import { formatCurrency, formatDistanceKm, calculateDistance } from '../../utils/helpers';
-import { useLocation } from '../../hooks/useLocation';
-import { DELIVERY_STATUS, DELIVERY_STATUS_COLORS, DELIVERY_STATUS_LABELS } from '../../constants/app';
+import { formatCurrency } from '../../utils/helpers';
+import { DELIVERY_STATUS_COLORS } from '../../constants/app';
 
 export default function DeliveriesListScreen() {
   const router = useRouter();
   const { deliveries, loading, refreshing, filter, setFilter, fetchDeliveries, refresh } = useDeliveries();
-  const { location } = useLocation();
   const [filters] = useState([
     { key: 'all', label: 'Toutes' },
-    { key: DELIVERY_STATUS.ASSIGNED, label: 'Assignées' },
-    { key: DELIVERY_STATUS.IN_TRANSIT, label: 'En cours' },
-    { key: DELIVERY_STATUS.DELIVERED, label: 'Livrées' },
-    { key: DELIVERY_STATUS.FAILED, label: 'Échouées' },
+    { key: 'ASSIGNED', label: 'Assignées' },
+    { key: 'IN_TRANSIT', label: 'En cours' },
+    { key: 'DELIVERED', label: 'Livrées' },
+    { key: 'FAILED', label: 'Échouées' },
   ]);
 
   useEffect(() => {
     fetchDeliveries();
   }, []);
-
-  const getDistance = (delivery: any) => {
-    if (!location) return null;
-    const dist = calculateDistance(location.latitude, location.longitude, delivery.latitude, delivery.longitude);
-    return formatDistanceKm(dist);
-  };
 
   const renderItem = ({ item }: any) => (
     <TouchableOpacity 
@@ -41,16 +33,19 @@ export default function DeliveriesListScreen() {
       onPress={() => router.push(`/delivery/${item.id}`)}
     >
       <View style={styles.cardHeader}>
-        <Text style={styles.orderNumber}>{item.order_number}</Text>
-        <View style={[styles.badge, { backgroundColor: DELIVERY_STATUS_COLORS[item.status] }]}>
-          <Text style={styles.badgeText}>{DELIVERY_STATUS_LABELS[item.status]}</Text>
+        <View>
+          <Text style={styles.trackingCode}>{item.tracking_code}</Text>
+          <Text style={styles.orderNumber}>{item.order.order_number}</Text>
+        </View>
+        <View style={[styles.badge, { backgroundColor: DELIVERY_STATUS_COLORS[item.status] || '#999' }]}>
+          <Text style={styles.badgeText}>{item.status_label}</Text>
         </View>
       </View>
-      <Text style={styles.customer}>{item.customer_name}</Text>
+      <Text style={styles.customer}>{item.order.customer.name}</Text>
       <Text style={styles.address} numberOfLines={2}>{item.delivery_address}</Text>
       <View style={styles.footer}>
-        <Text style={styles.amount}>{formatCurrency(item.total_amount)}</Text>
-        {location && <Text style={styles.distance}>{getDistance(item)}</Text>}
+        <Text style={styles.amount}>{formatCurrency(parseFloat(item.order.total_amount))}</Text>
+        <Text style={styles.items}>{item.order.items.length} article(s)</Text>
       </View>
     </TouchableOpacity>
   );
@@ -106,14 +101,15 @@ const styles = StyleSheet.create({
   filterTextActive: { color: '#fff', fontWeight: '600' },
   list: { padding: 12 },
   card: { backgroundColor: '#fff', padding: 16, marginBottom: 12, borderRadius: 8, borderWidth: 1, borderColor: '#eee' },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  orderNumber: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
+  trackingCode: { fontSize: 12, color: '#4169E1', fontWeight: '600' },
+  orderNumber: { fontSize: 16, fontWeight: 'bold', color: '#333', marginTop: 2 },
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
   badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   customer: { fontSize: 15, fontWeight: '600', color: '#333', marginBottom: 4 },
   address: { fontSize: 14, color: '#666', marginBottom: 8 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   amount: { fontSize: 16, fontWeight: 'bold', color: '#32CD32' },
-  distance: { fontSize: 14, color: '#4169E1' },
+  items: { fontSize: 14, color: '#666' },
   empty: { textAlign: 'center', marginTop: 40, fontSize: 16, color: '#999' },
 });

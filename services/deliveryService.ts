@@ -98,7 +98,7 @@ export const reportIssue = async (id: number, formData: FormData) => {
 };
 
 export const getHistory = async (page: number = 1, perPage: number = 20) => {
-  const response: any = await api.get('/delivery-person/deliveries/history', {
+  const response: any = await api.get('/delivery-person/profile/deliveries', {
     params: { page, per_page: perPage },
   });
   return response.data;

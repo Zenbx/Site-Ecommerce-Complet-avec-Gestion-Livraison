@@ -9,20 +9,18 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useDeliveries } from '../../hooks/useDeliveries';
+import { useDelivery } from '../../context/DeliveryContext';
 import { useAuth } from '../../context/AuthContext';
-import { formatCurrency } from '../../utils/helpers';
-import { DELIVERY_STATUS } from '../../constants/app';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { fetchDeliveries, getTodayStats, refresh, refreshing } = useDeliveries();
+  const { deliveries, fetchDeliveries, refresh, refreshing } = useDelivery();
   const [stats, setStats] = useState({
     total: 0,
     assigned: 0,
-    inProgress: 0,
-    completed: 0,
+    in_transit: 0,
+    delivered: 0,
     failed: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -34,7 +32,6 @@ export default function DashboardScreen() {
   const loadData = async () => {
     try {
       await fetchDeliveries();
-      setStats(getTodayStats());
     } catch (error) {
       console.error('Erreur chargement:', error);
     } finally {
@@ -42,9 +39,24 @@ export default function DashboardScreen() {
     }
   };
 
+  useEffect(() => {
+    // Calculer les stats à partir des livraisons
+    const today = new Date().toDateString();
+    const todayDeliveries = deliveries.filter(
+      d => new Date(d.timeline.created_at).toDateString() === today
+    );
+
+    setStats({
+      total: todayDeliveries.length,
+      assigned: todayDeliveries.filter(d => d.status === 'ASSIGNED').length,
+      in_transit: todayDeliveries.filter(d => d.status === 'IN_TRANSIT' || d.status === 'PICKED_UP').length,
+      delivered: todayDeliveries.filter(d => d.status === 'DELIVERED').length,
+      failed: todayDeliveries.filter(d => d.status === 'FAILED').length,
+    });
+  }, [deliveries]);
+
   const onRefresh = async () => {
     await refresh();
-    setStats(getTodayStats());
   };
 
   if (loading) {
@@ -75,11 +87,11 @@ export default function DashboardScreen() {
           <Text style={styles.statLabel}>Assignées</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: '#1E90FF' }]}>
-          <Text style={styles.statValue}>{stats.inProgress}</Text>
+          <Text style={styles.statValue}>{stats.in_transit}</Text>
           <Text style={styles.statLabel}>En cours</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: '#32CD32' }]}>
-          <Text style={styles.statValue}>{stats.completed}</Text>
+          <Text style={styles.statValue}>{stats.delivered}</Text>
           <Text style={styles.statLabel}>Complétées</Text>
         </View>
       </View>

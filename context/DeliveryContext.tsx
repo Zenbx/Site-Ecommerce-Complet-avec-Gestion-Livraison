@@ -2,20 +2,61 @@ import React, { createContext, useState, useContext, useCallback, ReactNode } fr
 import * as deliveryService from '../services/deliveryService';
 import { DELIVERY_STATUS } from '../constants/app';
 
-interface Delivery {
+interface Customer {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+}
+
+interface OrderItem {
+  product_name: string;
+  quantity: number;
+  unit_price: string;
+  image_url: string | null;
+}
+
+interface Order {
   id: number;
   order_number: string;
+  total_amount: string;
   status: string;
-  customer_name: string;
-  customer_phone: string;
-  delivery_address: string;
-  latitude: number;
-  longitude: number;
-  total_amount: number;
-  items: any[];
-  notes?: string;
+  customer: Customer;
+  items: OrderItem[];
+}
+
+interface QRCode {
+  token: string;
+  status: string;
+  expires_at: string;
+  scanned_at: string | null;
+  url: string;
+}
+
+interface ProofOfDelivery {
+  image_url: string | null;
+  submitted_at: string | null;
+}
+
+interface Timeline {
   created_at: string;
-  scheduled_at?: string;
+  delivered_at: string | null;
+  updated_at: string;
+  elapsed_time: string;
+  total_duration: string | null;
+}
+
+interface Delivery {
+  id: number;
+  tracking_code: string;
+  status: string;
+  status_label: string;
+  order: Order;
+  delivery_address: string;
+  qr_code: QRCode;
+  proof_of_delivery: ProofOfDelivery;
+  timeline: Timeline;
+  estimated_delivery: string;
 }
 
 interface DeliveryContextData {
