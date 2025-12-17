@@ -1,4 +1,4 @@
-// src/app/features/deliveries/delivery-map/delivery-map.component.ts
+// src/app/features/map/map.component.ts
 
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -52,11 +52,11 @@ const iconDefault = L.icon({
 L.Marker.prototype.options.icon = iconDefault;
 
 @Component({
-  selector: 'app-delivery-map',
+  selector: 'app-map',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './delivery-map.component.html',
-  styleUrls: ['./delivery-map.component.scss'],
+  templateUrl: './map.component.html',
+  styleUrls: ['./map.component.scss'],
   animations: [
     trigger('slideIn', [
       transition(':enter', [
@@ -71,7 +71,7 @@ L.Marker.prototype.options.icon = iconDefault;
     ])
   ]
 })
-export class DeliveryMapComponent implements OnInit, OnDestroy, OnChanges {
+export class MapComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * PROPRIÉTÉS D'ENTRÉE (@Input)
    * 

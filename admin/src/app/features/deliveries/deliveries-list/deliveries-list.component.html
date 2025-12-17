@@ -70,11 +70,7 @@
       <!-- Card Header -->
       <div class="card-header">
         <div class="order-section">
-          <span class="order-number">#{{ delivery.orderNumber }}</span>
-          <span class="priority-chip" [ngClass]="getPriorityClass(delivery.priority)">
-            <i class="material-icons">{{ getPriorityIcon(delivery.priority) }}</i>
-            {{ getPriorityLabel(delivery.priority) }}
-          </span>
+          <span class="order-number">#{{ delivery.order.order_number }}</span>
         </div>
         <span class="status-chip" [ngClass]="getStatusClass(delivery.status)">
           {{ getStatusLabel(delivery.status) }}
@@ -86,36 +82,36 @@
         <div class="info-item">
           <i class="material-icons">person</i>
           <div class="item-text">
-            <span class="label">Client</span>
-            <span class="value">{{ delivery.customer.name }}</span>
+            <span class="label">Client: </span>
+            <span class="value">{{ delivery.client.name }}</span>
           </div>
         </div>
 
         <div class="info-item">
           <i class="material-icons">phone</i>
           <div class="item-text">
-            <span class="label">Téléphone</span>
-            <span class="value">{{ delivery.customer.phone }}</span>
+            <span class="label">Téléphone: </span>
+            <span class="value">{{ delivery.client.phone }}</span>
           </div>
         </div>
 
         <div class="info-item">
           <i class="material-icons">location_on</i>
           <div class="item-text">
-            <span class="label">Destination</span>
-            <span class="value">{{ delivery.address.city }}</span>
+            <span class="label">Destination: </span>
+            <span class="value">{{ delivery.delivery_address }}</span>
           </div>
         </div>
 
-        <div *ngIf="delivery.driver" class="info-item driver-assigned">
+        <div *ngIf="delivery.delivery_person" class="info-item driver-assigned">
           <i class="material-icons">local_shipping</i>
           <div class="item-text">
-            <span class="label">Livreur</span>
-            <span class="value">{{ delivery.driver.firstName }} {{ delivery.driver.lastName }}</span>
+            <span class="label">Livreur: </span>
+            <span class="value">{{ delivery.delivery_person.name }}</span>
           </div>
         </div>
 
-        <div *ngIf="!delivery.driver" class="info-item no-driver">
+        <div *ngIf="!delivery.delivery_person" class="info-item no-driver">
           <i class="material-icons">person_off</i>
           <div class="item-text">
             <span class="label">Livreur</span>
@@ -226,19 +222,16 @@
       <!-- Delivery Info Section -->
       <div class="delivery-summary-card">
         <div class="summary-header">
-          <h3>Livraison #{{ selectedDelivery?.orderNumber }}</h3>
-          <span class="priority-chip" [ngClass]="getPriorityClass(selectedDelivery?.priority || 'medium')">
-            {{ getPriorityLabel(selectedDelivery?.priority || 'medium') }}
-          </span>
+          <h3>Livraison #{{ selectedDelivery?.order?.order_number }}</h3>
         </div>
         <div class="summary-details">
           <div class="detail-item">
             <i class="material-icons">person</i>
-            <span>{{ selectedDelivery?.customer?.name }}</span>
+            <span>{{ selectedDelivery?.client?.name }}</span>
           </div>
           <div class="detail-item">
             <i class="material-icons">location_on</i>
-            <span>{{ selectedDelivery?.address?.city }}</span>
+            <span>{{ selectedDelivery?.delivery_address }}</span>
           </div>
         </div>
       </div>
@@ -265,18 +258,11 @@
             (click)="selectedDriverId = driver.id"
           >
             <div class="driver-avatar">
-              {{ driver.firstName?.charAt(0) }}{{ driver.lastName?.charAt(0) }}
+              {{ driver.name?.charAt(0) }}
             </div>
             <div class="driver-info">
               <div class="driver-name">
-                {{ driver.firstName }} {{ driver.lastName }}
-              </div>
-              <div class="driver-meta">
-                <span class="vehicle">
-                  <i class="material-icons">directions_car</i>
-                  {{ driver.vehicleType }}
-                </span>
-                <span class="plate">{{ driver.vehiclePlate }}</span>
+                {{ driver.name }}
               </div>
               <div class="driver-contact">
                 <i class="material-icons">phone</i>

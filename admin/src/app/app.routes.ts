@@ -5,12 +5,13 @@ import { RegisterComponent } from './features/auth/register/register.component';
 import { AccessDeniedComponent } from './shared/access-denied/access-denied.component';
 import { LayoutComponent } from './shared/layout/layout.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { ProductsComponent } from './features/products/products.component';
 import { DeliveryDriversListComponent } from './features/delivery-drivers/delivery-drivers-list/delivery-drivers-list.component';
 import { DriverFormComponent } from './features/delivery-drivers/driver-form/driver-form.component';
 import { DeliveriesListComponent } from './features/deliveries/deliveries-list/deliveries-list.component'
 import { DeliveryDetailsComponent } from './features/deliveries/delivery-details/delivery-details.component';
-import { DeliveryTrackingComponent } from './features/deliveries/delivery-tracking/delivery-tracking.component';
-import { DeliveryMapComponent } from './features/deliveries/delivery-map/delivery-map.component';
+// import { DeliveryTrackingComponent } from './features/deliveries/delivery-tracking/delivery-tracking.component';
+import { MapComponent } from './features/map/map.component';
 import { DeliveryProofComponent } from './features/deliveries/delivery-proof/delivery-proof.component';
 import { ReportsComponent } from './features/reports/reports.component';
 import { AuthGuard } from './core/guards/auth.guard';
@@ -44,9 +45,9 @@ export const routes: Routes = [
         path: 'dashboard', 
         component: DashboardComponent 
       },
-      { 
-        path: 'reports', 
-        component: ReportsComponent 
+      {
+        path: 'products',
+        component: ProductsComponent
       },
       {
         path: 'drivers',
@@ -68,17 +69,21 @@ export const routes: Routes = [
         path: 'deliveries/:id',
         component: DeliveryDetailsComponent
       },
-      {
-        path: 'deliveries/track/:id',
-        component: DeliveryTrackingComponent
-      },
+      // {
+      //   path: 'deliveries/track/:id',
+      //   component: DeliveryTrackingComponent
+      // },
       {
         path: 'deliveries/proof/:id',
         component: DeliveryProofComponent
       },
       {
         path: 'map',
-        component: DeliveryMapComponent
+        component: MapComponent
+      },
+      { 
+        path: 'reports', 
+        component: ReportsComponent 
       }
     ]
   },

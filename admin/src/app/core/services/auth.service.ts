@@ -61,7 +61,7 @@ export class AuthService {
    * En utilisant environment.apiUrl plutôt qu'une URL codée en dur, nous
    * pouvons facilement changer l'URL selon l'environnement sans toucher ce code.
    */
-  private apiUrl = environment.apiUrl;
+  private apiUrl = environment.apiAuthUrl;
 
   /**
    * BehaviorSubject qui garde l'état de l'admin connecté
@@ -143,11 +143,11 @@ export class AuthService {
    */
   login(email: string, password: string): Observable<LoginResponse> {
     // Log pour le débogage - vous verrez ceci dans la console du navigateur
-    console.log('Tentative de connexion vers:', `${this.apiUrl}/auth/admin/login`);
+    console.log('Tentative de connexion vers:', `${this.apiUrl}/login`);
 
     // Faire la requête POST vers l'API
     return this.http.post<LoginResponse>(
-      `${this.apiUrl}/auth/admin/login`,
+      `${this.apiUrl}/login`,
       { email, password }
     ).pipe(
       // L'opérateur tap nous permet d'exécuter du code avec la réponse
@@ -193,7 +193,7 @@ export class AuthService {
     
     // Faire la requête POST vers l'endpoint de logout si nous avons un token
     const logoutRequest = token 
-      ? this.http.post(`${this.apiUrl}/auth/admin/logout`, {})
+      ? this.http.post(`${this.apiUrl}/logout`, {})
       : throwError(() => new Error('Pas de token'));
 
     return logoutRequest.pipe(
@@ -238,7 +238,7 @@ export class AuthService {
    */
   getProfile(): Observable<Admin> {
     return this.http.get<{success: boolean; data: Admin}>(
-      `${this.apiUrl}/auth/admin/me`
+      `${this.apiUrl}/admin/me`
     ).pipe(
       map(response => response.data),
       tap(admin => {

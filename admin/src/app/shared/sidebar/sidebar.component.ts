@@ -18,15 +18,20 @@ export class SidebarComponent {
       label: 'Dashboard', 
       route: '/dashboard'
     },
+    {
+      icon: '📦',
+      label: 'Produits',
+      route: '/products'
+    },
     { 
       icon: '🚚', 
       label: 'Livraisons', 
       route: '/deliveries',
-      children: [
-        { label: 'Liste', route: '/deliveries' },
-        { label: 'En cours', route: '/deliveries/active' },
-        { label: 'Historique', route: '/deliveries/history' }
-      ]
+      // children: [
+      //   { label: 'Liste', route: '/deliveries' },
+      //   { label: 'En cours', route: '/deliveries/active' },
+      //   { label: 'Historique', route: '/deliveries/history' }
+      // ]
     },
     { 
       icon: '👥', 
@@ -34,7 +39,7 @@ export class SidebarComponent {
       route: '/drivers' 
     },
     { 
-      icon: '⚙️', 
+      icon: '🗺️', 
       label: 'Carte', 
       route: '/map' 
     },

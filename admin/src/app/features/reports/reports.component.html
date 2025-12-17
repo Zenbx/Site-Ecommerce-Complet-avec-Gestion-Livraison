@@ -1,11 +1,11 @@
 <div class="reports-wrapper">
-  
+
   <header class="page-header">
     <div class="header-title">
       <h1>Rapports et Statistiques</h1>
       <span class="subtitle">Analyse des performances</span>
     </div>
-    
+
     <div class="header-actions">
       <button class="btn-outlined" (click)="exportPDF()" [disabled]="exportingPdf">
         <i class="material-icons">description</i>
@@ -22,97 +22,96 @@
     <div class="spinner"></div>
   </div>
 
-  <main *ngIf="!loading && stats" class="reports-content">
-    
-    <section class="summary-cards">
-      <div class="summary-item">
-        <span class="label">Total Livraisons</span>
-        <span class="value">{{ stats.totalDeliveries || 0 }}</span>
-      </div>
-      <div class="summary-item">
-        <span class="label">Livrées Aujourd'hui</span>
-        <span class="value success-text">{{ stats.todayDeliveries || 0 }}</span>
-      </div>
-      <div class="summary-item">
-        <span class="label">Taux de Succès</span>
-        <span class="value">{{ stats.successRate || 0 }}%</span>
-      </div>
-      <div class="summary-item">
-        <span class="label">Temps Moyen</span>
-        <span class="value">{{ formatTime(stats.averageTime) }}</span>
+  <main *ngIf="!loading">
+
+    <!-- Stats globales des livraisons -->
+    <section *ngIf="stats" class="reports-content">
+      <section class="summary-cards">
+        <div class="summary-item">
+          <span class="label">Total Livraisons</span>
+          <span class="value">{{ stats.totalDeliveries || 0 }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Livrées Aujourd'hui</span>
+          <span class="value success-text">{{ stats.todayDeliveries || 0 }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Taux de Succès</span>
+          <span class="value">{{ stats.successRate || 0 }}%</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Temps Moyen</span>
+          <span class="value">{{ formatTime(stats.averageTime) }}</span>
+        </div>
+      </section>
+
+      <div class="charts-layout">
+        <section class="chart-panel" *ngIf="stats.deliveriesByDay?.length">
+          <div class="panel-header">
+            <h2>Volume par jour</h2>
+          </div>
+          <div class="chart-container">
+            <div class="bar-chart">
+              <div *ngFor="let item of stats.deliveriesByDay" class="chart-column">
+                <div class="column-track">
+                  <div class="fill-bar" [style.height.%]="(item.count / 250) * 100" [attr.data-value]="item.count">
+                  </div>
+                </div>
+                <span class="column-label">{{ item.day }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="chart-panel" *ngIf="stats.deliveriesByStatus">
+          <div class="panel-header">
+            <h2>Répartition par statut</h2>
+          </div>
+          <div class="status-list">
+            <div *ngFor="let status of statusKeys" class="status-row">
+              <div class="row-info">
+                <span class="dot" [ngClass]="statusClasses[status]"></span>
+                <span>{{ statusLabels[status] }}</span>
+              </div>
+              <div class="row-metric">
+                <span class="percent">{{ stats.deliveriesByStatus[status] || 0 }}%</span>
+                <div class="mini-bar">
+                <div class="fill" [ngClass]="statusClasses[status]"
+                  [style.width.%]="stats.deliveriesByStatus[status] || 0"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </section>
 
-    <div class="charts-layout">
-      <section class="chart-panel" *ngIf="stats.deliveriesByDay?.length">
-        <div class="panel-header">
-          <h2>Volume par jour</h2>
-        </div>
-        <div class="chart-container">
-          <div class="bar-chart">
-            <div *ngFor="let item of stats.deliveriesByDay" class="chart-column">
-              <div class="column-track">
-                <div class="fill-bar" 
-                     [style.height.%]="(item.count / 250) * 100"
-                     [attr.data-value]="item.count">
-                </div>
-              </div>
-              <span class="column-label">{{ item.day }}</span>
-            </div>
-          </div>
-        </div>
-      </section>
+    <!-- Performance des livreurs -->
+    <section *ngIf="deliveryPersons.length" class="delivery-persons-report">
+      <h2>Performance des livreurs</h2>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Total Livraisons</th>
+            <th>Livrées</th>
+            <th>Échecs</th>
+            <th>Taux de Succès</th>
+            <th>Note Moyenne</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let driver of deliveryPersons">
+            <td>{{ driver.name }}</td>
+            <td>{{ driver.totalDeliveries }}</td>
+            <td>{{ driver.completedDeliveries }}</td>
+            <td>{{ driver.failedDeliveries }}</td>
+            <td>{{ driver.successRate }}%</td>
+            <td>{{ driver.rating }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
 
-      <section class="chart-panel" *ngIf="stats.deliveriesByStatus">
-        <div class="panel-header">
-          <h2>Répartition par statut</h2>
-        </div>
-        <div class="status-list">
-          <div class="status-row">
-            <div class="row-info">
-              <span class="dot success"></span>
-              <span>Livrées</span>
-            </div>
-            <div class="row-metric">
-              <span class="percent">{{ stats.deliveriesByStatus.delivered }}%</span>
-              <div class="mini-bar"><div class="fill success" [style.width.%]="stats.deliveriesByStatus.delivered"></div></div>
-            </div>
-          </div>
-          
-          <div class="status-row">
-            <div class="row-info">
-              <span class="dot primary"></span>
-              <span>En cours</span>
-            </div>
-            <div class="row-metric">
-              <span class="percent">{{ stats.deliveriesByStatus.inProgress }}%</span>
-              <div class="mini-bar"><div class="fill primary" [style.width.%]="stats.deliveriesByStatus.inProgress"></div></div>
-            </div>
-          </div>
-
-          <div class="status-row">
-            <div class="row-info">
-              <span class="dot warning"></span>
-              <span>En attente</span>
-            </div>
-            <div class="row-metric">
-              <span class="percent">{{ stats.deliveriesByStatus.pending }}%</span>
-              <div class="mini-bar"><div class="fill warning" [style.width.%]="stats.deliveriesByStatus.pending"></div></div>
-            </div>
-          </div>
-
-          <div class="status-row">
-            <div class="row-info">
-              <span class="dot error"></span>
-              <span>Échecs</span>
-            </div>
-            <div class="row-metric">
-              <span class="percent">{{ stats.deliveriesByStatus.failed }}%</span>
-              <div class="mini-bar"><div class="fill error" [style.width.%]="stats.deliveriesByStatus.failed"></div></div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
   </main>
 </div>

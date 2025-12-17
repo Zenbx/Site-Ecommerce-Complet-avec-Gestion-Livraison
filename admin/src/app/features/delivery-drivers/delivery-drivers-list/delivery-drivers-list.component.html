@@ -41,7 +41,6 @@
         <tr>
           <th class="col-avatar"></th> <th>Livreur</th>
           <th>Contact</th>
-          <th>Véhicule</th>
           <th>Statut</th>
           <th class="text-right">Actions</th>
         </tr>
@@ -62,12 +61,6 @@
                <span>{{ driver.email }}</span>
                <span class="sub-text">{{ driver.phone }}</span>
              </div>
-          </td>
-          <td>
-            <div class="cell-stack">
-              <span>{{ driver.vehicleType }}</span>
-              <span class="sub-text">{{ driver.vehiclePlate }}</span>
-            </div>
           </td>
           <td>
             <span class="status-indicator" [class.available]="driver.isAvailable">

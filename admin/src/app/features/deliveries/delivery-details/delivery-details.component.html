@@ -10,7 +10,7 @@
       </button>
       <div class="title-content">
         <h1>Détails de la livraison</h1>
-        <span class="order-ref" *ngIf="delivery && !loading">{{ delivery.orderNumber }}</span>
+        <span class="order-ref" *ngIf="delivery && !loading">{{ delivery.order.order_number }}</span>
       </div>
     </div>
     
@@ -55,35 +55,19 @@
         </h2>
       </div>
       <div class="timeline-content">
-        <div class="timeline-item" [class.completed]="delivery.createdAt">
+        <div class="timeline-item" [class.completed]="delivery.created_at">
           <div class="timeline-dot"></div>
           <div class="timeline-info">
             <span class="timeline-label">Création</span>
-            <span class="timeline-date">{{ formatDate(delivery.createdAt) }}</span>
+            <span class="timeline-date">{{ formatDate(delivery.created_at) }}</span>
           </div>
         </div>
-        <div class="timeline-item" [class.completed]="delivery.assignedAt">
-          <div class="timeline-dot"></div>
-          <div class="timeline-info">
-            <span class="timeline-label">Assignation</span>
-            <span class="timeline-date" *ngIf="delivery.assignedAt">{{ formatDate(delivery.assignedAt) }}</span>
-            <span class="timeline-date pending" *ngIf="!delivery.assignedAt">En attente</span>
-          </div>
-        </div>
-        <div class="timeline-item" [class.completed]="delivery.pickedUpAt">
-          <div class="timeline-dot"></div>
-          <div class="timeline-info">
-            <span class="timeline-label">Collecte</span>
-            <span class="timeline-date" *ngIf="delivery.pickedUpAt">{{ formatDate(delivery.pickedUpAt) }}</span>
-            <span class="timeline-date pending" *ngIf="!delivery.pickedUpAt">En attente</span>
-          </div>
-        </div>
-        <div class="timeline-item" [class.completed]="delivery.deliveredAt">
+        <div class="timeline-item" [class.completed]="delivery.delivered_at">
           <div class="timeline-dot"></div>
           <div class="timeline-info">
             <span class="timeline-label">Livraison</span>
-            <span class="timeline-date" *ngIf="delivery.deliveredAt">{{ formatDate(delivery.deliveredAt) }}</span>
-            <span class="timeline-date pending" *ngIf="!delivery.deliveredAt">En attente</span>
+            <span class="timeline-date" *ngIf="delivery.delivered_at">{{ formatDate(delivery.delivered_at) }}</span>
+            <span class="timeline-date pending" *ngIf="!delivery.delivered_at">En attente</span>
           </div>
         </div>
       </div>
@@ -103,11 +87,11 @@
         <div class="card-content">
           <div class="info-row-primary">
             <div class="avatar-large">
-              {{ delivery.customer.name.charAt(0) }}
+              {{ delivery.client.name.charAt(0) }}
             </div>
             <div class="info-text">
-              <span class="primary-text">{{ delivery.customer.name }}</span>
-              <span class="secondary-text" *ngIf="delivery.customer.email">{{ delivery.customer.email }}</span>
+              <span class="primary-text">{{ delivery.client.name }}</span>
+              <span class="secondary-text" *ngIf="delivery.client.name">{{ delivery.client.name }}</span>
             </div>
           </div>
           
@@ -117,8 +101,8 @@
             <i class="material-icons item-icon">phone</i>
             <div class="item-content">
               <span class="item-label">Téléphone</span>
-              <a [href]="'tel:' + delivery.customer.phone" class="item-value link">
-                {{ delivery.customer.phone }}
+              <a [href]="'tel:' + delivery.client.phone" class="item-value link">
+                {{ delivery.client.phone }}
               </a>
             </div>
           </div>
@@ -138,38 +122,14 @@
             <i class="material-icons item-icon">home</i>
             <div class="item-content">
               <span class="item-label">Adresse</span>
-              <span class="item-value">{{ delivery.address.street }}</span>
-            </div>
-          </div>
-          
-          <div class="info-item">
-            <i class="material-icons item-icon">location_city</i>
-            <div class="item-content">
-              <span class="item-label">Ville</span>
-              <span class="item-value">{{ delivery.address.postalCode }} {{ delivery.address.city }}</span>
-            </div>
-          </div>
-          
-          <div class="info-item">
-            <i class="material-icons item-icon">public</i>
-            <div class="item-content">
-              <span class="item-label">Pays</span>
-              <span class="item-value">{{ delivery.address.country }}</span>
-            </div>
-          </div>
-          
-          <div class="info-item instructions-block" *ngIf="delivery.address.instructions">
-            <i class="material-icons item-icon">info</i>
-            <div class="item-content">
-              <span class="item-label">Instructions</span>
-              <span class="item-value instructions-text">{{ delivery.address.instructions }}</span>
+              <span class="item-value">{{ delivery.delivery_address }}</span>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Section Livreur -->
-      <div class="info-card card-elevated" *ngIf="delivery.driver">
+      <div class="info-card card-elevated" *ngIf="delivery.delivery_person">
         <div class="card-header-inline">
           <h2>
             <i class="material-icons">local_shipping</i>
@@ -179,49 +139,20 @@
         <div class="card-content">
           <div class="info-row-primary">
             <div class="avatar-large">
-              {{ delivery.driver.firstName?.charAt(0) }}{{ delivery.driver.lastName?.charAt(0) }}
+              {{ delivery.delivery_person?.name?.charAt(0) }}
             </div>
             <div class="info-text">
-              <span class="primary-text">{{ delivery.driver.firstName }} {{ delivery.driver.lastName }}</span>
-              <span class="secondary-text availability" [class.available]="delivery.driver.isAvailable">
+              <span class="primary-text">{{ delivery.delivery_person.name }}</span>
+              <span class="secondary-text availability" [class.available]="delivery.delivery_person.is_available">
                 <span class="availability-dot"></span>
-                {{ delivery.driver.isAvailable ? 'Disponible' : 'Occupé' }}
+                {{ delivery.delivery_person.is_available ? 'Disponible' : 'Occupé' }}
               </span>
             </div>
           </div>
-          
-          <div class="divider-line"></div>
-          
-          <div class="info-item">
-            <i class="material-icons item-icon">phone</i>
-            <div class="item-content">
-              <span class="item-label">Téléphone</span>
-              <a [href]="'tel:' + delivery.driver.phone" class="item-value link">
-                {{ delivery.driver.phone }}
-              </a>
-            </div>
-          </div>
-          
-          <div class="info-item">
-            <i class="material-icons item-icon">directions_car</i>
-            <div class="item-content">
-              <span class="item-label">Véhicule</span>
-              <span class="item-value">{{ delivery.driver.vehicleType }}</span>
-            </div>
-          </div>
-          
-          <div class="info-item">
-            <i class="material-icons item-icon">confirmation_number</i>
-            <div class="item-content">
-              <span class="item-label">Immatriculation</span>
-              <span class="item-value">{{ delivery.driver.vehiclePlate }}</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Section Aucun Livreur -->
-      <div class="info-card card-elevated empty-state" *ngIf="!delivery.driver">
+      <div class="info-card card-elevated empty-state" *ngIf="!delivery.delivery_person">
         <div class="empty-content">
           <i class="material-icons empty-icon">person_add_disabled</i>
           <span class="empty-text">Aucun livreur assigné</span>
@@ -241,16 +172,6 @@
           </h2>
         </div>
         <div class="card-content">
-          <div class="info-item">
-            <i class="material-icons item-icon">flag</i>
-            <div class="item-content">
-              <span class="item-label">Priorité</span>
-              <span class="priority-badge" [ngClass]="getPriorityClass(delivery.priority)">
-                {{ delivery.priority === 'high' ? 'Urgente' : delivery.priority === 'medium' ? 'Normale' : 'Basse' }}
-              </span>
-            </div>
-          </div>
-          
           <div class="info-item">
             <i class="material-icons item-icon">check_circle</i>
             <div class="item-content">

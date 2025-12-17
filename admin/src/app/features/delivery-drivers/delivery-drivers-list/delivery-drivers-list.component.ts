@@ -3,8 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DeliveryDriversService } from '../delivery-drivers.service';
-import { DeliveryDriver } from '../../deliveries/models/delivery.model';
+import { DeliveryDriversService } from '../../../core/services/delivery-drivers.service';
+import { DeliveryDriver } from '../../../core/models/delivery.model';
 
 @Component({
   selector: 'app-delivery-drivers-list',
@@ -24,9 +24,6 @@ export class DeliveryDriversListComponent implements OnInit {
   filterVehicleType: string = 'all';
   sortBy: 'name' | 'availability' | 'vehicle' = 'name';
   sortDirection: 'asc' | 'desc' = 'asc';
-
-  // Types de véhicules disponibles
-  vehicleTypes = ['Voiture', 'Moto', 'Camion', 'Fourgon', 'Vélo'];
 
   constructor(
     private driversService: DeliveryDriversService,
@@ -86,9 +83,6 @@ export class DeliveryDriversListComponent implements OnInit {
         case 'availability':
           comparison = (a.isAvailable === b.isAvailable) ? 0 : a.isAvailable ? -1 : 1;
           break;
-        case 'vehicle':
-          comparison = (a.vehicleType || 'N/A').localeCompare(b.vehicleType || 'N/A');
-          break;
       }
 
       return this.sortDirection === 'asc' ? comparison : -comparison;
@@ -112,11 +106,8 @@ export class DeliveryDriversListComponent implements OnInit {
 
       const driver: any = {
         id: p.id,
-        firstName: firstName,
-        lastName: lastName,
+        name: p.name,
         phone: (p as any).phone || '',
-        vehicleType: (p as any).vehicleType || 'N/A',
-        vehiclePlate: (p as any).vehiclePlate || '',
         isAvailable: (p as any).is_available ?? (p as any).isAvailable ?? false,
         currentLocation: (p as any).currentLocation,
         email: (p as any).email
@@ -130,7 +121,7 @@ export class DeliveryDriversListComponent implements OnInit {
     // Prefer name if present on payload
     const name = (d as any).name as string | undefined;
     if (name) return name;
-    return `${d.firstName || ''} ${d.lastName || ''}`.trim() || 'N/A';
+    return `${d.name || ''}`.trim() || 'N/A';
   }
 
   /** Initiales pour avatar */
@@ -144,9 +135,7 @@ export class DeliveryDriversListComponent implements OnInit {
         .join('')
         .toUpperCase();
     }
-    const first = d.firstName?.charAt(0) || '';
-    const last = d.lastName?.charAt(0) || '';
-    return (first + last).toUpperCase();
+    return (d.name?.charAt(0) || '').toUpperCase();
   }
 
   /** Email si présent */
@@ -227,7 +216,7 @@ onSearch(event: any): void {
       .subscribe({
         next: (updatedDriver) => {
           driver.isAvailable = updatedDriver.isAvailable;
-          console.log(`✅ Disponibilité mise à jour pour ${driver.firstName}`);
+          console.log(`✅ Disponibilité mise à jour pour ${driver.name}`);
         },
         error: (error) => {
           console.error('❌ Error toggling availability:', error);
@@ -240,11 +229,11 @@ onSearch(event: any): void {
    * Supprimer un livreur
    */
   deleteDriver(driver: DeliveryDriver): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer ${driver.firstName} ${driver.lastName} ?`)) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer ${driver.name} ?`)) {
       this.driversService.deleteDriver(driver.id)
         .subscribe({
           next: () => {
-            console.log(`✅ Livreur supprimé: ${driver.firstName}`);
+            console.log(`✅ Livreur supprimé: ${driver.name}`);
             this.loadDrivers();
           },
           error: (error) => {

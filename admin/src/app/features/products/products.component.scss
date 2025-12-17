@@ -1,0 +1,133 @@
+// --- Variables (Google / Material Palette) ---
+$primary: #1a73e8;       // Google Blue
+$success: #1e8e3e;       // Google Green
+$warning: #e37400;       // Google Yellow/Orange
+$error: #d93025;         // Google Red
+$bg-body: #f8f9fa;       // Light Gray Background
+$border-color: #dadce0;  // Subtle Border
+$text-primary: #202124;  // Almost Black
+$text-secondary: #5f6368; // Dark Gray
+$border: #dadce0;
+$text-main: #202124;
+$text-sub: #5f6368;
+$bg-hover: #f1f3f4;
+.products-dashboard {
+  padding: 20px;
+}
+
+.categories-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.categories-tabs button {
+  padding: 8px 16px;
+  border: none;
+  background-color: #eee;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+
+.categories-tabs button.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.product-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  transition: transform 0.2s;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+}
+
+.product-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.product-info {
+  padding: 10px 15px;
+  flex: 1;
+}
+
+.product-info h3 {
+  margin: 0 0 8px 0;
+}
+
+.product-info .description {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.product-info .price {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.product-info .quantity,
+.product-info .status {
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.product-info .status.active {
+  color: green;
+}
+
+.product-info .status.inactive {
+  color: red;
+}
+
+.product-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 15px;
+  border-top: 1px solid #ddd;
+}
+
+.btn-edit, .btn-delete {
+  border: none;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-edit {
+  background-color: #ffc107;
+}
+
+.btn-delete {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+// Actions
+  .icon-action {
+    background: none; border: none; color: $text-sub; cursor: pointer; padding: 4px;
+    &:hover { color: $primary; }
+    &.delete:hover { color: #d93025; }
+  }
+
+.empty-msg {
+  grid-column: 1/-1;
+  text-align: center;
+  color: #888;
+  font-style: italic;
+}

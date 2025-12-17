@@ -1,95 +1,117 @@
-// src/app/features/reports/reports.component.ts
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReportsService } from './reports.service';
+
+import {
+  ReportsService,
+  DeliveriesByStatus,
+  DeliveryReportStats,
+  DeliveryPersonPerformance
+} from '../../core/services/reports.service';
 
 @Component({
   selector: 'app-reports',
-  standalone: true,
-  imports: [CommonModule],
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss'],
-  encapsulation: ViewEncapsulation.None  // ← Désactive l'encapsulation pour tester
+  standalone: true,
+  imports: [CommonModule],
 })
 export class ReportsComponent implements OnInit {
-  stats: any = {};
+  stats: DeliveryReportStats | null = null;
+  deliveryPersons: DeliveryPersonPerformance[] = [];
   loading = false;
+
   exportingPdf = false;
   exportingExcel = false;
 
-  constructor(private reportsService: ReportsService) {}
+  // Classes CSS pour les statuts
+  statusClasses: Record<keyof DeliveriesByStatus, string> = {
+    delivered: 'success',
+    inProgress: 'primary',
+    pending: 'warning',
+    failed: 'error',
+  };
+
+  statusLabels: Record<keyof DeliveriesByStatus, string> = {
+    delivered: 'Livrées',
+    inProgress: 'En cours',
+    pending: 'En attente',
+    failed: 'Échecs',
+  };
+
+  statusKeys: Array<keyof DeliveriesByStatus> = ['delivered', 'inProgress', 'pending', 'failed'];
+
+
+  constructor(private reportsService: ReportsService) { }
 
   ngOnInit(): void {
-    this.loadStatistics();
+    this.loadStats();
+    this.loadDeliveryPersons();
   }
 
-  loadStatistics(): void {
+  private loadStats(): void {
     this.loading = true;
-    this.reportsService.getGlobalStats().subscribe({
-      next: (data) => {
+    this.reportsService.getDeliveriesReport().subscribe({
+      next: data => {
         this.stats = data;
         this.loading = false;
-        console.log('📊 Stats chargées:', data);
       },
-      error: (err) => {
-        console.error('❌ Erreur chargement stats:', err);
+      error: err => {
+        console.error(err);
         this.loading = false;
-      }
+      },
     });
   }
 
-  // À ajouter dans la classe ReportsComponent
-formatTime(minutes: number): string {
-  if (minutes === undefined || minutes === null) return '0 min';
-  const h = Math.floor(minutes / 60);
-  const m = Math.floor(minutes % 60);
-  if (h === 0) return `${m} min`;
-  return `${h}h ${m}min`;
-}
+  private loadDeliveryPersons(): void {
+    this.reportsService.getDeliveryPersonsReport().subscribe({
+      next: data => (this.deliveryPersons = data),
+      error: err => console.error(err),
+    });
+  }
+
+  formatTime(minutes?: number): string {
+    if (!minutes) return '0 min';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${h > 0 ? h + 'h ' : ''}${m} min`;
+  }
 
   exportPDF(): void {
     this.exportingPdf = true;
-    this.reportsService.exportPdf().subscribe({
-      next: (blob) => {
-        this.download(blob, 'rapport.pdf');
-        this.exportingPdf = false;
-        console.log('✅ PDF exporté');
-      },
-      error: (err) => {
-        console.error('❌ Erreur export PDF:', err);
-        this.exportingPdf = false;
-      }
-    });
+    if (this.stats) {
+      this.reportsService.exportDeliveriesPdf().subscribe({
+        next: blob => this.downloadBlob(blob, 'deliveries-report.pdf'),
+        complete: () => (this.exportingPdf = false),
+      });
+    } else {
+      this.reportsService.exportDeliveryPersonsPdf().subscribe({
+        next: blob => this.downloadBlob(blob, 'delivery-persons-report.pdf'),
+        complete: () => (this.exportingPdf = false),
+      });
+    }
   }
 
   exportExcel(): void {
     this.exportingExcel = true;
-    this.reportsService.exportExcel().subscribe({
-      next: (blob) => {
-        this.download(blob, 'rapport.xlsx');
-        this.exportingExcel = false;
-        console.log('✅ Excel exporté');
-      },
-      error: (err) => {
-        console.error('❌ Erreur export Excel:', err);
-        this.exportingExcel = false;
-      }
-    });
+    if (this.stats) {
+      this.reportsService.exportDeliveriesExcel().subscribe({
+        next: blob => this.downloadBlob(blob, 'deliveries-report.xlsx'),
+        complete: () => (this.exportingExcel = false),
+      });
+    } else {
+      this.reportsService.exportDeliveryPersonsExcel().subscribe({
+        next: blob => this.downloadBlob(blob, 'delivery-persons-report.xlsx'),
+        complete: () => (this.exportingExcel = false),
+      });
+    }
   }
 
-  private download(blob: Blob, filename: string): void {
+  private downloadBlob(blob: Blob, filename: string) {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     a.click();
     window.URL.revokeObjectURL(url);
-  }
-
-  getSuccessRateColor(): string {
-    if (!this.stats.successRate) return '#95a5a6';
-    if (this.stats.successRate >= 95) return '#27ae60';
-    if (this.stats.successRate >= 85) return '#f39c12';
-    return '#e74c3c';
   }
 }

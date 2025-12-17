@@ -4,8 +4,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { DeliveriesService } from '../deliveries.service';
-import { Delivery, DeliveryStatus, DeliveryDriver } from '../models/delivery.model';
+import { DeliveriesService } from '../../../core/services/deliveries.service';
+import { Delivery, DeliveryDriver } from '../../../core/models/delivery.model';
 
 /**
  * DeliveryDetailsComponent
@@ -387,7 +387,7 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
           this.closeAssignModal();
           
           // Afficher un message de succès
-          alert(`Livreur assigné avec succès ! ${updatedDelivery.driver?.name || 'Le livreur'} a été notifié.`);
+          alert(`Livreur assigné avec succès ! ${updatedDelivery.delivery_person?.name || 'Le livreur'} a été notifié.`);
           
           this.processing = false;
         },
@@ -487,9 +487,9 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
           this.delivery = updatedDelivery;
           
           // Construire un message de succès détaillé
-          const driverName = updatedDelivery.driver?.name || 
-                            `${updatedDelivery.driver?.firstName} ${updatedDelivery.driver?.lastName}`;
-          
+          const driverName = updatedDelivery.delivery_person?.name ||
+                            `${updatedDelivery.delivery_person?.name}`;
+
           alert(
             `Assignation automatique réussie !\n\n` +
             `Livreur sélectionné : ${driverName}\n` +
@@ -537,13 +537,13 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
    * importante qui affecte directement le planning du livreur.
    */
   removeDriver(): void {
-    if (!this.delivery || !this.delivery.driver) {
+    if (!this.delivery || !this.delivery.delivery_person) {
       return;
     }
 
     // Construire un message de confirmation personnalisé avec le nom du livreur
-    const driverName = this.delivery.driver.name ||
-                      `${this.delivery.driver.firstName} ${this.delivery.driver.lastName}`;
+    const driverName = this.delivery.delivery_person.name ||
+                      `${this.delivery.delivery_person.name}`;
     
     const confirmed = confirm(
       `Voulez-vous vraiment retirer ${driverName} de cette livraison ?\n\n` +
@@ -590,14 +590,14 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
    * Transforme les codes techniques de statut (comme "pending")
    * en texte compréhensible pour l'utilisateur français.
    */
-  getStatusLabel(status: DeliveryStatus): string {
+  getStatusLabel(status: string): string {
     const labels: { [key: string]: string } = {
-      [DeliveryStatus.PENDING]: 'En attente',
-      [DeliveryStatus.ASSIGNED]: 'Assignée',
-      [DeliveryStatus.IN_PROGRESS]: 'En cours',
-      [DeliveryStatus.DELIVERED]: 'Livrée',
-      [DeliveryStatus.FAILED]: 'Échouée',
-      [DeliveryStatus.CANCELLED]: 'Annulée'
+      'pending': 'En attente',
+      'assigned': 'Assignée',
+      'in_progress': 'En cours',
+      'delivered': 'Livrée',
+      'failed': 'Échouée',
+      'cancelled': 'Annulée'
     };
     return labels[status] || status;
   }
@@ -608,14 +608,14 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
    * Chaque statut a sa propre classe CSS pour afficher
    * une couleur différente (vert = livrée, rouge = échouée, etc.)
    */
-  getStatusClass(status: DeliveryStatus): string {
+  getStatusClass(status: string): string {
     const classes: { [key: string]: string } = {
-      [DeliveryStatus.PENDING]: 'status-pending',
-      [DeliveryStatus.ASSIGNED]: 'status-assigned',
-      [DeliveryStatus.IN_PROGRESS]: 'status-in-progress',
-      [DeliveryStatus.DELIVERED]: 'status-delivered',
-      [DeliveryStatus.FAILED]: 'status-failed',
-      [DeliveryStatus.CANCELLED]: 'status-cancelled'
+      'pending': 'status-pending',
+      'assigned': 'status-assigned',
+      'in_progress': 'status-in-progress',
+      'delivered': 'status-delivered',
+      'failed': 'status-failed',
+      'cancelled': 'status-cancelled'
     };
     return classes[status] || '';
   }
@@ -623,14 +623,14 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
   /**
    * Obtenir l'icône Material appropriée pour un statut
    */
-  getStatusIcon(status: DeliveryStatus): string {
+  getStatusIcon(status: string): string {
     const icons: { [key: string]: string } = {
-      [DeliveryStatus.PENDING]: 'schedule',
-      [DeliveryStatus.ASSIGNED]: 'assignment_ind',
-      [DeliveryStatus.IN_PROGRESS]: 'local_shipping',
-      [DeliveryStatus.DELIVERED]: 'check_circle',
-      [DeliveryStatus.FAILED]: 'cancel',
-      [DeliveryStatus.CANCELLED]: 'block'
+      'pending': 'schedule',
+      'assigned': 'assignment_ind',
+      'in_progress': 'local_shipping',
+      'delivered': 'check_circle',
+      'failed': 'cancel',
+      'cancelled': 'block'
     };
     return icons[status] || 'help_outline';
   }
@@ -694,7 +694,7 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
    * Le tracking n'est disponible que si la livraison est en cours
    */
   canShowTracking(): boolean {
-    return this.delivery?.status === DeliveryStatus.IN_PROGRESS;
+    return this.delivery?.status === 'in_progress';
   }
 
   /**
@@ -702,7 +702,7 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
    * La preuve n'est disponible que si la livraison est terminée
    */
   canShowProof(): boolean {
-    return this.delivery?.status === DeliveryStatus.DELIVERED;
+    return this.delivery?.status === 'delivered';
   }
 
   /**
@@ -711,7 +711,7 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
    * et qu'aucun livreur n'est encore assigné
    */
   canAssignDriver(): boolean {
-    return this.delivery?.status === DeliveryStatus.PENDING && !this.delivery.driver;
+    return this.delivery?.status === 'pending' && !this.delivery?.delivery_person;
   }
 
   /**
@@ -723,9 +723,9 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
    */
   canRemoveDriver(): boolean {
     return !!(
-      this.delivery?.driver &&
-      (this.delivery.status === DeliveryStatus.PENDING ||
-       this.delivery.status === DeliveryStatus.ASSIGNED)
+      this.delivery?.delivery_person &&
+      (this.delivery.status === 'pending' ||
+       this.delivery.status === 'assigned')
     );
   }
 }

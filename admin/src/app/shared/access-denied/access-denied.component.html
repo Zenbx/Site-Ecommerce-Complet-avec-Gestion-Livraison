@@ -1,0 +1,31 @@
+<div class="access-denied-container">
+    <div class="access-denied-card">
+        <div class="icon-container">
+            <span class="icon">🚫</span>
+        </div>
+        <h1>Accès refusé</h1>
+        <p class="message">
+            Vous n'avez pas les permissions nécessaires pour accéder à cette page.
+        </p>
+        <div class="details" *ngIf="requiredRoles">
+            <p class="detail-label">Rôles requis :</p>
+            <div class="roles-list">
+                <span *ngFor="let role of requiredRoles" class="role-badge">
+                    {{ getRoleLabel(role) }}
+                </span>
+            </div>
+        </div>
+        <div class="current-role" *ngIf="currentAdmin">
+            <p class="detail-label">Votre rôle actuel :</p>
+            <span class="role-badge current">{{ getRoleLabel(currentAdmin.role) }}</span>
+        </div>
+        <div class="actions">
+            <button class="btn btn-primary" (click)="goToDashboard()">
+                Retour au tableau de bord
+            </button>
+            <button class="btn btn-secondary" (click)="goBack()">
+                Retour
+            </button>
+        </div>
+    </div>
+</div>

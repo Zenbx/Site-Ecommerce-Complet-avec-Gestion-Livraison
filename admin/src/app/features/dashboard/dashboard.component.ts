@@ -2,9 +2,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil, interval } from 'rxjs';
-import { DashboardService } from './dashboard.service';
+import { DashboardService } from '../../core/services/dashboard.service';
 import { WebSocketService } from '../../core/services/websocket.service';
-import { DashboardStats, RecentDelivery, DriverPerformance } from './models/dashboard-stats.model';
+import { DashboardStats, RecentDelivery, DriverPerformance } from '../../core/models/dashboard-stats.model';
 
 @Component({
   selector: 'app-dashboard',

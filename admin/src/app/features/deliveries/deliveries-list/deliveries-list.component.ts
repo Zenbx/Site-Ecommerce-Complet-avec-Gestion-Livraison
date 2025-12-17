@@ -5,10 +5,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { DeliveriesService, DeliveryFilters } from '../deliveries.service';
-import { DeliveryDriversService } from '../../delivery-drivers/delivery-drivers.service';
+import { DeliveriesService, DeliveryFilters } from '../../../core/services/deliveries.service';
+import { DeliveryDriversService } from '../../../core/services/delivery-drivers.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
-import { Delivery, DeliveryStatus, DeliveryDriver } from '../models/delivery.model';
+import { Delivery, DeliveryDriver } from '../../../core/models/delivery.model';
 import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-deliveries-list',
@@ -24,7 +24,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
   perPage = 15;
   totalDeliveries = 0;
   searchTerm = '';
-  selectedStatus: DeliveryStatus | '' = '';
+  selectedStatus  = '';
   private destroy$ = new Subject<void>();
 
   // Modal d'assignation
@@ -37,11 +37,11 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
 
   statusOptions = [
     { value: '', label: 'Tous les statuts' },
-    { value: DeliveryStatus.PENDING, label: 'En attente' },
-    { value: DeliveryStatus.ASSIGNED, label: 'Assignée' },
-    { value: DeliveryStatus.IN_PROGRESS, label: 'En cours' },
-    { value: DeliveryStatus.DELIVERED, label: 'Livrée' },
-    { value: DeliveryStatus.FAILED, label: 'Échouée' }
+    { value: 'pending', label: 'En attente' },
+    { value: 'assigned', label: 'Assignée' },
+    { value: 'in_progress', label: 'En cours' },
+    { value: 'delivered', label: 'Livrée' },
+    { value: 'failed', label: 'Échouée' }
   ];
 
   constructor(
@@ -111,14 +111,16 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
     }
 
     if (this.selectedStatus) {
-      filters.status = this.selectedStatus as DeliveryStatus;
+      filters.status = this.selectedStatus as string;
     }
 
     this.deliveriesService.getDeliveries(filters)
       .subscribe({
         next: (response) => {
           this.deliveries = response.data;
-          this.totalDeliveries = response.total;
+          console.log('Livraisons chargées:', this.deliveries);
+          
+          this.totalDeliveries = response.meta.total;
           this.loading = false;
         },
         error: (error) => {
@@ -200,7 +202,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
         
         // Afficher une notification de succès
         this.showSuccessNotification(
-          `Livraison #${updatedDelivery.orderNumber} assignée à ${updatedDelivery.driver?.firstName} ${updatedDelivery.driver?.lastName}`
+          `Livraison #${updatedDelivery.order.order_number} assignée à ${updatedDelivery.delivery_person?.name}`
         );
         
         this.assigning = false;
@@ -218,7 +220,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
    * ASSIGNATION AUTOMATIQUE
    */
   autoAssignDelivery(delivery: Delivery): void {
-    if (!confirm(`Voulez-vous assigner automatiquement la livraison #${delivery.orderNumber} au meilleur livreur disponible ?`)) {
+    if (!confirm(`Voulez-vous assigner automatiquement la livraison #${delivery.order.order_number} au meilleur livreur disponible ?`)) {
       return;
     }
 
@@ -237,7 +239,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
           
           // Afficher une notification détaillée
           this.showSuccessNotification(
-            `Livraison #${result.orderNumber} assignée automatiquement à ${result.firstName} ${result.lastName}. ${result.reason}`
+            `Livraison #${result.order.order_number} assignée automatiquement à ${result.delivery_person?.name}`
           );
           
           this.autoAssigning = false;
@@ -254,7 +256,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
    * DÉSASSIGNER UNE LIVRAISON
    */
   unassignDelivery(delivery: Delivery): void {
-    if (!confirm(`Voulez-vous retirer l'assignation de la livraison #${delivery.orderNumber} ?`)) {
+    if (!confirm(`Voulez-vous retirer l'assignation de la livraison #${delivery.order.order_number} ?`)) {
       return;
     }
 
@@ -263,7 +265,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
         next: (updatedDelivery) => {
           console.log('✅ Livraison désassignée');
           this.updateDeliveryInList(updatedDelivery);
-          this.showSuccessNotification(`Livraison #${updatedDelivery.orderNumber} désassignée`);
+          this.showSuccessNotification(`Livraison #${updatedDelivery.order.order_number} désassignée`);
         },
         error: (error) => {
           console.error('❌ Erreur lors de la désassignation:', error);
@@ -291,32 +293,28 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/deliveries/track', delivery.id]);
   }
 
-  getStatusClass(status: DeliveryStatus): string {
+  getStatusClass(status: string): string {
     const statusClasses: { [key: string]: string } = {
-      [DeliveryStatus.PENDING]: 'status-pending',
-      [DeliveryStatus.ASSIGNED]: 'status-assigned',
-      [DeliveryStatus.IN_PROGRESS]: 'status-in-progress',
-      [DeliveryStatus.DELIVERED]: 'status-delivered',
-      [DeliveryStatus.FAILED]: 'status-failed',
-      [DeliveryStatus.CANCELLED]: 'status-cancelled'
+      'pending': 'status-pending',
+      'assigned': 'status-assigned',
+      'in_progress': 'status-in-progress',
+      'delivered': 'status-delivered',
+      'failed': 'status-failed',
+      'cancelled': 'status-cancelled'
     };
     return statusClasses[status] || '';
   }
 
-  getStatusLabel(status: DeliveryStatus): string {
+  getStatusLabel(status: string): string {
     const statusLabels: { [key: string]: string } = {
-      [DeliveryStatus.PENDING]: 'En attente',
-      [DeliveryStatus.ASSIGNED]: 'Assignée',
-      [DeliveryStatus.IN_PROGRESS]: 'En cours',
-      [DeliveryStatus.DELIVERED]: 'Livrée',
-      [DeliveryStatus.FAILED]: 'Échouée',
-      [DeliveryStatus.CANCELLED]: 'Annulée'
+      'PENDING': 'En attente',
+      'ASSIGNED': 'Assignée',
+      'IN_TRANSIT': 'En cours',
+      'DELIVERED': 'Livrée',
+      'FAILED': 'Échouée',
+      'CANCELLED': 'Annulée'
     };
-    return statusLabels[status] || status;
-  }
-
-  getPriorityClass(priority: string): string {
-    return `priority-${priority}`;
+    return statusLabels[status].toUpperCase() || status;
   }
 
   getTotalPages(): number {
@@ -324,16 +322,16 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
   }
 
   canAssign(delivery: Delivery): boolean {
-    return delivery.status === DeliveryStatus.PENDING;
+    return delivery.status === 'pending';
   }
 
   canUnassign(delivery: Delivery): boolean {
-    return delivery.status === DeliveryStatus.ASSIGNED;
+    return delivery.status === 'assigned';
   }
 
   canTrack(delivery: Delivery): boolean {
-    return delivery.status === DeliveryStatus.IN_PROGRESS || 
-           delivery.status === DeliveryStatus.ASSIGNED;
+    return delivery.status === 'in_progress' || 
+           delivery.status === 'assigned';
   }
 
   // Méthodes communes à ajouter dans les composants

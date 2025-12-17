@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, delay, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DashboardStats, RecentDelivery, DriverPerformance } from './models/dashboard-stats.model';
+import { DashboardStats, RecentDelivery, DriverPerformance } from '../models/dashboard-stats.model';
 
 @Injectable({
   providedIn: 'root'

@@ -7,9 +7,8 @@ import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   Delivery,
-  DeliveryStatus,
   DeliveryDriver
-} from './models/delivery.model';
+} from '../models/delivery.model';
 
 // ============================================
 // INTERFACES DE SERVICE
@@ -33,7 +32,7 @@ export interface DeliveryResponse {
 }
 
 export interface DeliveryFilters {
-  status?: DeliveryStatus | string;
+  status?: string;
   driverId?: number;
   dateFrom?: string;
   dateTo?: string;
@@ -70,7 +69,7 @@ export class DeliveriesService {
    * URL de base pour les endpoints de livraisons admin
    * Construit automatiquement à partir de l'environnement
    */
-  private apiUrl = `${environment.apiUrl}/admin/deliveries`;
+  private apiUrl = `${environment.apiUrl}/deliveries`;
 
   constructor(private http: HttpClient) {}
 
@@ -164,7 +163,7 @@ export class DeliveriesService {
    * @returns Observable contenant uniquement les livraisons en attente
    */
   getPendingDeliveries(): Observable<Delivery[]> {
-    return this.getDeliveries({ status: DeliveryStatus.PENDING })
+    return this.getDeliveries({ status: 'pending' })
       .pipe(
         map(response => response.data)
       );
@@ -196,7 +195,7 @@ export class DeliveriesService {
    * ```
    */
   getAvailableDrivers(): Observable<DeliveryDriver[]> {
-    return this.http.get<AvailableDriversResponse>(`${environment.apiUrl}/admin/delivery-persons`)
+    return this.http.get<AvailableDriversResponse>(`${environment.apiUrl}/delivery-persons`)
       .pipe(
         map(response => response.data),
         catchError(this.handleError)
@@ -360,7 +359,7 @@ export class DeliveriesService {
    */
   updateDeliveryStatus(
     id: number,
-    status: DeliveryStatus,
+    status: string,
     notes?: string
   ): Observable<Delivery> {
     return this.http.patch<DeliveryResponse>(

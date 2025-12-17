@@ -16,6 +16,8 @@ import { AuthService } from '../services/auth.service';
  * La fonction inject() est une nouvelle API d'Angular qui permet d'injecter des
  * dépendances directement dans une fonction plutôt que dans un constructeur de classe.
  */
+
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Injecter les services nécessaires avec la nouvelle API inject()
   const authService = inject(AuthService);
@@ -23,7 +25,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Récupérer le token d'authentification
   const token = authService.getToken();
-
+  
   // Cloner la requête pour ajouter le header Authorization si un token existe
   let authReq = req;
   if (token) {
