@@ -19,7 +19,7 @@ export class LoginComponent implements OnInit {
   error = '';
   returnUrl = '';
 
-  TEST_MODE = true;
+  TEST_MODE = false;
 
   constructor(
     private fb: FormBuilder,
@@ -39,37 +39,43 @@ export class LoginComponent implements OnInit {
 
   get f() { return this.loginForm.controls; }
 
-  onSubmit(): void {
-    this.submitted = true;
-    this.error = '';
+ onSubmit(): void {
+  this.submitted = true;
+  this.error = '';
 
-    if (this.loginForm.invalid) return;
+  if (this.loginForm.invalid) return;
 
-    this.loading = true;
+  this.loading = true;
 
-    if (this.TEST_MODE) {
-      // Mode test simulé
-      const user = {
-        id: 1,
-        email: this.loginForm.value.email,
-        name: 'Admin Test',
-        role: 'admin'
-      };
-      localStorage.setItem('auth_token', 'fake-token');
-      localStorage.setItem('current_user', JSON.stringify(user));
+  if (this.TEST_MODE) {
+    // Mode test simulé
+    const user = {
+      id: 1,
+      email: this.loginForm.value.email,
+      name: 'Admin Test',
+      role: 'ADMIN'
+    };
+    localStorage.setItem('auth_token', 'fake-token');
+    localStorage.setItem('current_admin', JSON.stringify(user));
 
-      setTimeout(() => {
-        this.loading = false;
+    setTimeout(() => {
+      this.loading = false;
+      this.router.navigate([this.returnUrl]);
+    }, 500);
+  } else {
+    // Mode réel avec API
+    const { email, password } = this.loginForm.value;
+    this.authService.login(email, password).subscribe({
+      next: (response) => {
+        console.log('✅ Connexion réussie:', response);
         this.router.navigate([this.returnUrl]);
-      }, 500);
-    } else {
-      this.authService.login(this.loginForm.value).subscribe({
-        next: () => this.router.navigate([this.returnUrl]),
-        error: err => {
-          this.error = err.message || 'Identifiants incorrects';
-          this.loading = false;
-        }
-      });
-    }
+      },
+      error: (err) => {
+        console.error('❌ Erreur de connexion:', err);
+        this.error = err.error?.message || 'Identifiants incorrects';
+        this.loading = false;
+      }
+    });
   }
+}
 }

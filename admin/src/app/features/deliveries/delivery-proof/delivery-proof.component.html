@@ -1,86 +1,163 @@
 <!-- src/app/features/deliveries/delivery-proof/delivery-proof.component.html -->
 
-<div class="delivery-proof-page">
-
-  <!-- HEADER -->
-  <div class="page-header">
-    <div>
-      <h1>Preuves de livraison</h1>
-      <p *ngIf="delivery">
-        Commande <strong>#{{ delivery.orderNumber }}</strong> — {{ delivery.customer.name }}
-      </p>
+<div class="proof-wrapper">
+  
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="title-section">
+      <button class="back-btn" (click)="goBack()">
+        <i class="material-icons">arrow_back</i>
+      </button>
+      <div class="title-content">
+        <h1>Preuves de livraison</h1>
+        <p class="subtitle" *ngIf="delivery">
+          Commande <strong>#{{ delivery.orderNumber }}</strong> · {{ delivery.customer.name }}
+        </p>
+      </div>
     </div>
+    
+    <div class="actions-section">
+      <button class="icon-btn" (click)="refresh()" title="Actualiser">
+        <i class="material-icons">refresh</i>
+      </button>
+    </div>
+  </header>
 
-    <button class="btn btn-secondary" (click)="goBack()">
-      ← Retour
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Chargement des preuves...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-state">
+    <i class="material-icons error-icon">error_outline</i>
+    <h2>Une erreur s'est produite</h2>
+    <p>{{ error }}</p>
+    <button class="btn-primary" (click)="refresh()">
+      <i class="material-icons">refresh</i>
+      Réessayer
     </button>
   </div>
 
-  <!-- LOADING -->
-  <div *ngIf="loading" class="state loading">
-    Chargement des preuves…
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && proofs.length === 0" class="empty-state">
+    <i class="material-icons empty-icon">photo_camera</i>
+    <h2>Aucune preuve disponible</h2>
+    <p>Le livreur n'a pas encore envoyé de preuve de livraison</p>
   </div>
 
-  <!-- ERROR -->
-  <div *ngIf="error" class="state error">
-    {{ error }}
-  </div>
+  <!-- Proofs Grid -->
+  <div *ngIf="!loading && !error && proofs.length > 0" class="proofs-content">
+    <div class="proofs-grid">
+      
+      <div *ngFor="let proof of proofs" class="proof-card">
+        
+        <!-- Proof Header -->
+        <div class="proof-header">
+          <span class="proof-type-badge" [ngClass]="proof.type.toLowerCase()">
+            <i class="material-icons">{{ getProofTypeIcon(proof.type) }}</i>
+            {{ getProofLabel(proof.type) }}
+          </span>
+          <span class="proof-status-badge" [ngClass]="proof.status.toLowerCase()">
+            {{ getProofStatusLabel(proof.status) }}
+          </span>
+        </div>
 
-  <!-- EMPTY -->
-  <div *ngIf="!loading && proofs.length === 0" class="state empty">
-    Aucune preuve envoyée par le livreur.
-  </div>
+        <!-- Proof Image -->
+        <div class="proof-image-container">
+          <img 
+            [src]="proof.url" 
+            [alt]="proof.type"
+            (click)="viewFullImage(proof)"
+            class="proof-image"
+          />
+          <div class="image-overlay" (click)="viewFullImage(proof)">
+            <i class="material-icons">zoom_in</i>
+          </div>
+        </div>
 
-  <!-- PROOFS LIST -->
-  <div *ngIf="!loading && proofs.length > 0" class="proofs-grid">
+        <!-- Proof Details -->
+        <div class="proof-details">
+          <div class="detail-item">
+            <i class="material-icons">person</i>
+            <div class="detail-text">
+              <span class="label">Destinataire</span>
+              <span class="value">{{ proof.recipientName || 'Non spécifié' }}</span>
+            </div>
+          </div>
 
-    <div class="proof-card" *ngFor="let proof of proofs">
+          <div class="detail-item">
+            <i class="material-icons">local_shipping</i>
+            <div class="detail-text">
+              <span class="label">Livreur</span>
+              <span class="value">
+                {{ proof.driver?.firstName }} {{ proof.driver?.lastName }}
+              </span>
+            </div>
+          </div>
 
-      <!-- CARD HEADER -->
-      <div class="proof-header">
-        <span class="proof-type" [ngClass]="proof.type.toLowerCase()">
-          {{ getProofLabel(proof.type) }}
-        </span>
+          <div class="detail-item">
+            <i class="material-icons">schedule</i>
+            <div class="detail-text">
+              <span class="label">Date</span>
+              <span class="value">{{ proof.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+        </div>
 
-        <span class="proof-status" [ngClass]="proof.status.toLowerCase()">
-          {{ proof.status }}
-        </span>
-      </div>
+        <!-- Actions for Pending Proofs -->
+        <div class="proof-actions" *ngIf="proof.status === 'PENDING'">
+          <button 
+            class="btn-action validate" 
+            (click)="validateProof(proof)"
+            [disabled]="processing"
+          >
+            <i class="material-icons">check_circle</i>
+            <span>Valider</span>
+          </button>
+          <button 
+            class="btn-action reject" 
+            (click)="rejectProof(proof)"
+            [disabled]="processing"
+          >
+            <i class="material-icons">cancel</i>
+            <span>Rejeter</span>
+          </button>
+        </div>
 
-      <!-- IMAGE / SIGNATURE -->
-      <div class="proof-preview">
-        <img [src]="proof.url" [alt]="proof.type" />
-      </div>
+        <!-- Validation Info -->
+        <div class="validation-info" *ngIf="proof.status !== 'PENDING'">
+          <div *ngIf="proof.status === 'VALIDATED'" class="validation-message success">
+            <i class="material-icons">check_circle</i>
+            <span>Validée le {{ proof.validatedAt | date:'dd/MM/yyyy à HH:mm' }}</span>
+          </div>
+          <div *ngIf="proof.status === 'REJECTED'" class="validation-message error">
+            <i class="material-icons">cancel</i>
+            <div>
+              <span class="rejection-label">Rejetée</span>
+              <span class="rejection-reason" *ngIf="proof.rejectionReason">
+                Motif : {{ proof.rejectionReason }}
+              </span>
+            </div>
+          </div>
+        </div>
 
-      <!-- META -->
-      <div class="proof-meta">
-        <div><strong>Destinataire :</strong> {{ proof.recipientName || '—' }}</div>
-        <div><strong>Livreur :</strong> {{ proof.driver?.firstName }} {{ proof.driver?.lastName }}</div>
-        <div><strong>Date :</strong> {{ proof.createdAt | date:'short' }}</div>
-      </div>
-
-      <!-- ACTIONS -->
-      <div class="proof-actions" *ngIf="proof.status === 'PENDING'">
-        <button class="btn btn-success" (click)="validateProof(proof)">
-          ✔ Valider
-        </button>
-
-        <button class="btn btn-danger" (click)="rejectProof(proof)">
-          ✖ Rejeter
-        </button>
-      </div>
-
-      <!-- VALIDATION INFO -->
-      <div class="proof-validation-info" *ngIf="proof.status !== 'PENDING'">
-        <span *ngIf="proof.status === 'VALIDATED'">
-          Validée le {{ proof.validatedAt | date:'short' }}
-        </span>
-        <span *ngIf="proof.status === 'REJECTED'">
-          Rejetée : {{ proof.rejectionReason }}
-        </span>
       </div>
 
     </div>
   </div>
 
+</div>
+
+<!-- Modal Full Image -->
+<div *ngIf="showFullImage" class="image-modal" (click)="closeFullImage()">
+  <div class="modal-content">
+    <button class="btn-close-modal" (click)="closeFullImage()">
+      <i class="material-icons">close</i>
+    </button>
+    <img [src]="selectedProof?.url" [alt]="selectedProof?.type" />
+  </div>
 </div>

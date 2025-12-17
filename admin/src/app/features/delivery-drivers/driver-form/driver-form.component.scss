@@ -1,329 +1,143 @@
-// src/app/features/delivery-drivers/driver-form/driver-form.component.scss
+// Variables
+$primary: #1a73e8;
+$error: #d93025;
+$border: #dadce0;
+$text-main: #202124;
+$text-sub: #5f6368;
+$bg-body: #f8f9fa;
 
-.driver-form-container {
-  background: #f5f7fa;
+.form-page-wrapper {
+  background-color: $bg-body;
   min-height: 100vh;
-  padding: 24px;
-}
-
-// ========================================
-// EN-TÊTE
-// ========================================
-
-.form-header {
+  font-family: 'Roboto', sans-serif;
   display: flex;
-  align-items: center;
-  margin-bottom: 32px;
-  gap: 16px;
+  flex-direction: column;
+}
 
-  .btn-back {
-    padding: 8px 16px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+.simple-header {
+  padding: 16px 24px;
+  
+  .back-link {
+    background: none; border: none;
+    color: $text-sub;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 500;
     cursor: pointer;
-    color: #718096;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-    font-size: 14px;
-    font-weight: 500;
-
-    &:hover {
-      background: #f7fafc;
-      color: #2d3748;
-    }
-
-    i {
-      font-size: 18px;
-    }
-  }
-
-  h1 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1a202c;
-    margin: 0;
-  }
-
-  .spacer {
-    flex: 1;
+    &:hover { color: $primary; }
   }
 }
 
-// ========================================
-// ÉTATS DE CHARGEMENT
-// ========================================
+.form-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 40px;
+}
 
-.loading-state {
+.form-card {
   background: white;
-  border-radius: 12px;
-  padding: 60px 24px;
-  text-align: center;
+  border: 1px solid $border;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px; // Largeur de lecture confortable
+  padding: 32px 40px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 
-  .spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid #e2e8f0;
-    border-top-color: #4299e1;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 24px;
+  .card-title {
+    margin-bottom: 32px;
+    text-align: center;
+    h1 { font-size: 24px; font-weight: 400; margin: 0 0 8px 0; }
+    .subtitle { color: $text-sub; font-size: 14px; margin: 0; }
   }
-
-  p {
-    color: #718096;
-    font-size: 16px;
-  }
-}
-
-// ========================================
-// FORMULAIRE
-// ========================================
-
-.driver-form {
-  max-width: 800px;
-  margin: 0 auto;
-
-  .error-banner {
-    background: #fff5f5;
-    border: 1px solid #fed7d7;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #c53030;
-    font-size: 14px;
-
-    i {
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-  }
-}
-
-// ========================================
-// CONTENU DU FORMULAIRE
-// ========================================
-
-.form-content {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .form-section {
-  padding: 24px;
-  border-bottom: 1px solid #e2e8f0;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  .section-header {
-    margin-bottom: 24px;
-
-    h2 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-      color: #1a202c;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      i {
-        font-size: 20px;
-        color: #4299e1;
-      }
-    }
+  margin-bottom: 24px;
+  
+  .section-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: $primary;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
   }
 }
 
-// ========================================
-// GROUPES DE FORMULAIRE
-// ========================================
+.divider { border: 0; border-top: 1px solid #f1f3f4; margin: 24px 0; }
 
-.form-group {
-  margin-bottom: 20px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
+// Inputs Styles
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
 
   label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #2d3748;
-    margin-bottom: 8px;
-
-    .required {
-      color: #c53030;
-      margin-left: 4px;
-    }
-  }
-
-  .form-control {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
-    transition: all 0.2s;
-    background: white;
-    color: #2d3748;
-
-    &:focus {
-      outline: none;
-      border-color: #4299e1;
-      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-    }
-
-    &::placeholder {
-      color: #a0aec0;
-    }
-
-    &.error {
-      border-color: #c53030;
-      background: #fff5f5;
-
-      &:focus {
-        box-shadow: 0 0 0 3px rgba(197, 48, 48, 0.1);
-      }
-    }
-
-    &:disabled {
-      background: #f7fafc;
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
-    // Select styling
-    &[type='select-multiple'],
-    select {
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a5568' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 36px;
-    }
-  }
-
-  .error-message {
-    display: block;
     font-size: 12px;
-    color: #c53030;
-    margin-top: 6px;
+    color: $text-sub;
     font-weight: 500;
+    margin-bottom: 6px;
   }
 }
 
-// ========================================
-// BOUTONS D'ACTION
-// ========================================
+.google-input {
+  padding: 10px 12px;
+  border: 1px solid $border;
+  border-radius: 4px;
+  font-size: 16px; // 16px empêche le zoom sur mobile
+  color: $text-main;
+  transition: all 0.2s;
 
+  &:focus {
+    outline: none;
+    border-color: $primary;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+  }
+
+  &.error { border-color: $error; }
+}
+
+.error-text { color: $error; font-size: 12px; margin-top: 4px; }
+
+.row-2-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+// Actions
 .form-actions {
   display: flex;
-  gap: 12px;
   justify-content: flex-end;
-
-  .btn {
-    padding: 12px 28px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
+  gap: 12px;
+  margin-top: 32px;
+  
+  button {
+    padding: 10px 24px;
+    border-radius: 4px;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 14px;
+  }
 
-    &.btn-secondary {
-      background: #edf2f7;
-      color: #2d3748;
+  .btn-cancel {
+    background: white;
+    border: 1px solid $border;
+    color: $text-main;
+    &:hover { background: #f1f3f4; }
+  }
 
-      &:hover:not(:disabled) {
-        background: #e2e8f0;
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-    }
-
-    &.btn-primary {
-      background: #4299e1;
-      color: white;
-
-      &:hover:not(:disabled) {
-        background: #3182ce;
-        box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-    }
-
-    i {
-      font-size: 16px;
-    }
+  .btn-save {
+    background: $primary;
+    color: white;
+    border: none;
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:hover:not(:disabled) { box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
   }
 }
 
-// ========================================
-// ANIMATIONS
-// ========================================
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-// ========================================
-// RESPONSIVE
-// ========================================
-
-@media (max-width: 768px) {
-  .driver-form-container {
-    padding: 16px;
-  }
-
-  .form-header {
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 24px;
-
-    h1 {
-      font-size: 24px;
-    }
-
-    .spacer {
-      display: none;
-    }
-  }
-
-  .form-section {
-    padding: 16px;
-  }
-
-  .form-actions {
-    flex-direction: column;
-
-    .btn {
-      width: 100%;
-      justify-content: center;
-    }
-  }
+// Mobile
+@media (max-width: 600px) {
+  .form-card { border: none; padding: 16px; }
+  .row-2-col { grid-template-columns: 1fr; }
 }

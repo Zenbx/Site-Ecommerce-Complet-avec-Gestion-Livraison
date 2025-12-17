@@ -4,10 +4,16 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, interval } from 'rxjs';
+import * as L from 'leaflet';
+
 import { DeliveriesService } from '../deliveries.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { Delivery, DeliveryStatus } from '../models/delivery.model';
 import { DeliveryMapComponent } from '../delivery-map/delivery-map.component';
+
+// ============================================
+// INTERFACES
+// ============================================
 
 interface DriverLocation {
   id: number;
@@ -21,6 +27,30 @@ interface DriverLocation {
   accuracy: number;
 }
 
+// ============================================
+// CONFIGURATION LEAFLET
+// ============================================
+
+const iconRetinaUrl = 'assets/marker-icon-2x.png';
+const iconUrl = 'assets/marker-icon.png';
+const shadowUrl = 'assets/marker-shadow.png';
+
+const iconDefault = L.icon({
+  iconRetinaUrl,
+  iconUrl,
+  shadowUrl,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  tooltipAnchor: [16, -28],
+  shadowSize: [41, 41]
+});
+L.Marker.prototype.options.icon = iconDefault;
+
+// ============================================
+// COMPOSANT
+// ============================================
+
 @Component({
   selector: 'app-delivery-tracking',
   standalone: true,
@@ -29,25 +59,42 @@ interface DriverLocation {
   styleUrls: ['./delivery-tracking.component.scss']
 })
 export class DeliveryTrackingComponent implements OnInit, OnDestroy {
-  // Variables
+  
+  // ============================================
+  // PROPRIÉTÉS
+  // ============================================
+  
+  // Données principales
   delivery: Delivery | null = null;
   driverLocation: DriverLocation | null = null;
   loading = true;
   error: string | null = null;
-  private destroy$ = new Subject<void>();
-
+  
   // WebSocket
   wsConnected = false;
   lastUpdateTime: Date | null = null;
-
+  
   // Simulation GPS (MODE TEST)
   private TEST_MODE = true;
   private gpsSimulationInterval: any;
-
+  
   // Statistiques
   totalDistance: number = 0;
   completedDistance: number = 0;
   estimatedTimeMinutes: number = 0;
+  
+  // Leaflet
+  private map: L.Map | null = null;
+  private driverMarker: L.Marker | null = null;
+  private destinationMarker: L.Marker | null = null;
+  private routeLine: L.Polyline | null = null;
+  
+  // RxJS
+  private destroy$ = new Subject<void>();
+
+  // ============================================
+  // CONSTRUCTEUR
+  // ============================================
 
   constructor(
     private route: ActivatedRoute,
@@ -55,6 +102,10 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
     private deliveriesService: DeliveriesService,
     private wsService: WebSocketService
   ) {}
+
+  // ============================================
+  // HOOKS DU CYCLE DE VIE
+  // ============================================
 
   ngOnInit(): void {
     this.route.params
@@ -75,11 +126,17 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
     if (this.gpsSimulationInterval) {
       clearInterval(this.gpsSimulationInterval);
     }
+    
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
   }
 
-  /**
-   * CHARGER LES DÉTAILS DE LA LIVRAISON
-   */
+  // ============================================
+  // CHARGEMENT DES DONNÉES
+  // ============================================
+
   private loadDelivery(deliveryId: number): void {
     this.loading = true;
     this.deliveriesService.getDelivery(deliveryId)
@@ -100,6 +157,11 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
             );
           }
 
+          // Initialiser la carte
+          setTimeout(() => {
+            this.initializeMap();
+          }, 100);
+
           // Si mode test, simuler le GPS
           if (this.TEST_MODE && delivery.status === DeliveryStatus.IN_PROGRESS) {
             this.startGPSSimulation(deliveryId);
@@ -113,9 +175,10 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * CONFIGURER WEBSOCKET
-   */
+  // ============================================
+  // WEBSOCKET
+  // ============================================
+
   private setupWebSocket(deliveryId: number): void {
     this.wsService.connect();
     this.wsConnected = true;
@@ -132,7 +195,6 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
       .subscribe((message) => {
         console.log('📍 Position GPS reçue:', message.data);
         
-        // Vérifier que c'est bien notre livraison
         if (this.delivery?.driver && message.data.driverId === this.delivery.driver.id) {
           this.updateDriverLocation(message.data);
         }
@@ -147,8 +209,6 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
         if (this.delivery && message.data.deliveryId === this.delivery.id) {
           const oldStatus = this.delivery.status;
           this.delivery.status = message.data.status;
-          
-          // Notification de changement de statut
           this.onStatusChanged(oldStatus, message.data.status);
         }
       });
@@ -161,7 +221,6 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
           console.log('✅ Livraison terminée !');
           this.showNotification('Livraison terminée avec succès !', 'success');
           
-          // Arrêter la simulation GPS
           if (this.gpsSimulationInterval) {
             clearInterval(this.gpsSimulationInterval);
           }
@@ -172,7 +231,6 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
     interval(5000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        // Vérifier que la connexion est toujours active
         const timeSinceLastUpdate = this.lastUpdateTime 
           ? Date.now() - this.lastUpdateTime.getTime()
           : 0;
@@ -183,14 +241,11 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * METTRE À JOUR LA POSITION DU LIVREUR
-   */
   private updateDriverLocation(locationData: any): void {
     this.driverLocation = {
       id: locationData.id || Date.now(),
       driverId: locationData.driverId,
-      driverName: locationData.driverName || this.delivery?.driver?.firstName + ' ' + this.delivery?.driver?.lastName,
+      driverName: locationData.driverName || `${this.delivery?.driver?.firstName} ${this.delivery?.driver?.lastName}`,
       latitude: locationData.latitude,
       longitude: locationData.longitude,
       speed: locationData.speed || 0,
@@ -208,11 +263,11 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
 
     // Recalculer l'ETA
     this.updateETA();
+
+    // Mettre à jour la carte
+    this.updateDriverMarker();
   }
 
-  /**
-   * NOTIFICATION DE CHANGEMENT DE STATUT
-   */
   private onStatusChanged(oldStatus: DeliveryStatus, newStatus: DeliveryStatus): void {
     const messages: { [key: string]: string } = {
       [DeliveryStatus.ASSIGNED]: '📋 Livraison assignée à un livreur',
@@ -228,10 +283,10 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * SIMULATION GPS EN MODE TEST
-   * Simule un déplacement progressif vers la destination
-   */
+  // ============================================
+  // SIMULATION GPS (MODE TEST)
+  // ============================================
+
   private startGPSSimulation(deliveryId: number): void {
     if (!this.delivery?.address?.latitude || !this.delivery?.address?.longitude) {
       return;
@@ -239,15 +294,14 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
 
     console.log('🧪 MODE TEST - Simulation GPS activée');
 
-    // Position de départ (un peu éloignée de la destination)
     const destLat = this.delivery.address.latitude;
     const destLng = this.delivery.address.longitude;
     
-    let currentLat = destLat + (Math.random() - 0.5) * 0.05; // ~5km
+    let currentLat = destLat + (Math.random() - 0.5) * 0.05;
     let currentLng = destLng + (Math.random() - 0.5) * 0.05;
 
     let simulationStep = 0;
-    const totalSteps = 50; // 50 mises à jour pour arriver
+    const totalSteps = 50;
 
     this.gpsSimulationInterval = setInterval(() => {
       if (!this.delivery || simulationStep >= totalSteps) {
@@ -255,18 +309,13 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // Progression vers la destination
       const progress = simulationStep / totalSteps;
       currentLat = currentLat + (destLat - currentLat) * 0.05;
       currentLng = currentLng + (destLng - currentLng) * 0.05;
 
-      // Vitesse variable (15-50 km/h)
       const speed = 20 + Math.random() * 30 + (progress * 10);
-
-      // Heading (direction approximative)
       const heading = Math.atan2(destLng - currentLng, destLat - currentLat) * 180 / Math.PI;
 
-      // Mettre à jour la position
       this.updateDriverLocation({
         driverId: this.delivery.driver?.id || 1,
         driverName: `${this.delivery.driver?.firstName} ${this.delivery.driver?.lastName}`,
@@ -280,7 +329,6 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
 
       simulationStep++;
 
-      // Si presque arrivé, changer le statut
       if (simulationStep === totalSteps - 5) {
         console.log('🎯 Presque arrivé - Simulation terminée');
         if (this.delivery) {
@@ -288,13 +336,13 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
           this.delivery.deliveredAt = new Date().toISOString();
         }
       }
-
-    }, 2000); // Mise à jour toutes les 2 secondes
+    }, 2000);
   }
 
-  /**
-   * CALCULER L'ETA (ESTIMATED TIME OF ARRIVAL)
-   */
+  // ============================================
+  // CALCULS DE DISTANCE ET ETA
+  // ============================================
+
   private updateETA(): void {
     if (!this.driverLocation) {
       this.estimatedTimeMinutes = 0;
@@ -302,16 +350,12 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
     }
 
     const distance = parseFloat(this.calculateDistance());
-    const speed = this.driverLocation.speed || 30; // Vitesse par défaut 30 km/h
+    const speed = this.driverLocation.speed || 30;
 
-    // Temps en heures puis en minutes
     const timeInHours = distance / speed;
     this.estimatedTimeMinutes = Math.ceil(timeInHours * 60);
   }
 
-  /**
-   * CALCULER LA DISTANCE ENTRE LE LIVREUR ET LA DESTINATION
-   */
   calculateDistance(): string {
     if (!this.driverLocation || !this.delivery?.address?.latitude) {
       return 'N/A';
@@ -327,11 +371,8 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
     return distance.toFixed(2);
   }
 
-  /**
-   * FORMULE HAVERSINE - DISTANCE ENTRE DEUX POINTS GPS
-   */
   private calculateDistanceBetweenPoints(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Rayon de la Terre en km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     
@@ -344,9 +385,6 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
     return R * c;
   }
 
-  /**
-   * ESTIMER LE TEMPS D'ARRIVÉE (FORMAT LISIBLE)
-   */
   estimateArrivalTime(): string {
     if (!this.driverLocation) {
       return 'N/A';
@@ -367,31 +405,223 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * OBTENIR LE POURCENTAGE DE PROGRESSION
-   */
   getProgressPercentage(): number {
     if (this.totalDistance === 0) return 0;
     return Math.min(100, Math.round((this.completedDistance / this.totalDistance) * 100));
   }
 
-  /**
-   * AFFICHER UNE NOTIFICATION
-   */
-  private showNotification(message: string, type: 'success' | 'info' | 'warning' | 'error'): void {
-    // Vous pouvez utiliser une bibliothèque de toast ici
-    console.log(`${type.toUpperCase()}: ${message}`);
-    alert(message);
+  // ============================================
+  // LEAFLET - INITIALISATION
+  // ============================================
+
+  private initializeMap(): void {
+    if (!this.delivery) {
+      console.warn('⚠️ Impossible d\'initialiser la carte : pas de données de livraison');
+      return;
+    }
+
+    const mapElement = document.getElementById('tracking-map');
+    if (!mapElement) {
+      console.error('❌ Élément de carte introuvable dans le DOM');
+      return;
+    }
+
+    try {
+      this.map = L.map('tracking-map', {
+        center: [this.delivery.address.latitude, this.delivery.address.longitude],
+        zoom: 13,
+        scrollWheelZoom: false
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(this.map);
+
+      const destinationIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 24px;
+            height: 24px;
+            background: #ea4335;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+          "></div>
+        `,
+        className: '',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      this.destinationMarker = L.marker(
+        [this.delivery.address.latitude, this.delivery.address.longitude],
+        { icon: destinationIcon }
+      ).addTo(this.map);
+
+      this.destinationMarker.bindPopup(`
+        <div style="text-align: center; padding: 4px;">
+          <strong style="color: #ea4335;">📍 Destination</strong><br>
+          <span style="font-size: 12px;">${this.delivery.address.street}</span>
+        </div>
+      `);
+
+      if (this.driverLocation) {
+        this.updateDriverMarker();
+      }
+
+      console.log('✅ Carte Leaflet initialisée avec succès');
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'initialisation de la carte Leaflet:', error);
+      this.error = 'Impossible d\'initialiser la carte de suivi';
+    }
   }
 
-  /**
-   * RETOUR À LA LISTE
-   */
-  goBack(): void {
-    this.router.navigate(['/deliveries']);
+  // ============================================
+  // LEAFLET - MISE À JOUR
+  // ============================================
+
+  private updateDriverMarker(): void {
+    if (!this.map || !this.driverLocation || !this.delivery) {
+      return;
+    }
+
+    const driverIcon = L.divIcon({
+      html: `
+        <div style="
+          width: 28px;
+          height: 28px;
+          background: #1a73e8;
+          border-radius: 50%;
+          border: 3px solid white;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+          position: relative;
+        ">
+          <div style="
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 12px;
+            height: 12px;
+            background: #34a853;
+            border-radius: 50%;
+            border: 2px solid white;
+          "></div>
+        </div>
+      `,
+      className: '',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
+    });
+
+    if (this.driverMarker) {
+      this.driverMarker.setLatLng([this.driverLocation.latitude, this.driverLocation.longitude]);
+      this.driverMarker.setPopupContent(`
+        <div style="text-align: center; padding: 4px;">
+          <strong style="color: #1a73e8;">🚚 Livreur</strong><br>
+          <span style="font-size: 12px;">${this.driverLocation.driverName}</span><br>
+          <span style="font-size: 11px; color: #5f6368;">
+            Vitesse: ${this.driverLocation.speed} km/h
+          </span>
+        </div>
+      `);
+    } else {
+      this.driverMarker = L.marker(
+        [this.driverLocation.latitude, this.driverLocation.longitude],
+        { icon: driverIcon }
+      ).addTo(this.map);
+
+      this.driverMarker.bindPopup(`
+        <div style="text-align: center; padding: 4px;">
+          <strong style="color: #1a73e8;">🚚 Livreur</strong><br>
+          <span style="font-size: 12px;">${this.driverLocation.driverName}</span><br>
+          <span style="font-size: 11px; color: #5f6368;">
+            Vitesse: ${this.driverLocation.speed} km/h
+          </span>
+        </div>
+      `);
+    }
+
+    this.updateRouteLine();
+    this.fitMapBounds();
   }
 
-  // Méthodes existantes pour le template
+  private updateRouteLine(): void {
+    if (!this.map || !this.driverLocation || !this.delivery) {
+      return;
+    }
+
+    const points: [number, number][] = [
+      [this.driverLocation.latitude, this.driverLocation.longitude],
+      [this.delivery.address.latitude, this.delivery.address.longitude]
+    ];
+
+    if (this.routeLine) {
+      this.routeLine.setLatLngs(points);
+    } else {
+      this.routeLine = L.polyline(points, {
+        color: '#1a73e8',
+        weight: 3,
+        opacity: 0.7,
+        dashArray: '10, 10',
+        lineJoin: 'round'
+      }).addTo(this.map);
+    }
+  }
+
+  private fitMapBounds(): void {
+    if (!this.map || !this.driverLocation || !this.delivery) {
+      return;
+    }
+
+    const bounds = L.latLngBounds([
+      [this.driverLocation.latitude, this.driverLocation.longitude],
+      [this.delivery.address.latitude, this.delivery.address.longitude]
+    ]);
+
+    this.map.fitBounds(bounds, {
+      padding: [50, 50],
+      maxZoom: 15,
+      animate: true,
+      duration: 0.5
+    });
+  }
+
+  // ============================================
+  // LEAFLET - CONTRÔLES
+  // ============================================
+
+  zoomIn(): void {
+    if (this.map) {
+      this.map.zoomIn();
+    }
+  }
+
+  zoomOut(): void {
+    if (this.map) {
+      this.map.zoomOut();
+    }
+  }
+
+  centerOnDriver(): void {
+    if (this.map && this.driverLocation) {
+      this.map.setView(
+        [this.driverLocation.latitude, this.driverLocation.longitude],
+        15,
+        { animate: true, duration: 0.5 }
+      );
+    } else if (this.map && this.delivery) {
+      this.map.setView(
+        [this.delivery.address.latitude, this.delivery.address.longitude],
+        15,
+        { animate: true, duration: 0.5 }
+      );
+    }
+  }
+
+  // ============================================
+  // MÉTHODES UTILITAIRES
+  // ============================================
 
   getStatusLabel(status: DeliveryStatus): string {
     const labels: { [key: string]: string } = {
@@ -417,8 +647,39 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
     return classes[status] || '';
   }
 
+  getStatusIcon(status: DeliveryStatus): string {
+    const icons: { [key: string]: string } = {
+      [DeliveryStatus.PENDING]: 'schedule',
+      [DeliveryStatus.ASSIGNED]: 'assignment_ind',
+      [DeliveryStatus.IN_PROGRESS]: 'local_shipping',
+      [DeliveryStatus.DELIVERED]: 'check_circle',
+      [DeliveryStatus.FAILED]: 'cancel',
+      [DeliveryStatus.CANCELLED]: 'block'
+    };
+    return icons[status] || 'help_outline';
+  }
+
+  getPriorityIcon(priority: string): string {
+    const icons: { [key: string]: string } = {
+      'high': 'priority_high',
+      'medium': 'remove',
+      'low': 'arrow_downward'
+    };
+    return icons[priority] || 'remove';
+  }
+
+  getPriorityLabel(priority: string): string {
+    const labels: { [key: string]: string } = {
+      'high': 'Urgente',
+      'medium': 'Normale',
+      'low': 'Basse'
+    };
+    return labels[priority] || priority;
+  }
+
   formatDate(date: string | undefined): string {
     if (!date) return 'N/A';
+    
     return new Date(date).toLocaleString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
@@ -426,6 +687,26 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  formatRelativeTime(date: Date): string {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+
+    if (diffSecs < 10) {
+      return 'À l\'instant';
+    } else if (diffSecs < 60) {
+      return `Il y a ${diffSecs} seconde${diffSecs > 1 ? 's' : ''}`;
+    } else if (diffMins < 60) {
+      return `Il y a ${diffMins} minute${diffMins > 1 ? 's' : ''}`;
+    } else if (diffHours < 24) {
+      return `Il y a ${diffHours} heure${diffHours > 1 ? 's' : ''}`;
+    } else {
+      return this.formatDate(date.toISOString());
+    }
   }
 
   canShowProof(): boolean {
@@ -436,5 +717,14 @@ export class DeliveryTrackingComponent implements OnInit, OnDestroy {
     if (this.delivery?.id) {
       this.router.navigate(['/deliveries/proof', this.delivery.id]);
     }
+  }
+
+  goBack(): void {
+    this.router.navigate(['/deliveries']);
+  }
+
+  private showNotification(message: string, type: 'success' | 'info' | 'warning' | 'error'): void {
+    console.log(`${type.toUpperCase()}: ${message}`);
+    alert(message);
   }
 }

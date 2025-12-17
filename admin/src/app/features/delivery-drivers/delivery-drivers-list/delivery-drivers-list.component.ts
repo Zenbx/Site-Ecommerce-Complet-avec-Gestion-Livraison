@@ -180,11 +180,14 @@ export class DeliveryDriversListComponent implements OnInit {
 
   /**
    * Recherche
-   */
-  onSearch(): void {
-    this.currentPage = 1;
-    this.loadDrivers();
-  }
+   */// Dans delivery-drivers-list.component.ts
+onSearch(event: any): void {
+  this.searchTerm = event.target.value;
+  this.currentPage = 1; // Reset à la première page
+  this.loadDrivers();   // Recharge avec le filtre
+}
+
+
 
   /**
    * Changement de filtre

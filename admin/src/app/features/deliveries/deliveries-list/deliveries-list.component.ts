@@ -9,11 +9,11 @@ import { DeliveriesService, DeliveryFilters } from '../deliveries.service';
 import { DeliveryDriversService } from '../../delivery-drivers/delivery-drivers.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { Delivery, DeliveryStatus, DeliveryDriver } from '../models/delivery.model';
-
+import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-deliveries-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './deliveries-list.component.html',
   styleUrls: ['./deliveries-list.component.scss']
 })
@@ -95,6 +95,13 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Ajoutez cette fonction :
+  refresh(): void {
+    console.log('Actualisation des livraisons...');
+    this.currentPage = 1; // On revient à la première page
+    this.loadDeliveries(); // Appelle votre méthode existante qui récupère les données
+  }
+
   loadDeliveries(): void {
     this.loading = true;
     const filters: DeliveryFilters = {};
@@ -107,7 +114,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
       filters.status = this.selectedStatus as DeliveryStatus;
     }
 
-    this.deliveriesService.getDeliveries(this.currentPage, this.perPage, filters)
+    this.deliveriesService.getDeliveries(filters)
       .subscribe({
         next: (response) => {
           this.deliveries = response.data;
@@ -181,7 +188,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
 
     this.assigning = true;
 
-    this.deliveriesService.assignDeliveryManually(
+    this.deliveriesService.assignDriver(
       this.selectedDelivery.id,
       this.selectedDriverId
     ).subscribe({
@@ -217,20 +224,20 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
 
     this.autoAssigning = true;
 
-    this.deliveriesService.assignDeliveryAutomatically(delivery.id)
+    this.deliveriesService.autoAssignDriver(delivery.id)
       .subscribe({
         next: (result) => {
-          console.log('🤖 Assignation automatique réussie');
-          console.log(`   Livreur: ${result.driver.firstName} ${result.driver.lastName}`);
-          console.log(`   Raison: ${result.reason}`);
-          console.log(`   Score: ${result.score}`);
+         /// console.log('🤖 Assignation automatique réussie');
+         // console.log(`   Livreur: ${result.driver.firstName} ${result.driver.lastName}`);
+         // console.log(`   Raison: ${result.reason}`);
+         // console.log(`   Score: ${result.score}`);
           
           // Mettre à jour la livraison dans la liste
-          this.updateDeliveryInList(result.delivery);
+          this.updateDeliveryInList(result);
           
           // Afficher une notification détaillée
           this.showSuccessNotification(
-            `Livraison #${result.delivery.orderNumber} assignée automatiquement à ${result.driver.firstName} ${result.driver.lastName}. ${result.reason}`
+            `Livraison #${result.orderNumber} assignée automatiquement à ${result.firstName} ${result.lastName}. ${result.reason}`
           );
           
           this.autoAssigning = false;
@@ -251,7 +258,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.deliveriesService.unassignDelivery(delivery.id)
+    this.deliveriesService.removeDriver(delivery.id)
       .subscribe({
         next: (updatedDelivery) => {
           console.log('✅ Livraison désassignée');
@@ -328,4 +335,42 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
     return delivery.status === DeliveryStatus.IN_PROGRESS || 
            delivery.status === DeliveryStatus.ASSIGNED;
   }
+
+  // Méthodes communes à ajouter dans les composants
+
+getPriorityIcon(priority: string): string {
+  const icons: Record<string, string> = {
+    'high': 'priority_high',
+    'medium': 'remove',
+    'low': 'arrow_downward'
+  };
+  return icons[priority] || 'remove';
+}
+
+getPriorityLabel(priority: string): string {
+  const labels: Record<string, string> = {
+    'high': 'Urgente',
+    'medium': 'Normale',
+    'low': 'Basse'
+  };
+  return labels[priority] || priority;
+}
+
+getProofTypeIcon(type: string): string {
+  const icons: Record<string, string> = {
+    'SIGNATURE': 'draw',
+    'PHOTO': 'photo_camera',
+    'QR_CODE': 'qr_code'
+  };
+  return icons[type] || 'image';
+}
+
+getProofStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    'PENDING': 'En attente',
+    'VALIDATED': 'Validée',
+    'REJECTED': 'Rejetée'
+  };
+  return labels[status] || status;
+}
 }

@@ -1,373 +1,969 @@
 // src/app/features/deliveries/delivery-tracking/delivery-tracking.component.scss
 
-.tracking-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: #f5f7fa;
+// ============================================
+// VARIABLES MATERIAL GOOGLE DESIGN
+// ============================================
+
+// Couleurs principales
+$primary: #1a73e8;
+$primary-dark: #1557b0;
+$primary-light: #4285f4;
+
+$success: #34a853;
+$warning: #fbbc04;
+$error: #ea4335;
+$info: #4285f4;
+
+// Texte
+$text-primary: #202124;
+$text-secondary: #5f6368;
+$text-tertiary: #80868b;
+$text-disabled: #9aa0a6;
+
+// Surfaces
+$bg-main: #f8f9fa;
+$surface: #ffffff;
+$surface-hover: #f8f9fa;
+$border: #e8eaed;
+$divider: #e8eaed;
+
+// Ombres Material
+$shadow-sm: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+$shadow-md: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+$shadow-lg: 0 2px 6px 2px rgba(60, 64, 67, 0.15), 0 8px 24px 4px rgba(60, 64, 67, 0.15);
+
+// Radius
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-full: 50%;
+
+// Transitions
+$transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ============================================
+// CONTENEUR PRINCIPAL
+// ============================================
+
+.tracking-page {
+  min-height: 100vh;
+  background: $bg-main;
+  padding-bottom: 32px;
 }
 
-// ========================================
-// EN-TÊTE
-// ========================================
+// ============================================
+// TOP BAR AVEC NAVIGATION
+// ============================================
 
-.tracking-header {
-  padding: 24px;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
+.top-bar {
+  background: $surface;
+  border-bottom: 1px solid $border;
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: $shadow-sm;
+}
+
+.top-bar-content {
+  max-width: 1400px;
+  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
+  gap: 20px;
+}
 
-  .header-content {
-    h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: #1a202c;
-      margin-bottom: 4px;
-    }
+.btn-back {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: $radius-full;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background $transition;
+  flex-shrink: 0;
 
-    .subtitle {
-      color: #718096;
-      font-size: 14px;
+  &:hover {
+    background: $surface-hover;
+  }
+
+  .material-icons {
+    font-size: 24px;
+    color: $text-primary;
+  }
+}
+
+.title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 500;
+  color: $text-primary;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: $text-secondary;
+  margin: 0;
+  
+  strong {
+    color: $primary;
+    font-weight: 500;
+  }
+}
+
+.status-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+// ============================================
+// STATUS CHIP
+// ============================================
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: $radius-lg;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+
+  .material-icons {
+    font-size: 16px;
+  }
+
+  &.status-pending {
+    background: rgba(251, 188, 4, 0.12);
+    color: #f29900;
+  }
+
+  &.status-assigned {
+    background: rgba(66, 133, 244, 0.12);
+    color: $primary;
+  }
+
+  &.status-in-progress,
+  &.status-in_progress {
+    background: rgba(26, 115, 232, 0.12);
+    color: $primary-dark;
+  }
+
+  &.status-delivered {
+    background: rgba(52, 168, 83, 0.12);
+    color: $success;
+  }
+
+  &.status-failed {
+    background: rgba(234, 67, 53, 0.12);
+    color: $error;
+  }
+
+  &.status-cancelled {
+    background: rgba(95, 99, 104, 0.12);
+    color: $text-secondary;
+  }
+}
+
+// ============================================
+// INDICATEUR WEBSOCKET
+// ============================================
+
+.websocket-indicator {
+  max-width: 1400px;
+  margin: 12px auto 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ws-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: $radius-lg;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all $transition;
+
+  &.connected {
+    background: rgba(52, 168, 83, 0.08);
+    color: $success;
+
+    .ws-dot {
+      background: $success;
+      animation: pulse 2s infinite;
     }
   }
 
-  .header-status {
-    display: flex;
-    gap: 16px;
-    align-items: center;
+  &.disconnected {
+    background: rgba(95, 99, 104, 0.08);
+    color: $text-secondary;
 
-    .status-badge {
-      padding: 8px 16px;
-      border-radius: 24px;
-      font-size: 13px;
-      font-weight: 600;
-
-      &.status-pending {
-        background: #fef3c7;
-        color: #92400e;
-      }
-
-      &.status-assigned {
-        background: #dbeafe;
-        color: #1e40af;
-      }
-
-      &.status-in-progress {
-        background: #e0e7ff;
-        color: #3730a3;
-      }
-
-      &.status-delivered {
-        background: #d1fae5;
-        color: #065f46;
-      }
-
-      &.status-failed {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-
-      &.status-cancelled {
-        background: #f3f4f6;
-        color: #374151;
-      }
-    }
-
-    .ws-indicator {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-      background: #f7fafc;
-      color: #718096;
-      transition: all 0.2s;
-
-      .dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #cbd5e0;
-      }
-
-      &.connected {
-        background: #c6f6d5;
-        color: #22543d;
-
-        .dot {
-          background: #22863a;
-          animation: pulse 2s infinite;
-        }
-      }
-
-      &.disconnected {
-        background: #fed7d7;
-        color: #742a2a;
-
-        .dot {
-          background: #c53030;
-        }
-      }
+    .ws-dot {
+      background: $text-tertiary;
     }
   }
 }
 
-// ========================================
-// CONTENU PRINCIPAL
-// ========================================
+.ws-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: $radius-full;
+  transition: background $transition;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.ws-label {
+  font-size: 13px;
+}
+
+// ============================================
+// ÉTATS LOADING ET ERROR
+// ============================================
+
+.loading-state,
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 48px 24px;
+}
+
+.loading-container,
+.error-container {
+  text-align: center;
+  max-width: 400px;
+}
+
+// Loading
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid $border;
+  border-top-color: $primary;
+  border-radius: $radius-full;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 24px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: $text-primary;
+  margin: 0 0 8px 0;
+}
+
+.loading-subtext {
+  font-size: 14px;
+  color: $text-secondary;
+  margin: 0;
+}
+
+// Error
+.error-icon {
+  font-size: 64px;
+  color: $error;
+  margin-bottom: 16px;
+}
+
+.error-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: $text-primary;
+  margin: 0 0 8px 0;
+}
+
+.error-message {
+  font-size: 14px;
+  color: $text-secondary;
+  margin: 0 0 24px 0;
+}
+
+.btn-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: $primary;
+  color: $surface;
+  border: none;
+  border-radius: $radius-md;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all $transition;
+
+  &:hover {
+    background: $primary-dark;
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+// ============================================
+// GRILLE DE TRACKING
+// ============================================
 
 .tracking-content {
-  display: flex;
-  flex: 1;
-  gap: 16px;
-  padding: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.tracking-grid {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+  align-items: start;
+}
+
+// ============================================
+// CARTE GÉNÉRIQUE
+// ============================================
+
+.card {
+  background: $surface;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
   overflow: hidden;
+  transition: box-shadow $transition;
 
-  .map-section {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    position: relative;
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
 
-    .map-container {
-      width: 100%;
-      height: 100%;
-      z-index: 1;
+.card-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid $border;
+}
 
-      :deep(.leaflet-container) {
-        font-family: inherit;
-      }
+.card-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: $text-primary;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
-      :deep(.marker-popup) {
-        padding: 8px;
-        font-size: 12px;
+  .material-icons {
+    font-size: 20px;
+    color: $primary;
+  }
+}
 
-        strong {
-          display: block;
-          margin-bottom: 4px;
-        }
-      }
-    }
+.card-body {
+  padding: 24px;
+}
 
-    .loading-state,
-    .error-state {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: white;
-      z-index: 2;
+// ============================================
+// COLONNE CARTE
+// ============================================
 
-      .spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid #e2e8f0;
-        border-top-color: #4299e1;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 16px;
-      }
+.map-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
-      p {
-        color: #718096;
-        font-size: 14px;
-      }
-    }
+// Carte interactive
+.map-card {
+  position: relative;
+  height: 500px;
 
-    .error-state {
-      background: #fff5f5;
+  &:hover {
+    box-shadow: $shadow-lg;
+  }
+}
 
-      i {
-        font-size: 48px;
-        color: #c53030;
-        margin-bottom: 12px;
-      }
+.map-container {
+  width: 100%;
+  height: 100%;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  
+  // Leaflet va injecter sa carte ici
+}
 
-      p {
-        color: #c53030;
-      }
-    }
+// Contrôles de la carte
+.map-controls {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.map-control-btn {
+  width: 40px;
+  height: 40px;
+  background: $surface;
+  border: none;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: $shadow-md;
+  transition: all $transition;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
   }
 
-  .info-panel {
-    flex: 1;
+  .material-icons {
+    font-size: 20px;
+    color: $text-primary;
+  }
+}
+
+// Légende de la carte
+.map-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  background: $surface;
+  border-radius: $radius-md;
+  padding: 12px 16px;
+  box-shadow: $shadow-lg;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: $text-primary;
+}
+
+.legend-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: $radius-full;
+  border: 2px solid $surface;
+  box-shadow: $shadow-sm;
+
+  &.driver {
+    background: $primary;
+  }
+
+  &.destination {
+    background: $error;
+  }
+}
+
+// ============================================
+// CARTE DE PROGRESSION
+// ============================================
+
+.progress-card {
+  .card-body {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    overflow-y: auto;
-    padding-right: 8px;
+    gap: 24px;
+  }
+}
 
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
+// Barre de progression
+.progress-bar-container {
+  margin-bottom: 8px;
+}
 
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
+.progress-bar-track {
+  height: 8px;
+  background: $border;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  position: relative;
+}
 
-    &::-webkit-scrollbar-thumb {
-      background: #cbd5e0;
-      border-radius: 3px;
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $primary, $primary-light);
+  border-radius: $radius-lg;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  position: relative;
 
-      &:hover {
-        background: #a0aec0;
-      }
-    }
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    background: $surface;
+    border: 3px solid $primary;
+    border-radius: $radius-full;
+    box-shadow: $shadow-sm;
+  }
+}
 
-    .panel-section {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.progress-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: $surface;
+  margin-right: 20px;
+}
 
-      h3 {
-        margin: 0 0 16px 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: #1a202c;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
+// Statistiques de progression
+.progress-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
 
-      .info-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        padding: 12px 0;
-        border-bottom: 1px solid #f7fafc;
+.stat-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: $surface-hover;
+  border-radius: $radius-md;
+  transition: all $transition;
 
-        &:last-child {
-          border-bottom: none;
-          padding-bottom: 0;
-        }
+  &:hover {
+    background: $border;
+    transform: translateY(-2px);
+  }
 
-        label {
-          font-size: 13px;
-          color: #718096;
-          font-weight: 500;
-          min-width: 120px;
-        }
+  > .material-icons {
+    font-size: 24px;
+    color: $primary;
+    flex-shrink: 0;
+  }
+}
 
-        span {
-          font-size: 14px;
-          color: #2d3748;
-          text-align: right;
-          flex: 1;
-          margin-left: 12px;
+.stat-content {
+  flex: 1;
+  min-width: 0;
+}
 
-          &.speed-value {
-            color: #4299e1;
-            font-weight: 600;
-            font-size: 16px;
-          }
+.stat-label {
+  font-size: 12px;
+  color: $text-secondary;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 
-          &.priority-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
+.stat-value {
+  font-size: 20px;
+  font-weight: 500;
+  color: $text-primary;
+  line-height: 1.2;
+}
 
-            &.priority-high {
-              background: #fed7d7;
-              color: #c53030;
-            }
+// Précision GPS
+.gps-accuracy {
+  padding: 12px;
+  background: $surface-hover;
+  border-radius: $radius-md;
+}
 
-            &.priority-medium {
-              background: #feebc8;
-              color: #c05621;
-            }
+.accuracy-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
 
-            &.priority-low {
-              background: #c6f6d5;
-              color: #22543d;
-            }
-          }
-        }
-      }
+  .material-icons {
+    font-size: 18px;
+  }
 
-      .divider {
-        height: 1px;
-        background: #e2e8f0;
-        margin: 16px 0;
-      }
+  &.good {
+    color: $success;
+  }
 
-      .no-data {
-        padding: 24px;
-        text-align: center;
-        background: #f7fafc;
-        border-radius: 8px;
-        color: #718096;
+  &.medium {
+    color: $warning;
+  }
 
-        i {
-          display: block;
-          font-size: 32px;
-          margin-bottom: 12px;
-          color: #cbd5e0;
-        }
+  &.poor {
+    color: $error;
+  }
+}
 
-        p {
-          margin: 0;
-          font-size: 14px;
-        }
-      }
+.accuracy-text {
+  color: $text-primary;
+}
 
-      .gps-info {
-        .estimation-box {
-          background: #f7fafc;
-          padding: 16px;
-          border-radius: 8px;
-          display: flex;
-          gap: 16px;
+.accuracy-quality {
+  margin-left: 4px;
+  font-weight: 500;
+}
 
-          .estimation-item {
-            flex: 1;
-            display: flex;
-            gap: 12px;
-            align-items: center;
+// Dernière mise à jour
+.last-update {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: $text-tertiary;
 
-            i {
-              font-size: 24px;
-              color: #4299e1;
-            }
+  .material-icons {
+    font-size: 16px;
+  }
+}
 
-            .label {
-              font-size: 12px;
-              color: #718096;
-              margin-bottom: 4px;
-            }
+// ============================================
+// MESSAGE PAS DE GPS
+// ============================================
 
-            .value {
-              font-size: 16px;
-              font-weight: 600;
-              color: #1a202c;
-            }
-          }
-        }
-      }
+.no-gps-card {
+  .card-body {
+    padding: 48px 24px;
+  }
+}
+
+.empty-state {
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: $text-tertiary;
+  margin-bottom: 16px;
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: $text-primary;
+  margin: 0 0 8px 0;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: $text-secondary;
+  margin: 0;
+  line-height: 1.5;
+}
+
+// ============================================
+// COLONNE INFORMATIONS
+// ============================================
+
+.info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: sticky;
+  top: 88px; // En dessous de la top bar
+}
+
+// ============================================
+// CARTE D'INFORMATIONS
+// ============================================
+
+.info-card {
+  .card-body {
+    padding: 24px;
+  }
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.info-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 14px;
+  color: $text-primary;
+  line-height: 1.5;
+
+  &.address {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    .material-icons {
+      font-size: 18px;
+      color: $primary;
+      flex-shrink: 0;
+      margin-top: 2px;
     }
   }
 }
 
-// ========================================
+.phone-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: $primary;
+  text-decoration: none;
+  transition: color $transition;
+
+  &:hover {
+    color: $primary-dark;
+  }
+
+  .material-icons {
+    font-size: 16px;
+  }
+}
+
+// Badge de priorité
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: $radius-lg;
+  font-size: 12px;
+  font-weight: 500;
+  width: fit-content;
+
+  .material-icons {
+    font-size: 16px;
+  }
+
+  &.priority-high {
+    background: rgba(234, 67, 53, 0.12);
+    color: $error;
+  }
+
+  &.priority-medium {
+    background: rgba(251, 188, 4, 0.12);
+    color: #f29900;
+  }
+
+  &.priority-low {
+    background: rgba(66, 133, 244, 0.12);
+    color: $primary;
+  }
+}
+
+// Instructions spéciales
+.special-instructions {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(26, 115, 232, 0.04);
+  border-left: 3px solid $primary;
+  border-radius: $radius-md;
+}
+
+.instructions-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  .material-icons {
+    font-size: 18px;
+    color: $primary;
+  }
+}
+
+.instructions-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-primary;
+}
+
+.instructions-text {
+  font-size: 14px;
+  color: $text-primary;
+  margin: 0;
+  line-height: 1.5;
+}
+
+// ============================================
+// CARTE LIVREUR
+// ============================================
+
+.driver-card {
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+.driver-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.driver-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-full;
+  background: linear-gradient(135deg, $primary, $primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: $shadow-sm;
+
+  .material-icons {
+    font-size: 28px;
+    color: $surface;
+  }
+}
+
+.driver-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.driver-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: $text-primary;
+  margin: 0 0 8px 0;
+}
+
+.driver-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: $text-secondary;
+
+  .material-icons {
+    font-size: 16px;
+  }
+}
+
+// Contact livreur
+.driver-contact {
+  padding-top: 4px;
+}
+
+.btn-contact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 20px;
+  background: $primary;
+  color: $surface;
+  border: none;
+  border-radius: $radius-md;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all $transition;
+
+  &:hover {
+    background: $primary-dark;
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+// Statistiques livreur
+.driver-stats {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: $surface-hover;
+  border-radius: $radius-md;
+}
+
+.stat-badge {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-primary;
+
+  .material-icons {
+    font-size: 16px;
+    color: $warning;
+  }
+}
+
+// ============================================
 // TIMELINE
-// ========================================
+// ============================================
+
+.timeline-card {
+  .card-body {
+    padding: 24px;
+  }
+}
 
 .timeline {
   position: relative;
@@ -376,155 +972,323 @@
   &::before {
     content: '';
     position: absolute;
-    left: 5px;
-    top: 0;
-    bottom: 0;
+    left: 9px;
+    top: 8px;
+    bottom: 8px;
     width: 2px;
-    background: #e2e8f0;
+    background: $border;
+  }
+}
+
+.timeline-step {
+  position: relative;
+  padding-bottom: 32px;
+
+  &:last-child {
+    padding-bottom: 0;
   }
 
-  .timeline-item {
-    position: relative;
-    padding-bottom: 20px;
-
-    &:last-child {
-      padding-bottom: 0;
-    }
-
-    .timeline-dot {
+  // Ligne de connexion active
+  &.completed,
+  &.active {
+    &::after {
+      content: '';
       position: absolute;
-      left: -32px;
-      top: 3px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: white;
-      border: 3px solid #cbd5e0;
-      transition: all 0.2s;
+      left: -22px;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: $primary;
     }
+  }
 
-    &.completed {
-      .timeline-dot {
-        border-color: #22863a;
-        background: #22863a;
-      }
-    }
-
-    &.active {
-      .timeline-dot {
-        width: 16px;
-        height: 16px;
-        left: -34px;
-        top: 1px;
-        border-color: #4299e1;
-        background: #4299e1;
-        animation: pulse 2s infinite;
-      }
-    }
-
-    .timeline-content {
-      .timeline-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #1a202c;
-        margin-bottom: 4px;
-      }
-
-      .timeline-date {
-        font-size: 12px;
-        color: #718096;
-      }
+  &.failed {
+    &::after {
+      content: '';
+      position: absolute;
+      left: -22px;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: $error;
     }
   }
 }
 
-// ========================================
-// ANIMATIONS
-// ========================================
+.step-marker {
+  position: absolute;
+  left: -32px;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: $radius-full;
+  background: $surface;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+  .material-icons {
+    font-size: 20px;
+  }
+
+  .timeline-step.completed & .material-icons {
+    color: $primary;
+  }
+
+  .timeline-step.active & .material-icons {
+    color: $primary;
+    animation: pulse 2s infinite;
+  }
+
+  .timeline-step.failed & .material-icons {
+    color: $error;
+  }
+
+  .timeline-step:not(.completed):not(.active):not(.failed) & .material-icons {
+    color: $text-tertiary;
   }
 }
 
-@keyframes pulse {
+.step-content {
+  padding-left: 8px;
+}
 
-  0%,
-  100% {
-    opacity: 1;
-  }
+.step-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: $text-primary;
+  margin: 0 0 4px 0;
+}
 
-  50% {
-    opacity: 0.5;
+.step-time {
+  font-size: 13px;
+  color: $text-secondary;
+  margin: 0 0 6px 0;
+
+  &.pending {
+    color: $text-tertiary;
+    font-style: italic;
   }
 }
 
-// ========================================
-// RESPONSIVE
-// ========================================
+.step-description {
+  font-size: 13px;
+  color: $text-secondary;
+  margin: 0;
+  line-height: 1.5;
+
+  &.error {
+    color: $error;
+  }
+}
+
+// ============================================
+// CARTE PREUVE
+// ============================================
+
+.proof-card {
+  .card-body {
+    padding: 20px;
+  }
+}
+
+.btn-proof {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 20px;
+  background: $surface-hover;
+  color: $text-primary;
+  border: 2px solid $border;
+  border-radius: $radius-md;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all $transition;
+
+  &:hover {
+    background: $surface;
+    border-color: $primary;
+    color: $primary;
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+// ============================================
+// RESPONSIVE DESIGN
+// ============================================
 
 @media (max-width: 1200px) {
-  .tracking-content {
-    flex-direction: column;
+  .tracking-grid {
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+  }
 
-    .map-section {
-      flex: 1;
-      min-height: 400px;
-    }
+  .info-column {
+    top: 80px;
+  }
+}
 
-    .info-panel {
-      flex: 1;
-      max-height: 300px;
-    }
+@media (max-width: 1024px) {
+  .tracking-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .info-column {
+    position: static;
+  }
+
+  .map-card {
+    height: 400px;
+  }
+
+  .progress-stats {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .tracking-header {
+  .tracking-content {
+    padding: 16px;
+  }
+
+  .top-bar {
+    padding: 12px 16px;
+  }
+
+  .top-bar-content {
+    flex-wrap: wrap;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .status-section {
+    flex: 1 0 100%;
+    justify-content: flex-start;
+    margin-top: 8px;
+  }
+
+  .websocket-indicator {
+    margin-top: 8px;
+    justify-content: flex-start;
+  }
+
+  .map-card {
+    height: 350px;
+  }
+
+  .card-body {
+    padding: 16px;
+  }
+
+  .card-header {
+    padding: 16px;
+  }
+
+  .driver-profile {
     flex-direction: column;
     align-items: flex-start;
+  }
 
-    .header-content h1 {
-      font-size: 24px;
+  .timeline {
+    padding-left: 28px;
+  }
+
+  .step-marker {
+    left: -28px;
+    width: 18px;
+    height: 18px;
+
+    .material-icons {
+      font-size: 18px;
     }
+  }
+}
 
-    .header-status {
-      width: 100%;
-      justify-content: space-between;
+@media (max-width: 480px) {
+  .tracking-content {
+    padding: 12px;
+  }
+
+  .tracking-grid {
+    gap: 16px;
+  }
+
+  .map-card {
+    height: 300px;
+  }
+
+  .map-controls {
+    top: 12px;
+    right: 12px;
+    gap: 6px;
+  }
+
+  .map-control-btn {
+    width: 36px;
+    height: 36px;
+
+    .material-icons {
+      font-size: 18px;
     }
   }
 
-  .tracking-content {
-    flex-direction: column;
+  .map-legend {
+    bottom: 12px;
+    left: 12px;
+    padding: 8px 12px;
+    gap: 6px;
+  }
+
+  .legend-item {
+    font-size: 12px;
+  }
+
+  .info-grid {
+    gap: 16px;
+  }
+
+  .progress-stats {
     gap: 12px;
+  }
+
+  .stat-item {
     padding: 12px;
+  }
 
-    .map-section {
-      min-height: 300px;
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .driver-avatar {
+    width: 48px;
+    height: 48px;
+
+    .material-icons {
+      font-size: 24px;
     }
+  }
 
-    .info-panel {
-      max-height: 50vh;
+  .driver-name {
+    font-size: 15px;
+  }
 
-      .panel-section {
-        padding: 16px;
-
-        h3 {
-          font-size: 14px;
-        }
-
-        .info-item {
-          flex-direction: column;
-          align-items: flex-start;
-
-          span {
-            text-align: left;
-            margin-left: 0;
-            margin-top: 4px;
-          }
-        }
-      }
-    }
+  .meta-item {
+    font-size: 12px;
   }
 }

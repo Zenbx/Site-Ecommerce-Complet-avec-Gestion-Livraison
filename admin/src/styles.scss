@@ -3,7 +3,7 @@
 // Charte graphique : Bleu Nuit, Blanc, Cyan
 // ========================================
 @use '@angular/material' as mat;
-
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 // Include les styles de base Angular Material (obligatoire, une seule fois)
 @include mat.core();

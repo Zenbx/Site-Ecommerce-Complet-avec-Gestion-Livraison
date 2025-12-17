@@ -1,6 +1,117 @@
+<!-- src/app/features/deliveries/delivery-map/delivery-map.component.html -->
+
 <div class="map-wrapper">
+  
+  <!-- Map Container -->
   <div id="map" class="map-container"></div>
 
-  <div *ngIf="loading" class="overlay">Chargement…</div>
-  <div *ngIf="error" class="overlay error">{{ error }}</div>
+  <!-- Map Controls Overlay -->
+  <div class="map-controls">
+    <button class="control-btn" (click)="zoomIn()" title="Zoomer">
+      <i class="material-icons">add</i>
+    </button>
+    <button class="control-btn" (click)="zoomOut()" title="Dézoomer">
+      <i class="material-icons">remove</i>
+    </button>
+    <button class="control-btn" (click)="centerMap()" title="Centrer">
+      <i class="material-icons">my_location</i>
+    </button>
+    <button class="control-btn" (click)="toggleFullscreen()" title="Plein écran">
+      <i class="material-icons">fullscreen</i>
+    </button>
+  </div>
+
+  <!-- Legend Overlay -->
+  <div class="map-legend" *ngIf="showLegend">
+    <div class="legend-header">
+      <h3>Légende</h3>
+      <button class="btn-close-legend" (click)="showLegend = false">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    <div class="legend-items">
+      <div class="legend-item">
+        <div class="legend-marker pending"></div>
+        <span>En attente</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-marker in-transit"></div>
+        <span>En cours</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-marker delivered"></div>
+        <span>Livrée</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div *ngIf="loading" class="map-overlay loading">
+    <div class="overlay-content">
+      <div class="spinner"></div>
+      <p>Chargement de la carte...</p>
+    </div>
+  </div>
+
+  <!-- Error Overlay -->
+  <div *ngIf="error" class="map-overlay error">
+    <div class="overlay-content">
+      <i class="material-icons error-icon">error_outline</i>
+      <h3>Erreur de chargement</h3>
+      <p>{{ error }}</p>
+      <button class="btn-retry" (click)="retry()">
+        <i class="material-icons">refresh</i>
+        Réessayer
+      </button>
+    </div>
+  </div>
+
+  <!-- Info Panel for Selected Delivery -->
+  <div class="info-panel" *ngIf="selectedDelivery" [@slideIn]>
+    <div class="panel-header">
+      <div class="panel-title">
+        <h3>Livraison #{{ selectedDelivery.orderNumber }}</h3>
+        <span class="status-badge" [ngClass]="getStatusClass(selectedDelivery.status)">
+          {{ getStatusLabel(selectedDelivery.status) }}
+        </span>
+      </div>
+      <button class="btn-close-panel" (click)="closePanel()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="panel-body">
+      <div class="info-section">
+        <div class="info-item">
+          <i class="material-icons">person</i>
+          <div>
+            <span class="label">Client</span>
+            <span class="value">{{ selectedDelivery.customer.name }}</span>
+          </div>
+        </div>
+        
+        <div class="info-item">
+          <i class="material-icons">location_on</i>
+          <div>
+            <span class="label">Destination</span>
+            <span class="value">{{ selectedDelivery.address.city }}</span>
+          </div>
+        </div>
+        
+        <div class="info-item" *ngIf="selectedDelivery.driver">
+          <i class="material-icons">local_shipping</i>
+          <div>
+            <span class="label">Livreur</span>
+            <span class="value">{{ selectedDelivery.driver.firstName }} {{ selectedDelivery.driver.lastName }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <button class="btn-view-details" (click)="viewDetails(selectedDelivery)">
+        <i class="material-icons">visibility</i>
+        Voir les détails complets
+      </button>
+    </div>
+  </div>
+
 </div>

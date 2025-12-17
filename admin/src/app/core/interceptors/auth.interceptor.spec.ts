@@ -5,7 +5,7 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 
-import { AuthInterceptor } from './auth.interceptor';
+import { authInterceptor } from './auth.interceptor';
 
 describe('authInterceptor', () => {
   let authServiceSpy: jasmine.SpyObj<AuthService>;
@@ -24,7 +24,7 @@ describe('authInterceptor', () => {
         { provide: Router, useValue: routerSpy },
         {
           provide: HTTP_INTERCEPTORS,
-          useClass: AuthInterceptor,
+          useClass: authInterceptor,
           multi: true
         }
       ]

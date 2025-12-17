@@ -1,59 +1,62 @@
 <header class="navbar">
-
-  <!-- LEFT -->
   <div class="navbar-left">
-    <h1 class="page-title">TechStorm Admin</h1>
+    <h1 class="page-title">Gestion Logistique</h1>
   </div>
 
-  <!-- RIGHT -->
   <div class="navbar-right">
+    
+    <div class="time-display">
+      <i class="material-icons">schedule</i>
+      <span>{{ currentTime | date:'HH:mm' }}</span>
+    </div>
 
-    <!-- Notifications -->
     <div class="notifications-container">
-      <button class="icon-btn" (click)="toggleNotifications()">
-        <span class="notification-icon">🔔</span>
-        <span
-          class="notification-badge"
-          *ngIf="notifications.length > 0"
-        >
+      <button class="icon-btn" (click)="toggleNotifications()" [class.has-notif]="notifications.length > 0">
+        <i class="material-icons">notifications_none</i>
+        <span class="notification-badge" *ngIf="notifications.length > 0">
           {{ notifications.length }}
         </span>
       </button>
 
-      <!-- Dropdown -->
       <div class="notifications-dropdown" *ngIf="showNotifications">
         <div class="dropdown-header">
           <h3>Notifications</h3>
-          <span class="count">{{ notifications.length }}</span>
+          <button class="mark-read-btn">Tout marquer comme lu</button>
         </div>
 
         <div class="notifications-list">
-          <div
-            class="notification-item notification-{{ n.type }}"
-            *ngFor="let n of notifications"
-          >
+          <div class="notification-item" *ngFor="let n of notifications" [class.unread]="!n.read">
+            <div class="notif-icon-circle" [ngClass]="n.type">
+              <i class="material-icons">{{ n.type === 'success' ? 'check_circle' : n.type === 'warning' ? 'warning' : 'info' }}</i>
+            </div>
             <div class="notification-content">
               <p class="notification-message">{{ n.message }}</p>
               <span class="notification-time">{{ n.time }}</span>
             </div>
           </div>
 
-          <div *ngIf="notifications.length === 0" class="notification-item">
-            Aucune notification
+          <div *ngIf="notifications.length === 0" class="empty-notif">
+            <i class="material-icons">notifications_off</i>
+            <p>Aucune notification</p>
           </div>
+        </div>
+        <div class="dropdown-footer">
+          <a href="#">Voir toutes les alertes</a>
         </div>
       </div>
     </div>
 
-    <!-- User menu -->
-    <div class="user-menu" (click)="logout()">
-      <div class="user-avatar-small">
-        A <!-- {{ authService.currentUser$?.name?.charAt(0) || 'A' }} -->
-      </div>
-      <span class="user-name-small">
-        Admin <!-- {{ authService.currentUser$?.name || 'Admin' }} -->
-      </span>
-    </div>
+    <div class="divider"></div>
 
+    <div class="user-profile" (click)="logout()">
+      <div class="user-info-text">
+        <span class="user-name">Admin</span>
+        <span class="user-status">En ligne</span>
+      </div>
+      <div class="user-avatar-circle">
+        A
+      </div>
+      <i class="material-icons arrow-icon">expand_more</i>
+    </div>
   </div>
 </header>

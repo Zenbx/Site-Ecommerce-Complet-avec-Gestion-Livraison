@@ -38,6 +38,15 @@ export class ReportsComponent implements OnInit {
     });
   }
 
+  // À ajouter dans la classe ReportsComponent
+formatTime(minutes: number): string {
+  if (minutes === undefined || minutes === null) return '0 min';
+  const h = Math.floor(minutes / 60);
+  const m = Math.floor(minutes % 60);
+  if (h === 0) return `${m} min`;
+  return `${h}h ${m}min`;
+}
+
   exportPDF(): void {
     this.exportingPdf = true;
     this.reportsService.exportPdf().subscribe({

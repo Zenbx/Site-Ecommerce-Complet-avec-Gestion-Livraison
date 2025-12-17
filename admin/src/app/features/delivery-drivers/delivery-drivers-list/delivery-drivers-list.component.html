@@ -1,232 +1,97 @@
-<!-- src/app/features/delivery-drivers/delivery-drivers-list/delivery-drivers-list.component.html -->
-
-<div class="drivers-container">
-  <!-- Header avec boutons d'action -->
-  <div class="page-header">
-    <div class="header-content">
+<div class="drivers-wrapper">
+  
+  <header class="top-bar">
+    <div class="title-section">
       <h1>Gestion des livreurs</h1>
-      <p class="subtitle">
-        {{ totalDrivers }} livreur(s) au total
-        <span class="separator">•</span>
-        <span *ngIf="hasAvailableDrivers">
-          {{ availableDriversCount }} disponible(s)
-        </span>
-      </p>
+      <span class="badge-count">{{ totalDrivers }} total</span>
     </div>
-    <div class="header-actions">
-      <button class="btn btn-export" (click)="exportToPdf()" title="Export PDF">
-        📄 Export PDF
+    
+    <div class="actions-section">
+      <button class="icon-btn" (click)="refresh()" title="Actualiser">
+        <i class="material-icons">sync</i>
       </button>
-      <button class="btn btn-export" (click)="exportToExcel()" title="Export Excel">
-        � Export Excel
+      <button class="btn-primary" (click)="createDriver()">
+        <i class="material-icons">add</i>
+        <span>Nouveau Livreur</span>
       </button>
-      <button class="btn btn-refresh" (click)="refresh()" title="Actualiser">
-        🔄
-      </button>
-      <button class="btn btn-primary" (click)="createDriver()">
-        <i class="icon-plus"></i>
-        Ajouter un livreur
-      </button>
+    </div>
+  </header>
+
+  <div class="toolbar-section">
+    <div class="search-input-wrapper">
+      <i class="material-icons">search</i>
+      <input type="text" placeholder="Rechercher par nom, email..." (input)="onSearch($event)">
+    </div>
+    
+    <div class="filter-groups">
+      <button class="filter-chip active">Tous</button>
+      <button class="filter-chip">Disponibles ({{ availableDriversCount }})</button>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="export-actions">
+       <button class="text-btn" (click)="exportToExcel()">Export Excel</button>
     </div>
   </div>
 
-  <!-- Filters améliorés -->
-  <div class="filters-bar">
-    <div class="search-box">
-      <i class="icon-search"></i>
-      <input
-        type="text"
-        placeholder="Rechercher par nom, téléphone, plaque..."
-        [(ngModel)]="searchTerm"
-        (keyup.enter)="onSearch()"
-      />
-    </div>
-
-    <select class="filter-select" [(ngModel)]="filterAvailability" (change)="onFilterChange()">
-      <option value="all">📦 Tous les statuts</option>
-      <option value="available">✅ Disponibles</option>
-      <option value="unavailable">🔴 Non disponibles</option>
-    </select>
-
-    <select class="filter-select" [(ngModel)]="filterVehicleType" (change)="onFilterChange()">
-      <option value="all">🚗 Tous les véhicules</option>
-      <option *ngFor="let type of vehicleTypes" [value]="type">{{ type }}</option>
-    </select>
-
-    <button class="btn btn-search" (click)="onSearch()">
-      🔍 Rechercher
-    </button>
-
-    <button 
-      class="btn btn-reset" 
-      (click)="resetFilters()"
-      *ngIf="searchTerm || filterAvailability !== 'all' || filterVehicleType !== 'all'"
-    >
-      ✕ Réinitialiser
-    </button>
-  </div>
-
-  <!-- Loading -->
-  <div *ngIf="loading" class="loading-container">
-    <div class="spinner"></div>
-    <p>Chargement des livreurs...</p>
-  </div>
-
-  <!-- Drivers Table -->
-  <div *ngIf="!loading" class="drivers-table-container">
-    <table class="drivers-table">
+  <div class="table-card">
+    <table class="google-table">
       <thead>
         <tr>
-          <th (click)="changeSortBy('name')" class="sortable">
-            Livreur {{ getSortIcon('name') }}
-          </th>
-          <th>Téléphone</th>
-          <th (click)="changeSortBy('vehicle')" class="sortable">
-            Véhicule {{ getSortIcon('vehicle') }}
-          </th>
-          <th>Plaque</th>
-          <th (click)="changeSortBy('availability')" class="sortable">
-            Statut {{ getSortIcon('availability') }}
-          </th>
-          <th>Disponibilité</th>
-          <th class="actions-column">Actions</th>
+          <th class="col-avatar"></th> <th>Livreur</th>
+          <th>Contact</th>
+          <th>Véhicule</th>
+          <th>Statut</th>
+          <th class="text-right">Actions</th>
         </tr>
       </thead>
       <tbody>
-          <tr *ngFor="let driver of drivers" [class.highlighted]="driver.isAvailable">
+        <tr *ngFor="let driver of drivers" class="table-row">
+          <td class="col-avatar">
+           <div class="avatar-circle">
+              {{ driver.name ? driver.name.charAt(0) : '?' }}
+           </div>
+          </td>
+          <td class="col-primary">
+            <span class="name">{{ driver.name }}</span>
+            <span class="sub-text">ID: {{ driver.id }}</span>
+          </td>
           <td>
-            <div class="driver-info">
-              <div class="driver-avatar" [class.available]="isDriverAvailable(driver)">
-                {{ getDriverInitials(driver) }}
-              </div>
-              <div>
-                <div class="driver-name">{{ getDriverDisplayName(driver) }}</div>
-                <div class="driver-meta">
-                  <div class="driver-email">{{ getDriverEmail(driver) || '—' }}</div>
-                  <div class="driver-location" *ngIf="driver.currentLocation">
-                    <span class="location-badge">📍 Position GPS active</span>
-                  </div>
-                </div>
-              </div>
+             <div class="cell-stack">
+               <span>{{ driver.email }}</span>
+               <span class="sub-text">{{ driver.phone }}</span>
+             </div>
+          </td>
+          <td>
+            <div class="cell-stack">
+              <span>{{ driver.vehicleType }}</span>
+              <span class="sub-text">{{ driver.vehiclePlate }}</span>
             </div>
           </td>
-          <td class="phone-column">
-            <span class="phone-badge">{{ driver.phone || '—' }}</span>
-          </td>
           <td>
-            <span class="vehicle-badge">{{ driver.vehicleType }}</span>
-          </td>
-          <td>
-            <span class="plate-badge">{{ driver.vehiclePlate }}</span>
-          </td>
-          <td>
-            <span class="status-badge" [class.active]="isDriverAvailable(driver)" [class.inactive]="!isDriverAvailable(driver)">
-              {{ getDriverAvailabilityLabel(driver) }}
+            <span class="status-indicator" [class.available]="driver.isAvailable">
+              {{ driver.isAvailable ? 'Disponible' : 'Occupé' }}
             </span>
           </td>
-          <td>
-            <label class="toggle-switch" [title]="driver.isAvailable ? 'Marquer comme indisponible' : 'Marquer comme disponible'">
-              <input
-                type="checkbox"
-                [checked]="driver.isAvailable"
-                (change)="toggleAvailability(driver)"
-              />
-              <span class="toggle-slider"></span>
-            </label>
-          </td>
-          <td class="actions-column">
-            <div class="action-buttons">
-              <button
-                class="btn-icon btn-info"
-                (click)="viewStatistics(driver)"
-                title="Statistiques"
-              >
-                📊
-              </button>
-              <button
-                class="btn-icon btn-edit"
-                (click)="editDriver(driver)"
-                title="Modifier"
-              >
-                ✏️
-              </button>
-              <button
-                class="btn-icon btn-delete"
-                (click)="deleteDriver(driver)"
-                title="Supprimer"
-              >
-                🗑️
-              </button>
-            </div>
+          <td class="text-right actions-cell">
+            <button class="icon-action" (click)="editDriver(driver)" title="Modifier">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="icon-action delete" (click)="deleteDriver(driver)" title="Supprimer">
+              <i class="material-icons">delete</i>
+            </button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <!-- Empty State amélioré -->
-    <div *ngIf="drivers.length === 0" class="empty-state">
-      <div class="empty-icon">🚫</div>
-      <h3>Aucun livreur trouvé</h3>
-      <p>Essayez de modifier vos critères de recherche ou ajoutez un nouveau livreur</p>
-      <button class="btn btn-primary" (click)="createDriver()">
-        ➕ Ajouter un livreur
-      </button>
+    <div class="pagination-footer">
+      <span class="page-info">Page {{ currentPage }} sur {{ getTotalPages() }}</span>
+      <div class="page-controls">
+        <button class="btn-page" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">Précédent</button>
+        <button class="btn-page" [disabled]="currentPage >= getTotalPages()" (click)="onPageChange(currentPage + 1)">Suivant</button>
+      </div>
     </div>
-  </div>
-
-  <!-- Pagination améliorée -->
-  <div *ngIf="!loading && drivers.length > 0" class="pagination">
-    <button
-      class="btn btn-pagination"
-      [disabled]="currentPage === 1"
-      (click)="onPageChange(1)"
-      title="Première page"
-    >
-      ⏮️
-    </button>
-    
-    <button
-      class="btn btn-pagination"
-      [disabled]="currentPage === 1"
-      (click)="onPageChange(currentPage - 1)"
-    >
-      ◀️ Précédent
-    </button>
-
-    <!-- Numéros de pages -->
-    <div class="page-numbers">
-      <button
-        *ngFor="let page of getPageNumbers()"
-        class="page-number"
-        [class.active]="page === currentPage"
-        [disabled]="page === -1"
-        (click)="page !== -1 && onPageChange(page)"
-      >
-        {{ page === -1 ? '...' : page }}
-      </button>
-    </div>
-    
-    <button
-      class="btn btn-pagination"
-      [disabled]="currentPage >= getTotalPages()"
-      (click)="onPageChange(currentPage + 1)"
-    >
-      Suivant ▶️
-    </button>
-
-    <button
-      class="btn btn-pagination"
-      [disabled]="currentPage >= getTotalPages()"
-      (click)="onPageChange(getTotalPages())"
-      title="Dernière page"
-    >
-      ⏭️
-    </button>
-
-    <span class="page-info">
-      Page {{ currentPage }} / {{ getTotalPages() }} 
-      <span class="separator">•</span>
-      {{ totalDrivers }} résultat(s)
-    </span>
   </div>
 </div>

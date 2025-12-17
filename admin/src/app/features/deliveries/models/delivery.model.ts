@@ -36,6 +36,8 @@ export interface DeliveryDriver {
   // Champs communs
   isAvailable: boolean;
   statistics?: any;
+  rating: number;
+  totalDeliveries: number;
   currentLocation?: {
     latitude: number;
     longitude: number;

@@ -1,6 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
+
+// Définition d'une interface pour la sécurité du type
+interface Notification {
+  id: number;
+  type: string;
+  message: string;
+  time: string;
+  read: boolean; // Ajout de la propriété manquante
+}
 
 @Component({
   selector: 'app-navbar',
@@ -9,55 +18,61 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })
-export class NavbarComponent {
-  currentTime = new Date(); // L'heure actuelle
-  showNotifications = false; // Affichage des notifications
-  notificationsCount = 0; // Compte des notifications non lues
+export class NavbarComponent implements OnDestroy {
+  currentTime = new Date();
+  showNotifications = false;
+  private timer: any;
 
-  // Liste des notifications
-  notifications = [
+  // Liste des notifications mise à jour
+  notifications: Notification[] = [
     { 
       id: 1, 
       type: 'success', 
       message: 'Livraison #CMD-001 terminée',
-      time: '5 min'
+      time: '5 min',
+      read: false // Par défaut non lu
     },
     { 
       id: 2, 
       type: 'warning', 
       message: 'Livreur en retard - #CMD-045',
-      time: '12 min'
+      time: '12 min',
+      read: false
     },
     { 
       id: 3, 
       type: 'info', 
       message: 'Nouvelle commande assignée',
-      time: '25 min'
+      time: '25 min',
+      read: true // Exemple d'une déjà lue
     }
   ];
 
   constructor(public authService: AuthService) {
-    // Mise à jour de l'heure toutes les secondes
-    setInterval(() => {
+    // Mise à jour de l'heure
+    this.timer = setInterval(() => {
       this.currentTime = new Date();
     }, 1000);
-    
-    // Compte des notifications non lues
-    this.notificationsCount = this.notifications.length;
   }
 
-  // Fonction pour basculer l'affichage des notifications
+  // Nettoyage du timer quand on quitte le composant
+  ngOnDestroy(): void {
+    if (this.timer) clearInterval(this.timer);
+  }
+
   toggleNotifications(): void {
     this.showNotifications = !this.showNotifications;
   }
 
-  // Fonction pour effacer toutes les notifications
-  clearNotifications(): void {
-    this.notifications = [];
-    this.notificationsCount = 0;
+  // Marquer tout comme lu (utilisé par le bouton dans le HTML)
+  markAllAsRead(): void {
+    this.notifications.forEach(n => n.read = true);
   }
 
-  // Fonction de déconnexion
+  clearNotifications(): void {
+    this.notifications = [];
+  }
+
   logout(): void {
     this.authService.logout();
   }

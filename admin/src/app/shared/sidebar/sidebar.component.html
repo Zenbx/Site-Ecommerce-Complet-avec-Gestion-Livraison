@@ -1,14 +1,12 @@
 <nav class="sidebar">
 
-  <!-- HEADER -->
   <div class="sidebar-header">
     <div class="logo">
-      <span class="logo-icon">⚡</span>
-      <span class="logo-text">TechStorm</span>
+      <div class="logo-symbol">G</div>
+      <span class="logo-text">Logistique<span>Pro</span></span>
     </div>
   </div>
 
-  <!-- NAV -->
   <div class="sidebar-nav">
     <a
       *ngFor="let item of menuItems"
@@ -16,33 +14,26 @@
       [routerLink]="item.route"
       routerLinkActive="active"
     >
-      <span class="nav-icon">{{ item.icon }}</span>
+      <div class="nav-indicator"></div>
+      <i class="material-icons nav-icon">{{ item.icon }}</i>
       <span class="nav-label">{{ item.label }}</span>
     </a>
   </div>
 
-  <!-- FOOTER -->
   <div class="sidebar-footer">
-
-    <div class="user-info">
+    <div class="user-card">
       <div class="user-avatar">
-        A <!-- {{ authService.currentUser?.name?.charAt(0) || 'A' }} -->
+        {{ 'Admin'.charAt(0) }}
       </div>
-
       <div class="user-details">
-        <div class="user-name">
-          Admin <!-- {{ authService.currentUser?.name || 'Admin' }} -->
-        </div>
-        <div class="user-role">
-          Administrateur <!-- {{ authService.currentUser.role || 'administrateur' }} -->
-        </div>
+        <span class="user-name">Admin</span>
+        <span class="user-role">Administrateur</span>
       </div>
     </div>
 
     <button class="logout-btn" (click)="logout()">
-      <span class="logout-icon">⏻</span>
+      <i class="material-icons">logout</i>
       <span>Déconnexion</span>
     </button>
-
   </div>
 </nav>

@@ -1,253 +1,215 @@
-<!-- src/app/features/dashboard/dashboard.component.html -->
-
-<div class="dashboard-container">
-  <!-- Header avec refresh et dernière mise à jour -->
-  <div class="dashboard-header">
-    <div class="header-left">
+<div class="dashboard-wrapper">
+  
+  <header class="top-bar">
+    <div class="top-bar-left">
       <h1>Tableau de bord logistique</h1>
-      <p class="subtitle">Vue d'ensemble en temps réel</p>
+      <span class="divider">/</span>
+      <span class="context">Vue d'ensemble</span>
     </div>
-    <div class="header-right">
-      <span class="last-update">
-        <i class="icon-clock"></i>
-        Mis à jour il y a {{ getTimeSinceLastUpdate() }}
-      </span>
-      <button class="refresh-btn" (click)="manualRefresh()" [disabled]="loading">
-        <i class="icon-refresh">🔄</i>
-        Actualiser
+    
+    <div class="top-bar-right">
+      <div class="meta-info">
+        <span class="ws-status" [class.connected]="wsConnected">
+          <span class="dot"></span>
+          {{ wsConnected ? 'Temps réel' : 'Déconnecté' }}
+        </span>
+        <span class="last-update">Mis à jour {{ getTimeSinceLastUpdate() }}</span>
+      </div>
+      
+      <button class="btn-action primary" (click)="manualRefresh()" [disabled]="loading">
+        <i class="material-icons">sync</i>
+        <span>Actualiser</span>
       </button>
     </div>
+  </header>
+
+  <div *ngIf="loading" class="loading-bar">
+    <div class="indeterminate"></div>
   </div>
 
-  <!-- Alertes -->
-  <div class="alerts-container" *ngIf="alerts.length > 0">
-    <div 
-      *ngFor="let alert of alerts" 
-      class="alert-item"
-      [ngClass]="getAlertClass(alert.type)"
-    >
-      <span class="alert-icon">
-        {{ alert.type === 'warning' ? '⚠️' : alert.type === 'error' ? '❌' : alert.type === 'success' ? '✅' : 'ℹ️' }}
-      </span>
-      <span class="alert-message">{{ alert.message }}</span>
-      <span class="alert-time">{{ alert.timestamp | date: 'HH:mm' }}</span>
-    </div>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="loading" class="loading-container">
-    <div class="spinner"></div>
-    <p>Chargement des données...</p>
-  </div>
-
-  <!-- Dashboard Content -->
-  <div *ngIf="!loading && stats" class="dashboard-content">
+  <main class="dashboard-content">
     
-    <!-- Stats Cards avec indicateurs de tendance -->
-    <div class="stats-grid">
-      <div class="stat-card ready-to-ship">
-        <div class="stat-icon">
-          <i class="icon-package"></i>
+    <div class="alerts-section" *ngIf="alerts.length > 0">
+      <div *ngFor="let alert of alerts" class="alert-banner" [ngClass]="alert.type">
+        <div class="alert-icon">
+          {{ alert.type === 'warning' ? '⚠️' : alert.type === 'error' ? '❌' : 'ℹ️' }}
         </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3>{{ stats.readyToShip }}</h3>
-            <span class="trend" *ngIf="previousStats">
-              <span class="trend-icon">
+        <div class="alert-body">
+          <span class="alert-msg">{{ alert.message }}</span>
+          <span class="alert-time">{{ alert.timestamp | date: 'HH:mm' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="stats" class="content-fade-in">
+      
+      <section class="kpi-grid">
+        
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Prêtes à expédier</span>
+            <i class="material-icons">inventory_2</i>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value">{{ stats.readyToShip }}</span>
+            <div class="kpi-trend" *ngIf="previousStats">
+              <span class="trend-badge" 
+                [class.up]="hasIncreased(stats.readyToShip, previousStats.readyToShip)"
+                [class.down]="hasDecreased(stats.readyToShip, previousStats.readyToShip)">
                 {{ getTrendIcon(stats.readyToShip, previousStats.readyToShip) }}
-              </span>
-              <span class="trend-value" 
-                    [class.positive]="hasIncreased(stats.readyToShip, previousStats.readyToShip)"
-                    [class.negative]="hasDecreased(stats.readyToShip, previousStats.readyToShip)">
                 {{ Math.abs(getChangePercentage(stats.readyToShip, previousStats.readyToShip)) }}%
               </span>
-            </span>
+            </div>
           </div>
-          <p>Prêtes à expédier</p>
+          <div class="kpi-progress warning"></div>
         </div>
-      </div>
 
-      <div class="stat-card in-transit">
-        <div class="stat-icon">
-          <i class="icon-truck"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3>{{ stats.inTransit }}</h3>
-            <span class="trend" *ngIf="previousStats">
-              <span class="trend-icon">
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-label">En cours de livraison</span>
+            <i class="material-icons">local_shipping</i>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value">{{ stats.inTransit }}</span>
+            <div class="kpi-trend" *ngIf="previousStats">
+              <span class="trend-badge" 
+                [class.up]="hasIncreased(stats.inTransit, previousStats.inTransit)"
+                [class.down]="hasDecreased(stats.inTransit, previousStats.inTransit)">
                 {{ getTrendIcon(stats.inTransit, previousStats.inTransit) }}
-              </span>
-              <span class="trend-value"
-                    [class.positive]="hasIncreased(stats.inTransit, previousStats.inTransit)"
-                    [class.negative]="hasDecreased(stats.inTransit, previousStats.inTransit)">
                 {{ Math.abs(getChangePercentage(stats.inTransit, previousStats.inTransit)) }}%
               </span>
-            </span>
+            </div>
           </div>
-          <p>En cours de livraison</p>
+          <div class="kpi-progress info"></div>
         </div>
-      </div>
 
-      <div class="stat-card delivered">
-        <div class="stat-icon">
-          <i class="icon-check"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3>{{ stats.delivered }}</h3>
-            <span class="trend" *ngIf="previousStats">
-              <span class="trend-icon">
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Livrées succès</span>
+            <i class="material-icons">check_circle</i>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value">{{ stats.delivered }}</span>
+            <div class="kpi-trend" *ngIf="previousStats">
+              <span class="trend-badge" 
+                [class.up]="hasIncreased(stats.delivered, previousStats.delivered)"
+                [class.down]="hasDecreased(stats.delivered, previousStats.delivered)">
                 {{ getTrendIcon(stats.delivered, previousStats.delivered) }}
-              </span>
-              <span class="trend-value"
-                    [class.positive]="hasIncreased(stats.delivered, previousStats.delivered)"
-                    [class.negative]="hasDecreased(stats.delivered, previousStats.delivered)">
                 {{ Math.abs(getChangePercentage(stats.delivered, previousStats.delivered)) }}%
               </span>
-            </span>
+            </div>
           </div>
-          <p>Livrées avec succès</p>
+          <div class="kpi-progress success"></div>
         </div>
-      </div>
 
-      <div class="stat-card failed">
-        <div class="stat-icon">
-          <i class="icon-alert"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3>{{ stats.failed }}</h3>
-            <span class="trend" *ngIf="previousStats">
-              <span class="trend-icon">
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <span class="kpi-label">Échecs / Retours</span>
+            <i class="material-icons">error</i>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-value">{{ stats.failed }}</span>
+            <div class="kpi-trend" *ngIf="previousStats">
+              <span class="trend-badge" 
+                [class.up]="hasIncreased(stats.failed, previousStats.failed)"
+                [class.down]="hasDecreased(stats.failed, previousStats.failed)">
                 {{ getTrendIcon(stats.failed, previousStats.failed) }}
-              </span>
-              <span class="trend-value"
-                    [class.positive]="hasIncreased(stats.failed, previousStats.failed)"
-                    [class.negative]="hasDecreased(stats.failed, previousStats.failed)">
                 {{ Math.abs(getChangePercentage(stats.failed, previousStats.failed)) }}%
               </span>
-            </span>
-          </div>
-          <p>Livraisons échouées</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Additional Stats -->
-    <div class="additional-stats">
-      <div class="info-card">
-        <span class="label">Total aujourd'hui :</span>
-        <span class="value">{{ stats.totalToday }}</span>
-      </div>
-      <div class="info-card">
-        <span class="label">Délai moyen :</span>
-        <span class="value">{{ formatTime(stats.averageDeliveryTime) }}</span>
-      </div>
-      <div class="info-card">
-        <span class="label">Livreurs actifs :</span>
-        <span class="value">{{ stats.activeDrivers }}/{{ stats.activeDrivers + stats.availableDrivers }}</span>
-      </div>
-      <div class="info-card" *ngIf="wsConnected">
-        <span class="label">WebSocket :</span>
-        <span class="value ws-status">
-          <span class="ws-dot connected"></span>
-          Connecté
-        </span>
-      </div>
-    </div>
-
-    <!-- Filtres de période (prévu pour plus tard) -->
-    <!-- <div class="period-filters">
-      <button 
-        class="period-btn" 
-        [class.active]="selectedPeriod === 'today'"
-        (click)="changePeriod('today')">
-        Aujourd'hui
-      </button>
-      <button 
-        class="period-btn" 
-        [class.active]="selectedPeriod === 'week'"
-        (click)="changePeriod('week')">
-        Cette semaine
-      </button>
-      <button 
-        class="period-btn" 
-        [class.active]="selectedPeriod === 'month'"
-        (click)="changePeriod('month')">
-        Ce mois
-      </button>
-    </div> -->
-
-    <!-- Two Column Layout -->
-    <div class="content-grid">
-      
-      <!-- Recent Deliveries -->
-      <div class="panel recent-deliveries">
-        <div class="panel-header">
-          <h2>Livraisons récentes</h2>
-          <span class="live-indicator">
-            <span class="pulse"></span>
-            En direct
-          </span>
-        </div>
-        <div class="panel-content">
-          <div *ngIf="recentDeliveries.length === 0" class="empty-state">
-            <p>Aucune livraison récente</p>
-          </div>
-          <div class="delivery-list">
-            <div *ngFor="let delivery of recentDeliveries" class="delivery-item">
-              <div class="delivery-info">
-                <div class="order-number">#{{ delivery.orderNumber }}</div>
-                <div class="customer-name">{{ delivery.customerName }}</div>
-                <div class="driver-name" *ngIf="delivery.driverName">
-                  <i class="icon-user"></i> {{ delivery.driverName }}
-                </div>
-              </div>
-              <div class="delivery-meta">
-                <span class="status-badge" [ngClass]="getStatusClass(delivery.status)">
-                  {{ getStatusLabel(delivery.status) }}
-                </span>
-                <span class="timestamp">{{ delivery.timestamp | date: 'HH:mm' }}</span>
-              </div>
             </div>
           </div>
+          <div class="kpi-progress error"></div>
         </div>
-      </div>
+      </section>
 
-      <!-- Driver Performance -->
-      <div class="panel driver-performance">
-        <div class="panel-header">
-          <h2>🏆 Top 5 Livreurs</h2>
-        </div>
-        <div class="panel-content">
-          <div *ngIf="driverPerformance.length === 0" class="empty-state">
-            <p>Aucune donnée disponible</p>
+      <div class="split-layout">
+        
+        <section class="panel data-panel">
+          <div class="panel-header">
+            <h2>Dernières activités</h2>
+            <div class="panel-actions">
+              <span class="indicator">
+                <span class="pulse-ring"></span>
+                En direct
+              </span>
+            </div>
           </div>
-          <div class="performance-list">
-            <div *ngFor="let driver of driverPerformance; let i = index" class="performance-item">
-              <div class="rank" [class.top-rank]="i < 3">
-                {{ i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) }}
-              </div>
-              <div class="driver-details">
-                <div class="driver-name">{{ driver.driverName }}</div>
-                <div class="metrics">
-                  <span class="metric">
-                    <strong>{{ driver.deliveriesCompleted }}</strong> livraisons
-                  </span>
-                  <span class="metric">
-                    <strong>{{ formatTime(driver.averageTime) }}</strong> moy.
-                  </span>
-                  <span class="metric success-rate">
-                    <strong>{{ driver.successRate }}%</strong> succès
-                  </span>
+          
+          <div class="table-container">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Commande</th>
+                  <th>Client</th>
+                  <th>Statut</th>
+                  <th class="text-right">Heure</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="recentDeliveries.length === 0">
+                  <td colspan="4" class="empty-cell">Aucune donnée récente</td>
+                </tr>
+                <tr *ngFor="let delivery of recentDeliveries">
+                  <td class="primary-text">#{{ delivery.orderNumber }}</td>
+                  <td>
+                    <div class="user-cell">
+                      <div class="avatar-initial">{{ delivery.customerName.charAt(0) }}</div>
+                      <span>{{ delivery.customerName }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-chip" [ngClass]="getStatusClass(delivery.status)">
+                      {{ getStatusLabel(delivery.status) }}
+                    </span>
+                  </td>
+                  <td class="text-right meta-text">
+                    {{ delivery.timestamp | date: 'HH:mm' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="sidebar">
+          
+          <div class="mini-stats-row">
+            <div class="mini-card">
+              <span class="label">Total Aujourd'hui</span>
+              <span class="value">{{ stats.totalToday }}</span>
+            </div>
+            <div class="mini-card">
+              <span class="label">Délai Moyen</span>
+              <span class="value">{{ formatTime(stats.averageDeliveryTime) }}</span>
+            </div>
+          </div>
+
+          <div class="panel driver-panel">
+            <div class="panel-header">
+              <h2>Top Performance</h2>
+              <span class="subtitle-badge">Top 5</span>
+            </div>
+            
+            <div class="driver-list">
+              <div *ngFor="let driver of driverPerformance; let i = index" class="driver-item">
+                <div class="rank-col">{{ i + 1 }}</div>
+                <div class="driver-info">
+                  <span class="driver-name">{{ driver.driverName }}</span>
+                  <div class="driver-metrics">
+                    <span>{{ driver.deliveriesCompleted }} livraisons</span>
+                    <span class="separator">•</span>
+                    <span class="success-rate">{{ driver.successRate }}% succès</span>
+                  </div>
+                </div>
+                <div class="driver-time">
+                  {{ formatTime(driver.averageTime) }}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </aside>
 
+      </div>
     </div>
-  </div>
+  </main>
 </div>

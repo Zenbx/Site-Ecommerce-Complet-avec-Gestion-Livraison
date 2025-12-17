@@ -1,243 +1,316 @@
 <!-- src/app/features/deliveries/deliveries-list/deliveries-list.component.html -->
 
-<div class="deliveries-container">
-  <div class="page-header">
-    <div class="header-content">
+<div class="deliveries-wrapper">
+  
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="title-section">
       <h1>Gestion des livraisons</h1>
-      <p class="subtitle">{{ totalDeliveries }} livraison(s) au total</p>
+      <span class="badge-count">{{ totalDeliveries }} au total</span>
     </div>
-  </div>
+    
+    <div class="actions-section">
+      <button class="icon-btn" (click)="refresh()" title="Actualiser">
+        <i class="material-icons">refresh</i>
+      </button>
+    </div>
+  </header>
 
-  <!-- Filters -->
-  <div class="filters-bar">
-    <div class="search-box">
-      <i class="icon-search"></i>
-      <input
-        type="text"
+  <!-- Toolbar avec recherche et filtres -->
+  <div class="toolbar-section">
+    <div class="search-input-wrapper">
+      <i class="material-icons">search</i>
+      <input 
+        type="text" 
         placeholder="Rechercher par numéro, client..."
         [(ngModel)]="searchTerm"
-        (keyup.enter)="onSearch()"
+        (input)="onSearch()"
       />
     </div>
+    
+    <div class="filter-groups">
+      <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+        <option *ngFor="let option of statusOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
 
-    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
-      <option *ngFor="let option of statusOptions" [value]="option.value">
-        {{ option.label }}
-      </option>
-    </select>
+    <div class="spacer"></div>
 
-    <button class="btn btn-secondary" (click)="onSearch()">
-      Rechercher
-    </button>
+    <div class="view-toggle">
+      <button class="view-btn active" title="Vue grille">
+        <i class="material-icons">grid_view</i>
+      </button>
+      <button class="view-btn" title="Vue liste">
+        <i class="material-icons">view_list</i>
+      </button>
+    </div>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="loading-container">
-    <div class="spinner"></div>
-    <p>Chargement des livraisons...</p>
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Chargement des livraisons...</p>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && deliveries.length === 0" class="empty-state">
+    <i class="material-icons empty-icon">inbox</i>
+    <h2>Aucune livraison trouvée</h2>
+    <p>Essayez de modifier vos filtres de recherche</p>
   </div>
 
   <!-- Deliveries Grid -->
-  <div *ngIf="!loading" class="deliveries-grid">
+  <div *ngIf="!loading && deliveries.length > 0" class="deliveries-grid">
     <div *ngFor="let delivery of deliveries" class="delivery-card">
+      
+      <!-- Card Header -->
       <div class="card-header">
-        <div class="order-info">
-          <h3 class="order-number">#{{ delivery.orderNumber }}</h3>
-          <span class="priority-badge" [ngClass]="getPriorityClass(delivery.priority)">
-            {{ delivery.priority === 'high' ? 'Urgente' : delivery.priority === 'medium' ? 'Normale' : 'Basse' }}
+        <div class="order-section">
+          <span class="order-number">#{{ delivery.orderNumber }}</span>
+          <span class="priority-chip" [ngClass]="getPriorityClass(delivery.priority)">
+            <i class="material-icons">{{ getPriorityIcon(delivery.priority) }}</i>
+            {{ getPriorityLabel(delivery.priority) }}
           </span>
         </div>
-        <span class="status-badge" [ngClass]="getStatusClass(delivery.status)">
+        <span class="status-chip" [ngClass]="getStatusClass(delivery.status)">
           {{ getStatusLabel(delivery.status) }}
         </span>
       </div>
 
+      <!-- Card Body -->
       <div class="card-body">
-        <div class="info-row">
-          <i class="icon-user"></i>
-          <span>{{ delivery.customer.name }}</span>
-        </div>
-        <div class="info-row">
-          <i class="icon-phone"></i>
-          <span>{{ delivery.customer.phone }}</span>
-        </div>
-        <div class="info-row">
-          <i class="icon-location"></i>
-          <span>{{ delivery.address.city }}</span>
+        <div class="info-item">
+          <i class="material-icons">person</i>
+          <div class="item-text">
+            <span class="label">Client</span>
+            <span class="value">{{ delivery.customer.name }}</span>
+          </div>
         </div>
 
-        <div *ngIf="delivery.driver" class="info-row driver-info">
-          <i class="icon-truck"></i>
-          <span class="driver-name">
-            {{ delivery.driver.firstName }} {{ delivery.driver.lastName }}
-          </span>
+        <div class="info-item">
+          <i class="material-icons">phone</i>
+          <div class="item-text">
+            <span class="label">Téléphone</span>
+            <span class="value">{{ delivery.customer.phone }}</span>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <i class="material-icons">location_on</i>
+          <div class="item-text">
+            <span class="label">Destination</span>
+            <span class="value">{{ delivery.address.city }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="delivery.driver" class="info-item driver-assigned">
+          <i class="material-icons">local_shipping</i>
+          <div class="item-text">
+            <span class="label">Livreur</span>
+            <span class="value">{{ delivery.driver.firstName }} {{ delivery.driver.lastName }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="!delivery.driver" class="info-item no-driver">
+          <i class="material-icons">person_off</i>
+          <div class="item-text">
+            <span class="label">Livreur</span>
+            <span class="value placeholder">Non assigné</span>
+          </div>
         </div>
       </div>
 
-      <div class="card-footer">
-        <!-- Bouton Assignation manuelle -->
+      <!-- Card Actions -->
+      <div class="card-actions">
         <button 
           *ngIf="canAssign(delivery)" 
-          class="btn btn-sm btn-assign"
+          class="btn-action primary"
           (click)="openAssignModal(delivery)"
+          title="Assigner manuellement"
         >
-          <i class="icon-user-plus"></i>
-          Assigner
+          <i class="material-icons">person_add</i>
+          <span>Assigner</span>
         </button>
 
-        <!-- Bouton Assignation automatique -->
         <button 
           *ngIf="canAssign(delivery)" 
-          class="btn btn-sm btn-auto-assign"
+          class="btn-action secondary"
           (click)="autoAssignDelivery(delivery)"
           [disabled]="autoAssigning"
+          title="Assignation automatique"
         >
-          <i class="icon-zap"></i>
-          {{ autoAssigning ? 'Auto...' : 'Auto' }}
+          <i class="material-icons">auto_awesome</i>
+          <span>Auto</span>
         </button>
 
-        <!-- Bouton Désassigner -->
         <button 
           *ngIf="canUnassign(delivery)" 
-          class="btn btn-sm btn-unassign"
+          class="btn-action warning"
           (click)="unassignDelivery(delivery)"
+          title="Désassigner"
         >
-          <i class="icon-x"></i>
-          Retirer
+          <i class="material-icons">person_remove</i>
+          <span>Retirer</span>
         </button>
 
-        <!-- Bouton Suivre -->
         <button 
           *ngIf="canTrack(delivery)" 
-          class="btn btn-sm btn-track"
+          class="btn-action info"
           (click)="trackDelivery(delivery)"
+          title="Suivre sur la carte"
         >
-          <i class="icon-map"></i>
-          Suivre
+          <i class="material-icons">map</i>
+          <span>Suivre</span>
         </button>
 
-        <!-- Bouton Détails -->
         <button 
-          class="btn btn-sm btn-view" 
+          class="btn-action default"
           (click)="viewDelivery(delivery)"
+          title="Voir les détails"
         >
-          <i class="icon-eye"></i>
-          Détails
+          <i class="material-icons">visibility</i>
+          <span>Détails</span>
         </button>
       </div>
-    </div>
 
-    <div *ngIf="deliveries.length === 0" class="empty-state">
-      <i class="icon-package"></i>
-      <p>Aucune livraison trouvée</p>
     </div>
   </div>
 
   <!-- Pagination -->
-  <div *ngIf="!loading && deliveries.length > 0" class="pagination">
-    <button
-      class="btn btn-pagination"
-      [disabled]="currentPage === 1"
-      (click)="onPageChange(currentPage - 1)"
-    >
-      Précédent
-    </button>
-    
-    <span class="page-info">
-      Page {{ currentPage }} sur {{ getTotalPages() }}
-    </span>
-    
-    <button
-      class="btn btn-pagination"
-      [disabled]="currentPage >= getTotalPages()"
-      (click)="onPageChange(currentPage + 1)"
-    >
-      Suivant
-    </button>
+  <div *ngIf="!loading && deliveries.length > 0" class="pagination-footer">
+    <span class="page-info">Page {{ currentPage }} sur {{ getTotalPages() }}</span>
+    <div class="page-controls">
+      <button 
+        class="btn-page" 
+        [disabled]="currentPage === 1" 
+        (click)="onPageChange(currentPage - 1)"
+      >
+        <i class="material-icons">chevron_left</i>
+        Précédent
+      </button>
+      <button 
+        class="btn-page" 
+        [disabled]="currentPage >= getTotalPages()" 
+        (click)="onPageChange(currentPage + 1)"
+      >
+        Suivant
+        <i class="material-icons">chevron_right</i>
+      </button>
+    </div>
   </div>
+
 </div>
 
 <!-- MODAL D'ASSIGNATION -->
-<div *ngIf="showAssignModal" class="modal-overlay" (click)="closeAssignModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<div *ngIf="showAssignModal" class="modal-backdrop" (click)="closeAssignModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
     <div class="modal-header">
-      <h2>Assigner une livraison</h2>
+      <div class="modal-title-section">
+        <i class="material-icons">person_add</i>
+        <h2>Assigner une livraison</h2>
+      </div>
       <button class="btn-close" (click)="closeAssignModal()">
-        <i class="icon-x"></i>
+        <i class="material-icons">close</i>
       </button>
     </div>
 
+    <!-- Modal Body -->
     <div class="modal-body">
-      <div class="delivery-info-section">
-        <h3>Livraison #{{ selectedDelivery?.orderNumber }}</h3>
-        <p>
-          <strong>Client:</strong> {{ selectedDelivery?.customer?.name }}<br>
-          <strong>Destination:</strong> {{ selectedDelivery?.address?.city }}<br>
-          <strong>Priorité:</strong> 
-          <span [class]="'priority-badge ' + getPriorityClass(selectedDelivery?.priority || 'medium')">
-            {{ selectedDelivery?.priority === 'high' ? 'Urgente' : selectedDelivery?.priority === 'medium' ? 'Normale' : 'Basse' }}
+      
+      <!-- Delivery Info Section -->
+      <div class="delivery-summary-card">
+        <div class="summary-header">
+          <h3>Livraison #{{ selectedDelivery?.orderNumber }}</h3>
+          <span class="priority-chip" [ngClass]="getPriorityClass(selectedDelivery?.priority || 'medium')">
+            {{ getPriorityLabel(selectedDelivery?.priority || 'medium') }}
           </span>
-        </p>
+        </div>
+        <div class="summary-details">
+          <div class="detail-item">
+            <i class="material-icons">person</i>
+            <span>{{ selectedDelivery?.customer?.name }}</span>
+          </div>
+          <div class="detail-item">
+            <i class="material-icons">location_on</i>
+            <span>{{ selectedDelivery?.address?.city }}</span>
+          </div>
+        </div>
       </div>
 
-      <div class="drivers-list-section">
-        <h3>Sélectionner un livreur</h3>
+      <!-- Drivers Selection -->
+      <div class="drivers-section">
+        <h3 class="section-title">
+          <i class="material-icons">local_shipping</i>
+          Sélectionner un livreur
+        </h3>
         
-        <div *ngIf="availableDrivers.length === 0" class="no-drivers">
+        <!-- No Drivers Available -->
+        <div *ngIf="availableDrivers.length === 0" class="no-drivers-message">
+          <i class="material-icons">info</i>
           <p>Aucun livreur disponible pour le moment</p>
         </div>
 
-        <div class="drivers-list">
+        <!-- Drivers List -->
+        <div class="drivers-grid">
           <div 
             *ngFor="let driver of availableDrivers" 
-            class="driver-card"
+            class="driver-option"
             [class.selected]="selectedDriverId === driver.id"
             (click)="selectedDriverId = driver.id"
           >
             <div class="driver-avatar">
               {{ driver.firstName?.charAt(0) }}{{ driver.lastName?.charAt(0) }}
             </div>
-            <div class="driver-details">
+            <div class="driver-info">
               <div class="driver-name">
                 {{ driver.firstName }} {{ driver.lastName }}
               </div>
               <div class="driver-meta">
-                <span class="vehicle">{{ driver.vehicleType }}</span>
+                <span class="vehicle">
+                  <i class="material-icons">directions_car</i>
+                  {{ driver.vehicleType }}
+                </span>
                 <span class="plate">{{ driver.vehiclePlate }}</span>
               </div>
-              <div class="driver-phone">{{ driver.phone }}</div>
+              <div class="driver-contact">
+                <i class="material-icons">phone</i>
+                {{ driver.phone }}
+              </div>
             </div>
-            <div class="driver-status">
-              <span class="status-indicator available"></span>
-              Disponible
+            <div class="selection-indicator">
+              <i class="material-icons">check_circle</i>
             </div>
           </div>
         </div>
       </div>
+
     </div>
 
+    <!-- Modal Footer -->
     <div class="modal-footer">
       <button 
-        class="btn btn-secondary" 
+        class="btn-modal secondary" 
         (click)="closeAssignModal()"
         [disabled]="assigning"
       >
         Annuler
       </button>
       <button 
-        class="btn btn-primary" 
+        class="btn-modal primary" 
         (click)="confirmAssignment()"
         [disabled]="!selectedDriverId || assigning"
       >
-        <span *ngIf="!assigning">
-          <i class="icon-check"></i>
-          Confirmer l'assignation
-        </span>
-        <span *ngIf="assigning">
-          <i class="icon-loading"></i>
-          Assignation en cours...
-        </span>
+        <i class="material-icons" *ngIf="!assigning">check</i>
+        <i class="material-icons spinning" *ngIf="assigning">sync</i>
+        <span>{{ assigning ? 'Assignation en cours...' : 'Confirmer l\'assignation' }}</span>
       </button>
     </div>
+
   </div>
 </div>
