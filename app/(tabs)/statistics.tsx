@@ -55,24 +55,24 @@ export default function StatisticsScreen() {
     >
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>📅 Aujourd'hui</Text>
-        <StatCard label="Livraisons complétées" value={stats?.today?.completed || 0} />
+        <StatCard label="Livraisons complétées" value={stats?.today?.deliveries.delivered || 0} />
         <StatCard label="Gains" value={formatCurrency(stats?.today?.earnings || 0)} />
         <StatCard label="Distance parcourue" value={`${stats?.today?.distance || 0} km`} />
-        <StatCard label="Temps moyen" value={`${stats?.today?.avg_time || 0} min`} />
+        <StatCard label="Temps moyen" value={`${stats?.today?.performance.average_delivery_time || 0} min`} />
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>📊 Cette semaine</Text>
-        <StatCard label="Livraisons complétées" value={stats?.week?.completed || 0} />
+        <StatCard label="Livraisons complétées" value={stats?.week?.deliveries.delivered || 0} />
         <StatCard label="Gains" value={formatCurrency(stats?.week?.earnings || 0)} />
         <StatCard label="Distance parcourue" value={`${stats?.week?.distance || 0} km`} />
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>📈 Ce mois</Text>
-        <StatCard label="Livraisons complétées" value={stats?.month?.completed || 0} />
+        <StatCard label="Livraisons complétées" value={stats?.month?.deliveries.delivered || 0} />
         <StatCard label="Gains" value={formatCurrency(stats?.month?.earnings || 0)} />
-        <StatCard label="Taux de réussite" value={`${stats?.month?.success_rate || 0}%`} />
+        <StatCard label="Taux de réussite" value={`${stats?.month?.performance.on_time_rate || 0}%`} />
       </View>
     </ScrollView>
   );

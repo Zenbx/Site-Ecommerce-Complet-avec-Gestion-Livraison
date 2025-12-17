@@ -2,7 +2,7 @@
 
 const ENV = {
   // URL de l'API - à modifier selon l'environnement
-  API_URL: 'http://192.168.1.188:9000',
+  API_URL: 'http://192.168.1.103:8000/api',
   
   // Timeout des requêtes HTTP (en ms)
   API_TIMEOUT: 30000,

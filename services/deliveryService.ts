@@ -105,14 +105,14 @@ export const getHistory = async (page: number = 1, perPage: number = 20) => {
 };
 
 export const getStatistics = async (period: string = 'today') => {
-  const response: any = await api.get('/delivery-person/statistics', {
+  const response: any = await api.get('/delivery-person/profile/statistics', {
     params: { period },
   });
   return response.data;
 };
 
 export const updateAvailability = async (isAvailable: boolean, reason?: string) => {
-  const response: any = await api.patch('/delivery-person/availability', {
+  const response: any = await api.patch('/delivery-person/profile/availability', {
     is_available: isAvailable,
     reason,
   });

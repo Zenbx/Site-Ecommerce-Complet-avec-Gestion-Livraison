@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  Platform
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'expo-router';
@@ -33,14 +34,20 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Voulez-vous vraiment vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Déconnexion', style: 'destructive', onPress: () => signOut() },
-      ]
-    );
+  	console.log("Bouton déconnexion pressé");
+    if (Platform.OS === 'web') {
+      const confirmLogout = window.confirm('Voulez-vous vraiment vous déconnecter ?');
+      if (confirmLogout) signOut();
+    } else {
+      Alert.alert(
+        'Déconnexion',
+        'Voulez-vous vraiment vous déconnecter ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Déconnexion', style: 'destructive', onPress: () => signOut() },
+        ]
+      );
+    }
   };
 
   return (

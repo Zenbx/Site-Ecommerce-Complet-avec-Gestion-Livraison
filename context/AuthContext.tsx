@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter, useSegments } from 'expo-router';
 import { STORAGE_KEYS } from '../constants/app';
 import * as authService from '../services/authService';
 
@@ -68,10 +69,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Erreur logout API:', error);
     } finally {
+      // Effacer les données localement
       setToken(null);
       setUser(null);
       await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
       await AsyncStorage.removeItem(STORAGE_KEYS.USER_DATA);
+      
+      // La redirection sera gérée par useProtectedRoute dans _layout.tsx
     }
   };
 
