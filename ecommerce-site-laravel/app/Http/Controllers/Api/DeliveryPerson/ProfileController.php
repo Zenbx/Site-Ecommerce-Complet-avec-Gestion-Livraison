@@ -68,8 +68,11 @@ class ProfileController extends Controller
      *                  @OA\Property(property="id", type="integer"),
      *                  @OA\Property(property="name", type="string"),
      *                  @OA\Property(property="email", type="string"),
+     *                  @OA\Property(property="id_card_number", type="string"),
      *                  @OA\Property(property="is_available", type="boolean"),
      *                  @OA\Property(property="statistics", type="object")
+     *                  @OA\Property(property="member_since", type="string"),
+     *                  @OA\Property(property="created_at", type="string"),
      *              )
      *          )
      *      )
@@ -88,7 +91,6 @@ class ProfileController extends Controller
             'id' => $deliveryPerson->id,
             'name' => $deliveryPerson->name,
             'email' => $deliveryPerson->email,
-            'phone' => $deliveryPerson->email, // Devrait être un vrai champ phone
             'address' => $deliveryPerson->address,
             'id_card_number' => $deliveryPerson->id_card_number,
             'photo_url' => $deliveryPerson->photo_url 

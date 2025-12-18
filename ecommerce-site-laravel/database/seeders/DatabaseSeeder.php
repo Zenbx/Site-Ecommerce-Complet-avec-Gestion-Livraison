@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         Admin::create([
             'name' => 'Admin Principal',
             'email' => 'admin@ecommerce.cm',
-            'password' => Hash::make('admin123'),
+            'password' => 'admin123',
             'role' => 'ADMIN'
         ]);
 
@@ -27,14 +27,14 @@ class DatabaseSeeder extends Seeder
         Client::create([
             'name' => 'John Doe',
             'email' => 'john@example.com',
-            'password' => Hash::make('password123'),
+            'password' => 'password123',
             'address' => '123 Main St, Douala, Cameroun'
         ]);
 
         Client::create([
             'name' => 'Marie Dupont',
             'email' => 'marie@example.com',
-            'password' => Hash::make('password123'),
+            'password' => 'password123',
             'address' => '456 Avenue de la Liberté, Douala, Cameroun'
         ]);
 
@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
         DeliveryPerson::create([
             'name' => 'Pierre Livreur',
             'email' => 'pierre@delivery.cm',
-            'password' => Hash::make('delivery123'),
+            'password' => 'delivery123',
             'id_card_number' => 'CNI-123456',
             'address' => 'Zone Akwa, Douala',
             'is_available' => true
@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
         DeliveryPerson::create([
             'name' => 'Paul Rapide',
             'email' => 'paul@delivery.cm',
-            'password' => Hash::make('delivery123'),
+            'password' => 'delivery123',
             'id_card_number' => 'CNI-789012',
             'address' => 'Bonanjo, Douala',
             'is_available' => true

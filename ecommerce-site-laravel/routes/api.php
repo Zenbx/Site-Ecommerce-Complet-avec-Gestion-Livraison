@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\DeliveryPersonController as AdminDeliveryPersonController;
 use App\Http\Controllers\Api\Admin\DeliveryController as AdminDeliveryController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Api\Admin\ReportController as AdminReportController;
 
 // Controllers Client
 use App\Http\Controllers\Api\Client\ProductController as ClientProductController;
@@ -166,6 +167,26 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(func
         Route::post('/{delivery}/manualassign', [AdminDeliveryController::class, 'manualAssign'])->name('manual-assign');
         Route::patch('/{delivery}/reassign', [AdminDeliveryController::class, 'reassign'])->name('reassign');
     });
+
+    Route::prefix('reports')->name('reports.')->group(function () {
+        // Rapport statistique des livraisons
+        Route::get('/deliveries', [AdminReportController::class, 'deliveriesReport']);
+        
+        // Export PDF du rapport de livraisons
+        Route::get('/deliveries/export/pdf', [AdminReportController::class, 'exportDeliveriesPDF']);
+        
+        // Export Excel du rapport de livraisons
+        Route::get('/deliveries/export/excel', [AdminReportController::class, 'exportDeliveriesExcel']);
+    });    
+    
+    Route::prefix('reports')->name('reports.')->group(function () {
+        // Rapport de performance des livreurs
+        Route::get('/delivery-persons', [AdminReportController::class, 'deliveryPersonsReport']);
+        // Export PDF du rapport des livreurs
+        Route::get('/delivery-persons/export/pdf', [AdminReportController::class, 'exportDeliveryPersonsPDF']);
+        // Export Excel du rapport des livreurs (si vous l'implémentez)
+        Route::get('/delivery-persons/export/excel', [AdminReportController::class, 'exportDeliveryPersonsExcel']);
+    });
 });
 
 // ============================================================================
@@ -245,7 +266,10 @@ Route::prefix('delivery-person')->name('delivery-person.')->middleware('auth:del
         Route::post('/{delivery}/report-issue', [DeliveryPersonDeliveryController::class, 'reportIssue'])->name('report-issue');
         Route::get('/{delivery}/route', [DeliveryPersonDeliveryController::class, 'getRoute'])->name('get-route');
     });
+
+    
 });
+
 
 // ============================================================================
 // SECTION 6 : ROUTES UTILITAIRES (Cartographie)

@@ -343,6 +343,28 @@ class ReportController extends Controller
         return $this->exportService->exportDeliveryPersonsToPDF($deliveryPersons, $startDate, $endDate);
     }
 
+    public function exportDeliveryPersonsExcel(Request $request)
+    {
+        $validated = $request->validate([
+            'period' => 'required|in:today,week,month,year,custom',
+            'start_date' => 'required_if:period,custom|date',
+            'end_date' => 'required_if:period,custom|date',
+        ]);
+
+        [$startDate, $endDate] = $this->resolvePeriod(
+            $validated['period'],
+            $request->start_date,
+            $request->end_date
+        );
+
+        $deliveryPersons = DeliveryPerson::with(['deliveries' => function($q) use ($startDate, $endDate) {
+            $q->whereBetween('created_at', [$startDate, $endDate]);
+        }])->get();
+
+        return $this->exportService->exportDeliveryPersonsToExcel($deliveryPersons, $startDate, $endDate);
+    }
+
+
     // ============================================
     // MÉTHODES PRIVÉES UTILITAIRES
     // ============================================

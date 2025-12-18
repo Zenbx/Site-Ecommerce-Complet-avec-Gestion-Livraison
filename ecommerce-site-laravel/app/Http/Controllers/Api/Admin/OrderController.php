@@ -327,8 +327,6 @@ class OrderController extends Controller
         $validated = $request->validate([
             'delivery_person_id' => 'required|exists:delivery_persons,id',
             'delivery_address' => 'required|string|max:500',
-            'scheduled_date' => 'nullable|date|after:today',
-            'notes' => 'nullable|string|max:500',
         ]);
         
         // Vérifier que la commande n'a pas déjà une livraison assignée
@@ -339,12 +337,25 @@ class OrderController extends Controller
             ], 400);
         }
         
-        // Vérifier que le livreur est disponible
+       // Vérifier que le livreur est disponible
         $deliveryPerson = DeliveryPerson::findOrFail($validated['delivery_person_id']);
+
         if (!$deliveryPerson->is_available) {
             return response()->json([
                 'success' => false,
                 'message' => 'Ce livreur n\'est pas disponible actuellement',
+            ], 400);
+        }
+
+        // Vérifier le nombre de livraisons en cours (non terminées)
+        $activeDeliveries = Delivery::where('delivery_person_id', $deliveryPerson->id)
+            ->whereNotIn('status', ['DELIVERED', 'CANCELLED']) // adapter selon tes statuts terminés
+            ->count();
+
+        if ($activeDeliveries >= 5) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce livreur a déjà 5 livraisons en cours. Veuillez en choisir un autre.',
             ], 400);
         }
         

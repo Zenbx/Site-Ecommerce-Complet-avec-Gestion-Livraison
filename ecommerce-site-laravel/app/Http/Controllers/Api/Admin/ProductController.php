@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
+use App\Services\SupabaseStorageService;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\ProductCollection;
 use App\Models\Product;
@@ -25,6 +26,14 @@ use Illuminate\Http\JsonResponse;
  */
 class ProductController extends Controller
 {
+    
+    protected $storageService;
+
+    public function __construct(SupabaseStorageService $storageService)
+    {
+        $this->storageService = $storageService;
+    }
+
     /**
      * Affiche la liste de tous les produits avec pagination et filtres
      * 
@@ -163,31 +172,38 @@ class ProductController extends Controller
      *      )
      * )
      */
-    public function store(StoreProductRequest $request): JsonResponse
-    {
-        // À ce stade, grâce à StoreProductRequest, nous savons avec certitude
-        // que toutes les données sont valides selon les règles que nous avons définies
-        
-        // validated() retourne seulement les champs qui ont passé la validation
-        // C'est plus sûr que all() qui retournerait tous les champs de la requête
-        $validatedData = $request->validated();
-        
-        // Si is_active n'est pas fourni dans la requête, nous le mettons à true par défaut
-        // car un nouveau produit devrait généralement être actif dans le catalogue
-        $validatedData['is_active'] = $validatedData['is_active'] ?? true;
-        
-        // Créer le produit dans la base de données
-        // create() insère un nouvel enregistrement et retourne le modèle créé
-        $product = Product::create($validatedData);
-        
-        // Transformer le produit créé avec ProductResource et retourner une réponse 201 Created
-        // Le code 201 est le code HTTP standard pour "ressource créée avec succès"
-        return response()->json([
-            'success' => true,
-            'message' => 'Produit créé avec succès',
-            'data' => new ProductResource($product),
-        ], 201);
+    public function store(Request $request): JsonResponse
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'price' => 'required|numeric|min:0',
+        'quantity' => 'required|integer|min:0',
+        'brand' => 'nullable|string|max:100',
+        'category_id' => 'required|exists:categories,id',
+        'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+    ]);
+
+    // Gestion de l’upload
+    if ($request->hasFile('image')) {
+        $path = $request->file('image')->store(
+            'products',
+            'public'
+        );
+
+        $validated['image_url'] = asset('storage/' . $path);
     }
+
+    $validated['serial_id'] = strtoupper(Str::random(12));
+    $validated['is_active'] = true;
+
+    $product = Product::create($validated);
+
+    return generate_api_response(true, [
+        'id' => $product->id,
+        'image_url' => $product->image_url,
+    ], 'Produit créé avec succès', 201);
+}
 
     /**
      * Affiche les détails d'un produit spécifique
@@ -255,18 +271,36 @@ class ProductController extends Controller
      *      )
      * )
      */
-    public function update(UpdateProductRequest $request, Product $product): JsonResponse
+     public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
-        // Récupérer les données validées
         $validatedData = $request->validated();
         
-        // Mettre à jour le produit avec les nouvelles données
-        // update() modifie seulement les champs présents dans $validatedData
-        // Les autres champs restent inchangés
-        $product->update($validatedData);
+        // Gérer le remplacement de l'image
+        if ($request->hasFile('image')) {
+            // Supprimer l'ancienne image si elle existe
+            if ($product->image_url) {
+                $oldPath = $this->storageService->extractPathFromUrl($product->image_url);
+                if ($oldPath) {
+                    $this->storageService->delete($oldPath);
+                }
+            }
+            
+            // Upload la nouvelle image
+            $uploadResult = $this->storageService->upload($request->file('image'));
+            
+            if (!$uploadResult['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreur lors de l\'upload de l\'image',
+                    'error' => $uploadResult['error']
+                ], 500);
+            }
+            
+            $validatedData['image_url'] = $uploadResult['url'];
+        }
         
-        // Rafraîchir le modèle pour obtenir les valeurs les plus récentes de la base
-        // Cela est nécessaire si nous avons des triggers ou des valeurs par défaut en base
+        // Mettre à jour le produit
+        $product->update($validatedData);
         $product->refresh();
         
         return response()->json([
@@ -275,7 +309,6 @@ class ProductController extends Controller
             'data' => new ProductResource($product),
         ], 200);
     }
-
     /**
      * Supprime un produit du catalogue
      * 
@@ -300,14 +333,8 @@ class ProductController extends Controller
      */
     public function destroy(Product $product): JsonResponse
     {
-        // Avant de supprimer, nous pourrions vouloir vérifier certaines conditions
-        // Par exemple, ne pas permettre la suppression si le produit est dans des commandes actives
-        
-        // Vérifier si le produit apparaît dans des lignes de commande
-        // has('orderLines') vérifie si la relation orderLines existe et contient des éléments
+        // Vérifier si le produit apparaît dans des commandes
         if ($product->orderLines()->exists()) {
-            // Si le produit a été commandé, nous ne le supprimons pas vraiment
-            // Nous le marquons simplement comme inactif pour préserver l'historique
             $product->update(['is_active' => false]);
             
             return response()->json([
@@ -317,11 +344,16 @@ class ProductController extends Controller
             ], 200);
         }
         
-        // Si le produit n'a jamais été commandé, nous pouvons le supprimer complètement
+        // Supprimer l'image de Supabase avant de supprimer le produit
+        if ($product->image_url) {
+            $imagePath = $this->storageService->extractPathFromUrl($product->image_url);
+            if ($imagePath) {
+                $this->storageService->delete($imagePath);
+            }
+        }
+        
         $product->delete();
         
-        // Pour une suppression, le code HTTP 204 No Content est approprié
-        // Il indique que la requête a réussi mais qu'il n'y a pas de contenu à retourner
         return response()->json([
             'success' => true,
             'message' => 'Produit supprimé avec succès',
@@ -360,11 +392,8 @@ class ProductController extends Controller
      *      )
      * )
      */
-    public function updateStock(Request $request, Product $product): JsonResponse
+       public function updateStock(Request $request, Product $product): JsonResponse
     {
-        // Valider la requête directement dans le controller
-        // Pour une opération simple comme celle-ci, créer une Form Request séparée
-        // serait peut-être excessif, donc nous validons ici
         $validated = $request->validate([
             'quantity' => 'required|integer|min:0',
             'operation' => 'sometimes|string|in:set,add,subtract',
@@ -373,19 +402,15 @@ class ProductController extends Controller
         $operation = $validated['operation'] ?? 'set';
         $quantity = $validated['quantity'];
         
-        // Effectuer l'opération demandée
         switch ($operation) {
             case 'add':
-                // Ajouter à la quantité existante
                 $product->quantity += $quantity;
                 break;
             case 'subtract':
-                // Soustraire de la quantité existante, mais ne jamais aller en dessous de zéro
                 $product->quantity = max(0, $product->quantity - $quantity);
                 break;
             case 'set':
             default:
-                // Définir directement la quantité
                 $product->quantity = $quantity;
                 break;
         }

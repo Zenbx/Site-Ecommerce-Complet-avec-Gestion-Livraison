@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\DeliveryPerson;
 
 use App\Http\Controllers\Controller;
 use App\Models\DeliveryPerson;
+use App\Http\Resources\DeliveryPersonResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;

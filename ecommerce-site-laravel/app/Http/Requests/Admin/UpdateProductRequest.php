@@ -49,6 +49,7 @@ class UpdateProductRequest extends FormRequest
             'description' => 'nullable|string',
             'brand' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:100',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'image_url' => 'nullable|url|max:500',
             'is_active' => 'nullable|boolean',
         ];
@@ -66,6 +67,9 @@ class UpdateProductRequest extends FormRequest
             'price.min' => 'Le prix ne peut pas être négatif.',
             'serial_id.required' => 'Le numéro de série est obligatoire.',
             'serial_id.unique' => 'Ce numéro de série existe déjà.',
+            'image.image' => 'Le fichier doit être une image.',
+            'image.mimes' => 'L\'image doit être au format: jpeg, png, jpg, gif ou webp.',
+            'image.max' => 'L\'image ne doit pas dépasser 5 Mo.',
             'image_url.url' => 'L\'URL de l\'image n\'est pas valide.',
         ];
     }

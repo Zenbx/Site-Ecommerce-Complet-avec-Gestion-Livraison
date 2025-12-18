@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DeliveryPersonResource;
 use App\Models\DeliveryPerson;
+use App\Services\SupabaseStorageService;
+use App\Mail\DeliveryPersonWelcome;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
@@ -148,23 +151,33 @@ public function store(Request $request): JsonResponse
 {
     $validated = $request->validate([
         'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:delivery_person,email',
-        'id_card_number' => 'required|string|max:50|unique:delivery_person,id_card_number',
+        'email' => 'required|string|email|max:255|unique:delivery_persons,email',
+        'id_card_number' => 'required|string|max:50|unique:delivery_persons,id_card_number',
         'address' => 'required|string|max:500',
-        'photo_url' => 'nullable|url|max:500',
+        'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
     ]);
-    
-    // Générer un mot de passe temporaire sécurisé
+
+    // Upload photo dans le dossier delivery_person_profiles
+    if ($request->hasFile('photo')) {
+        $validated['photo_url'] = SupabaseStorageService::upload(
+            $request->file('photo'),
+            'delivery_person_profiles'
+        );
+    }
+
     $temporaryPassword = 'Delivery' . rand(100000, 999999) . '!';
-    
-    $validated['password'] = Hash::make($temporaryPassword);
-    $validated['must_change_password'] = true; // Flag pour forcer le changement
-    
+
+    $validated['password'] = $temporaryPassword;
+    $validated['must_change_password'] = true;
+
     $deliveryPerson = DeliveryPerson::create($validated);
-    
-    // TODO: Envoyer le mot de passe par email/SMS
-    // Mail::to($deliveryPerson->email)->send(new DeliveryPersonWelcome($deliveryPerson, $temporaryPassword));
-    
+
+     Mail::to($deliveryPerson->email)
+        ->send(new DeliveryPersonWelcome(
+            $deliveryPerson,
+            $temporaryPassword
+        ));
+
     return response()->json([
         'success' => true,
         'message' => 'Livreur créé avec succès',
@@ -172,9 +185,8 @@ public function store(Request $request): JsonResponse
             'delivery_person' => new DeliveryPersonResource($deliveryPerson),
             'credentials' => [
                 'email' => $deliveryPerson->email,
-                'temporary_password' => $temporaryPassword, // En production, ne pas retourner ça, envoyer par email
             ],
-            'note' => 'Le livreur doit changer ce mot de passe à sa première connexion'
+            'note' => 'Le livreur doit changer ce mot de passe à sa première connexion',
         ],
     ], 201);
 }
