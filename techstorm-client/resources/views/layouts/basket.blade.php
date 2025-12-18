@@ -8,7 +8,7 @@
         content="TechStorm - Votre boutique e-commerce futuriste spécialisée dans les technologies innovantes." />
     <meta name="author" content="Zenbx" />
     <title>@yield('title', 'TechStorm')</title>
-    @vite(['ressources/js/app.js', 'resources/css/Panier_css/main.css', 'resources/css/Panier_css/resume.css', 'resources/css/Panier_css/style.css'])
+    @vite(['resources/js/app.js', 'resources/css/Panier_css/main.css', 'resources/css/Panier_css/resume.css', 'resources/css/Panier_css/style.css'])
     <link rel="icon" href="favicon.ico" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>

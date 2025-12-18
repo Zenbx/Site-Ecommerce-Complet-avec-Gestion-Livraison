@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!userToken) {
         console.log('Pas de token trouvé, redirection vers connexion');
         alert('Pas de token trouvé, redirection vers connexion');
-        //window.location.href = '/connexion';
+        window.location.href = '/connexion';
         return;
     }
 
@@ -263,6 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('user_token');
             localStorage.removeItem('user_data');
+            localStorage.removeItem('techstorm_cart');
             window.location.href = '/connexion';
         });
     }

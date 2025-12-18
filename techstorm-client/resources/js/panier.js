@@ -3,26 +3,50 @@
 // CART.JS - Gestion du Panier Interactif avec Formulaire de Commande
 // ========================================
 
-// Récupération du panier depuis localStorage
-function getCart() {
-    const cart = localStorage.getItem('techstorm_cart');
-    return cart ? JSON.parse(cart) : [];
+// Récupération du panier depuis l'API
+// Récupération du panier (Logique hybride)
+async function getCart() {
+    // 1. Essayer le LocalStorage
+    let localCart = JSON.parse(localStorage.getItem('techstorm_cart') || '[]');
+    if (localCart.length > 0) return localCart;
+
+    // 2. Si vide, essayer l'API si connecté
+    const token = localStorage.getItem('user_token');
+    if (!token) return [];
+    
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/client/cart`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+        const data = await response.json();
+        const apiItems = data.items || [];
+        
+        // Mettre en cache localement si on a reçu des données
+        if (apiItems.length > 0) {
+            localStorage.setItem('techstorm_cart', JSON.stringify(apiItems));
+        }
+        return apiItems;
+    } catch (error) {
+        console.error('Erreur lors de la récupération du panier:', error);
+        return localCart;
+    }
 }
 
-// Sauvegarde du panier dans localStorage
-function saveCart(cart) {
-    localStorage.setItem('techstorm_cart', JSON.stringify(cart));
-    updateCartCount();
-}
-
-// Mise à jour du compteur dans le header
-function updateCartCount() {
-    const cart = getCart();
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+// Mise à jour du compteur dans le header (Logique hybride)
+async function updateCartCount() {
+    const cart = await getCart();
+    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
     const compteurEl = document.querySelector('.compteur');
     if (compteurEl) {
         compteurEl.textContent = `(${totalItems})`;
     }
+    // Mise à jour de l'éventuel élément header standard
+    const cartCountEl = document.getElementById('cart-count');
+    if (cartCountEl) cartCountEl.textContent = totalItems;
 }
 
 // Formatage du prix
@@ -59,8 +83,8 @@ function getColorName(colorValue) {
 }
 
 // Affichage des articles du panier
-function renderCartItems() {
-    const cart = getCart();
+async function renderCartItems() {
+    const cart = await getCart();
     const articleSection = document.querySelector('.article-panier');
 
     if (!articleSection) return;
@@ -80,7 +104,7 @@ function renderCartItems() {
         </a>
       </div>
     `;
-        updateSummary();
+        updateSummary(cart);
         return;
     }
 
@@ -88,52 +112,57 @@ function renderCartItems() {
     cart.forEach((item, index) => {
         const article = document.createElement('div');
         article.className = 'article';
-        article.dataset.index = index;
+        const lineId = item.cart_line_id || item.product_id || item.id;
+        article.dataset.id = lineId;
+
+        const title = item.title || item.name || 'Produit';
+        const img = item.img || 'images/default-product.png';
+        const imgSrc = img.startsWith('http') ? img : (import.meta.env.VITE_API_URL + '/' + img);
 
         article.innerHTML = `
-      <input type="checkbox" class="article-checkbox" data-index="${index}" ${item.selected ? 'checked' : ''}>
-      <img src="${item.img.startsWith('http') ? item.img : (import.meta.env.VITE_API_URL + '/' + item.img)}" alt="${item.title}" />
+      <input type="checkbox" class="article-checkbox" data-id="${lineId}" ${item.selected !== false ? 'checked' : ''}>
+      <img src="${imgSrc}" alt="${title}" onerror="this.src='/images/default-product.png'"/>
       <div class="article-info">
         <div class="article-name">
-          <label for="dialog${index}" style="cursor: pointer; color: inherit;">${item.title}</label>
+          <label for="dialog${index}" style="cursor: pointer; color: inherit;">${title}</label>
           <input type="checkbox" id="dialog${index}">
           <div class="dialog-overlay">
             <div class="dialog">
               <label for="dialog${index}" class="dialog-close">×</label>
-              <h3 class="dialog-title">${item.title}</h3>
+              <h3 class="dialog-title">${title}</h3>
               
               <div class="dialog-section">
                 <label>Couleur</label>
-                <div class="color-options" data-index="${index}">
-                  ${generateColorOptions(index, item.color)}
+                <div class="color-options" data-id="${lineId}">
+                  ${generateColorOptions(index, item.selected_attributes?.color || 'white')}
                 </div>
               </div>
               
               <div class="dialog-section">
                 <label>Quantité</label>
                 <div class="dialog-quantity">
-                  <input type="number" value="${item.quantity}" min="1" max="${item.stock}" data-index="${index}" class="dialog-qty-input">
+                  <input type="number" value="${item.quantity}" min="1" max="${item.stock || 10}" data-id="${lineId}" class="dialog-qty-input">
                 </div>
               </div>
               
               <div class="dialog-actions">
                 <label for="dialog${index}" class="dialog-btn cancel">Annuler</label>
-                <label for="dialog${index}" class="dialog-btn confirm" data-index="${index}">Confirmer</label>
+                <label for="dialog${index}" class="dialog-btn confirm" data-id="${lineId}">Confirmer</label>
               </div>
             </div>
           </div>
         </div>
         <div class="article-details">
-          <span><i class="fas fa-palette"></i> ${getColorName(item.color)}</span>
+          <span><i class="fas fa-palette"></i> ${getColorName(item.selected_attributes?.color)}</span>
           <span><i class="fas fa-box"></i> ${item.quantity} unité${item.quantity > 1 ? 's' : ''}</span>
         </div>
       </div>
       <div class="article-actions">
         <div class="quantity-control">
-          <input type="number" value="${item.quantity}" min="1" max="${item.stock}" data-index="${index}" class="qty-input">
+          <input type="number" value="${item.quantity}" min="1" max="${item.stock || 10}" data-id="${lineId}" class="qty-input">
         </div>
         <div class="article-price">${formatPrice(item.price * item.quantity)} FCFA</div>
-        <a href="#" class="delete-btn" data-index="${index}">
+        <a href="#" class="delete-btn" data-id="${lineId}">
           <i class="fas fa-trash"></i>
         </a>
       </div>
@@ -143,96 +172,163 @@ function renderCartItems() {
     });
 
     attachCartEvents();
-    updateSummary();
+    updateSummary(cart);
 }
 
 // Attacher les événements aux éléments du panier
 function attachCartEvents() {
+    const token = localStorage.getItem('user_token');
+
     // Checkbox individuelles
     document.querySelectorAll('.article-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const index = parseInt(this.dataset.index);
-            const cart = getCart();
-            cart[index].selected = this.checked;
-            saveCart(cart);
-            updateSummary();
+        checkbox.addEventListener('change', async function() {
+            // Pour l'instant, on gère la sélection localement pour le résumé, 
+            // car le backend ne stocke pas forcément le "selected" pour le checkout
+            // Mais on pourrait l'envoyer au backend si besoin.
+            // Ici, on va juste rafraîchir le résumé
+            const cart = await getCart();
+            updateSummary(cart);
         });
     });
 
     // Checkbox "Tout sélectionner"
     const selectAllCheckbox = document.getElementById('selectAll');
     if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            const cart = getCart();
-            cart.forEach(item => item.selected = this.checked);
-            saveCart(cart);
-            renderCartItems();
+        selectAllCheckbox.addEventListener('change', async function() {
+            const checkboxes = document.querySelectorAll('.article-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            const cart = await getCart();
+            updateSummary(cart);
         });
     }
 
     // Changement de quantité (input principal)
     document.querySelectorAll('.qty-input').forEach(input => {
-        input.addEventListener('change', function() {
-            const index = parseInt(this.dataset.index);
+        input.addEventListener('change', async function() {
+            const lineId = this.dataset.id;
             const newQty = parseInt(this.value);
-            const cart = getCart();
 
-            if (newQty > 0 && newQty <= cart[index].stock) {
-                cart[index].quantity = newQty;
-                saveCart(cart);
-                renderCartItems();
-            } else {
-                this.value = cart[index].quantity;
-                alert(`Quantité disponible: ${cart[index].stock}`);
+            // 1. Mise à jour LocalStorage
+            let localCart = JSON.parse(localStorage.getItem('techstorm_cart') || '[]');
+            const item = localCart.find(i => (i.cart_line_id || i.product_id || i.id) == lineId);
+            if (item) {
+                item.quantity = newQty;
+                localStorage.setItem('techstorm_cart', JSON.stringify(localCart));
+                renderCartItems(); // Re-render localement
+                updateCartCount();
+            }
+
+            // 2. Synchro API
+            if (token) {
+                try {
+                    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/client/cart/items/${lineId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ quantity: newQty })
+                    });
+
+                    if (!response.ok) {
+                        const data = await response.json();
+                        console.warn('Erreur synchro API quantité:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Erreur update quantity sync:', error);
+                }
             }
         });
     });
 
     // Boutons de suppression
     document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
+        btn.addEventListener('click', async function(e) {
             e.preventDefault();
-            const index = parseInt(this.dataset.index);
+            const lineId = this.dataset.id;
             if (confirm('Voulez-vous vraiment supprimer cet article ?')) {
-                const cart = getCart();
-                cart.splice(index, 1);
-                saveCart(cart);
+                // 1. Suppression LocalStorage
+                let localCart = JSON.parse(localStorage.getItem('techstorm_cart') || '[]');
+                localCart = localCart.filter(i => (i.cart_line_id || i.product_id || i.id) != lineId);
+                localStorage.setItem('techstorm_cart', JSON.stringify(localCart));
                 renderCartItems();
+                updateCartCount();
+
+                // 2. Suppression API
+                if (token) {
+                    try {
+                        await fetch(`${import.meta.env.VITE_API_URL}/api/client/cart/items/${lineId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Accept': 'application/json'
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Erreur delete item sync:', error);
+                    }
+                }
             }
         });
     });
 
     // Boutons "Confirmer" dans les dialogues
     document.querySelectorAll('.dialog-btn.confirm').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const index = parseInt(this.dataset.index);
-            const cart = getCart();
+        btn.addEventListener('click', async function() {
+            const lineId = this.dataset.id;
 
             // Récupérer la nouvelle couleur
-            const colorInput = document.querySelector(`.color-options[data-index="${index}"] input[type="radio"]:checked`);
-            if (colorInput) {
-                cart[index].color = colorInput.value;
-            }
+            const colorInput = document.querySelector(`.color-options[data-id="${lineId}"] input[type="radio"]:checked`);
+            const color = colorInput ? colorInput.value : 'white';
 
             // Récupérer la nouvelle quantité
-            const qtyInput = document.querySelector(`.dialog-qty-input[data-index="${index}"]`);
-            if (qtyInput) {
-                const newQty = parseInt(qtyInput.value);
-                if (newQty > 0 && newQty <= cart[index].stock) {
-                    cart[index].quantity = newQty;
-                }
+            const qtyInput = document.querySelector(`.dialog-qty-input[data-id="${lineId}"]`);
+            const quantity = qtyInput ? parseInt(qtyInput.value) : 1;
+
+            // 1. Mise à jour LocalStorage
+            let localCart = JSON.parse(localStorage.getItem('techstorm_cart') || '[]');
+            const item = localCart.find(i => (i.cart_line_id || i.product_id || i.id) == lineId);
+            if (item) {
+                item.quantity = quantity;
+                if (!item.selected_attributes) item.selected_attributes = {};
+                item.selected_attributes.color = color;
+                localStorage.setItem('techstorm_cart', JSON.stringify(localCart));
+                renderCartItems();
+                updateCartCount();
             }
 
-            saveCart(cart);
-            renderCartItems();
+            // 2. Synchro API
+            if (token) {
+                try {
+                    await fetch(`${import.meta.env.VITE_API_URL}/api/client/cart/items/${lineId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            quantity: quantity,
+                            attributes: { color: color }
+                        })
+                    });
+                } catch (error) {
+                    console.error('Erreur confirm dialog sync:', error);
+                }
+            }
         });
     });
 }
 
 // Mise à jour du résumé (prix total)
-function updateSummary() {
-    const cart = getCart();
-    const selectedItems = cart.filter(item => item.selected);
+function updateSummary(cart) {
+    const checkboxes = document.querySelectorAll('.article-checkbox');
+    const selectedLineIds = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.dataset.id);
+
+    const selectedItems = cart.filter(item => selectedLineIds.includes(String(item.cart_line_id || item.product_id || item.id)));
 
     const subtotal = selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const delivery = selectedItems.length > 0 ? 1000 : 0;
@@ -265,9 +361,15 @@ function updateSummary() {
 // FORMULAIRE DE COMMANDE
 // ========================================
 
-function showOrderForm() {
-    const cart = getCart();
-    const selectedItems = cart.filter(item => item.selected);
+async function showOrderForm() {
+    const cart = await getCart();
+    // Par défaut, on considère tout ce qui est coché comme sélectionné
+    const checkboxes = document.querySelectorAll('.article-checkbox');
+    const selectedLineIds = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.dataset.id);
+
+    const selectedItems = cart.filter(item => selectedLineIds.includes(String(item.cart_line_id || item.product_id || item.id)));
 
     if (selectedItems.length === 0) {
         alert('Veuillez sélectionner au moins un article');
@@ -674,12 +776,35 @@ function saveOrder(orderData) {
 }
 
 // Vider les articles commandés du panier
-function clearOrderedItems(orderedItems) {
-    const cart = getCart();
-    const orderedIds = orderedItems.map(item => item.id);
-    const newCart = cart.filter(item => !orderedIds.includes(item.id));
-    saveCart(newCart);
+async function clearOrderedItems(orderedItems) {
+    const token = localStorage.getItem('user_token');
+    
+    // 1. Vider le LocalStorage d'abord
+    let localCart = JSON.parse(localStorage.getItem('techstorm_cart') || '[]');
+    const orderedIds = orderedItems.map(item => (item.cart_line_id || item.product_id || item.id));
+    localCart = localCart.filter(item => !orderedIds.includes(item.cart_line_id || item.product_id || item.id));
+    localStorage.setItem('techstorm_cart', JSON.stringify(localCart));
+    
     renderCartItems();
+    updateCartCount();
+
+    // 2. Synchro API
+    if (token) {
+        for (const item of orderedItems) {
+            try {
+                const lineId = item.cart_line_id || item.id;
+                await fetch(`${import.meta.env.VITE_API_URL}/api/client/cart/items/${lineId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+            } catch (error) {
+                console.error('Erreur lors de la suppression de l\'article commandé:', error);
+            }
+        }
+    }
 }
 
 // Télécharger le reçu (génération simple)

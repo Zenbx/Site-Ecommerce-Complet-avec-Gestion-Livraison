@@ -134,58 +134,125 @@ const applyFiltersBtn = document.getElementById('apply-filters');
 const resetFiltersBtn = document.getElementById('reset-filters');
 const cartCountEl = document.getElementById('cart-count');
 
-// ===== GESTION DU PANIER AVEC LOCALSTORAGE =====
-function getCart() {
-    const cart = localStorage.getItem('techstorm_cart');
-    return cart ? JSON.parse(cart) : [];
-}
 
-function saveCart(cart) {
-    localStorage.setItem('techstorm_cart', JSON.stringify(cart));
-    updateCartCount();
-}
+async function updateCartCount() {
+    try {
+        // 1. Essayer d'abord le LocalStorage
+        let localCart = JSON.parse(localStorage.getItem('techstorm_cart') || '[]');
+        if (localCart.length > 0) {
+            const totalItems = localCart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+            if (cartCountEl) cartCountEl.textContent = totalItems;
+            return;
+        }
 
-function updateCartCount() {
-    const cart = getCart();
-    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    if (cartCountEl) {
-        cartCountEl.textContent = totalItems;
+        // 2. Si vide localement, essayer l'API
+        const token = localStorage.getItem('user_token');
+        if (!token) {
+            if (cartCountEl) cartCountEl.textContent = '0';
+            return;
+        }
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/client/cart`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const apiItems = data.items || [];
+            // Mettre en cache dans LocalStorage
+            localStorage.setItem('techstorm_cart', JSON.stringify(apiItems));
+            const totalItems = apiItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+            if (cartCountEl) cartCountEl.textContent = totalItems;
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du compteur:', error);
     }
 }
 
-// Ajouter un produit au panier
-function addToCart(productId) {
-    const product = PRODUCTS.find(p => p.id === productId);
-    if (!product) return false;
+// Ajouter un produit au panier (Logique hybride : LocalStorage + API)
+async function addToCart(productId) {
+    // 0. Vérifier l'authentification
+    if (!requireAuth()) {
+        return false; // Redirection déjà déclenchée par requireAuth()
+    }
 
-    const cart = getCart();
-    const existingItem = cart.find(item => item.id === productId);
-
-    if (existingItem) {
-        // Vérifier le stock
-        if (existingItem.quantity >= product.stock) {
-            alert(`Stock insuffisant. Maximum disponible: ${product.stock}`);
+    try {
+        // 1. Trouver le produit dans la liste locale pour avoir ses détails
+        const product = PRODUCTS.find(p => (p.id || p._id || p.ID) == productId);
+        if (!product) {
+            console.error('Produit non trouvé localement:', productId);
             return false;
         }
-        existingItem.quantity++;
-    } else {
-        // Nouvel article avec couleur par défaut
-        cart.push({
-            id: product.id,
-            title: product.title,
-            brand: product.brand,
-            category: product.category,
-            price: product.price,
-            img: product.img,
-            stock: product.stock,
-            quantity: 1,
-            color: 'white', // Couleur par défaut
-            selected: true // Sélectionné par défaut
-        });
-    }
 
-    saveCart(cart);
-    return true;
+        // 2. Mise à jour immédiate du LocalStorage pour la réactivité
+        let localCart = JSON.parse(localStorage.getItem('techstorm_cart') || '[]');
+        const existingIndex = localCart.findIndex(item => (item.id || item.product_id) == productId);
+
+        if (existingIndex > -1) {
+            localCart[existingIndex].quantity++;
+        } else {
+            localCart.push({
+                product_id: productId,
+                id: productId, // Pour la compatibilité
+                title: product.name || product.title,
+                name: product.name || product.title,
+                price: product.price,
+                img: product.image_url || product.img,
+                quantity: 1,
+                selected_attributes: { color: 'white' }
+            });
+        }
+        localStorage.setItem('techstorm_cart', JSON.stringify(localCart));
+        
+        // Mise à jour immédiate du compteur UI
+        const totalItems = localCart.reduce((sum, item) => sum + item.quantity, 0);
+        if (cartCountEl) {
+            cartCountEl.textContent = totalItems;
+        }
+
+        // 3. Synchronisation avec l'API en arrière-plan (si connecté)
+        const token = localStorage.getItem('user_token');
+        if (token) {
+            fetch(`${import.meta.env.VITE_API_URL}/api/client/cart/items`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: 1,
+                    attributes: { color: 'white' }
+                })
+            }).then(async res => {
+                const data = await res.json();
+                if (res.ok) {
+                    // Mettre à jour l'ID de la ligne dans LocalStorage pour les futurs DELETE/PATCH
+                    let updatedCart = JSON.parse(localStorage.getItem('techstorm_cart') || '[]');
+                    const itemIdx = updatedCart.findIndex(i => (i.product_id || i.id) == productId);
+                    if (itemIdx > -1) {
+                        // Supposons que l'API renvoie { cart_line_id: ... } ou { data: { id: ... } }
+                        const newLineId = data.cart_line_id || (data.data && data.data.id) || data.id;
+                        if (newLineId) {
+                            updatedCart[itemIdx].cart_line_id = newLineId;
+                            localStorage.setItem('techstorm_cart', JSON.stringify(updatedCart));
+                        }
+                    }
+                } else {
+                    console.warn('Erreur synchro API panier:', data);
+                }
+            }).catch(err => console.error('Erreur réseau synchro API:', err));
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Erreur add to cart (hybrid):', error);
+        return false;
+    }
 }
 
 // Helpers
@@ -229,6 +296,7 @@ function renderCards(items) {
             if (p.featured) badges += '<span class="badge badge-featured">⭐</span>';
 
             // Mapping de champs robuste
+            const productId = p.id || p._id || p.ID;
             const title = p.name || p.title || 'Produit sans nom';
             const brand = p.brand || '-';
             const stock = p.quantity !== undefined ? p.quantity : (p.stock !== undefined ? p.stock : 0);
@@ -239,7 +307,7 @@ function renderCards(items) {
             article.innerHTML = `
         <div class="card-badges">${badges}</div>
         <div class="card-thumb">
-          <img src="${imgSrc}" alt="${title}" onerror="this.onerror=null;this.src='/images/default-avatar.png'" />
+          <img src="${imgSrc}" alt="${title}" onerror="this.onerror=null;this.src='/images/default-product.png'" />
         </div>
         <div class="card-body">
           <div class="card-brand">${brand}</div>
@@ -249,8 +317,8 @@ function renderCards(items) {
             <div class="price"><span>${formatPrice(price)}</span><small>FCFA</small></div>
           </div>
           <div class="card-actions">
-            <button class="btn-add" data-id="${p.id}">Ajouter au panier</button>
-            <button class="btn-quiet quickview" data-id="${p.id}">Aperçu</button>
+            <button class="btn-add" data-id="${productId}">Ajouter au panier</button>
+            <button class="btn-quiet quickview" data-id="${productId}">Aperçu</button>
           </div>
         </div>
       `;
@@ -328,14 +396,10 @@ function attachCardEvents() {
     });
 }
 
-function onAddClick(e) {
-    // Vérifier l'authentification avant d'ajouter au panier
-    if (!requireAuth()) {
-        return; // Redirection en cours
-    }
-    
-    const id = Number(this.dataset.id || e.currentTarget.dataset.id);
-    const success = addToCart(id);
+async function onAddClick(e) {
+    const id = this.dataset.id || e.currentTarget.dataset.id;
+    console.log('Ajout au panier du produit ID:', id);
+    const success = await addToCart(id);
 
     if (success) {
         this.textContent = 'Ajouté ✓';
@@ -363,6 +427,7 @@ if (modal) modal.addEventListener('click', (ev)=> { if (ev.target === modal) clo
 function openQuickView(p) {
     if (!p) return;
 
+    const productId = p.id || p._id || p.ID;
     const title = p.title || p.name || 'Produit sans nom';
     const brand = p.brand || '-';
     const img = p.img || p.image || p.photo || '';
@@ -418,7 +483,7 @@ function openQuickView(p) {
         </div>
 
         <div class="product-actions">
-          <button class="btn-add-cart" onclick="addToCartFromModal(${p.id})">
+          <button class="btn-add-cart" onclick="addToCartFromModal('${productId}')">
             AJOUTER AU PANIER
           </button>
           <button class="btn-buy-now">Acheter maintenant</button>
