@@ -29,16 +29,23 @@
                     <hr class="line">
                 </div>
 
-                <form class="form" action="#" method="POST">
+                <form class="form" id="register-form">
                     @csrf
                     <div>
-                        <input type="text" name="pseudo" placeholder="Pseudo" required>
+                        <input type="text" id="register-pseudo" name="pseudo" placeholder="Pseudo" required>
                     </div>
                     <div>
-                        <input type="email" name="email" placeholder="E-mail" required />
+                        <input type="email" id="register-email" name="email" placeholder="E-mail" required />
                     </div>
                     <div>
-                        <input type="password" name="password" placeholder="Mot de passe" required />
+                        <input type="password" id="register-password" name="password" placeholder="Mot de passe" required />
+                    </div>
+                    <div>
+                        <input type="password" id="register-password-confirmation" name="password_confirmation"
+                            placeholder="Confirmer le mot de passe" required />
+                    </div>
+                    <div>
+                        <input type="text" id="register-address" name="address" placeholder="Adresse" required />
                     </div>
 
                     <button type="submit" id="signUp-btn">S'INSCRIRE</button>
@@ -51,3 +58,7 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/auth.js'])
+@endpush

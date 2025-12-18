@@ -1,4 +1,7 @@
- // Données produit avec marques ajoutées
+import { requireAuth } from './auth-guard.js';
+
+// Données produit avec marques ajoutées
+/*
 const PRODUCTS = [
   // ==================== SMARTPHONES ====================
   // iPhone
@@ -71,14 +74,48 @@ const PRODUCTS = [
   { id: 50, title: "Nikon Z30", category: "Appareils Photo", brand: "Nikon", price: 580000, stock: 7, img: "images/Appareil Photo/app photo_7.jpeg", featured: false, new: false, desc: "Vidéo 4K, écran orientable." },
   { id: 51, title: "Panasonic Lumix S5", category: "Appareils Photo", brand: "Panasonic", price: 1450000, stock: 3, img: "images/Appareil Photo/app photo_8.jpeg", featured: true, new: false, desc: "Plein format vidéo-centrique." }
 ];
+*/
+document.addEventListener('DOMContentLoaded', async () => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    let PRODUCTS = [];
+    try {
+        const response = await fetch(`${apiUrl}/api/public/products`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        const data = await response.json();
+        
+        // Robustesse : accepter différents formats ( {products: []}, {data: []}, ou directly [] )
+        if (response.ok) {
+            // L'utilisateur montre une réponse : { success: true, data: { products: [...], pagination: {...} } }
+            // Ou parfois direct : { products: [...] }
+            PRODUCTS = (data.data && data.data.products) || data.products || (Array.isArray(data) ? data : []);
+            
+            console.log(`Succès ! ${PRODUCTS.length} produits récupérés.`);
+            
+            if (PRODUCTS.length > 0) {
+                console.log("Premier produit :", PRODUCTS[0].title || PRODUCTS[0].name);
+            }
+        } else {
+            console.error("L'API a renvoyé une erreur :", response.status);
+            // On peut essayer de charger les produits commentés en fallback si besoin
+        }
+    } catch (error) {
+        console.error('Erreur lors de la récupération des produits :', error);
+        // On reste sur PRODUCTS = [] par défaut
+    }
 
-// Extraire les marques uniques
-const allBrands = [...new Set(PRODUCTS.map(p => p.brand))].sort();
+// Extraire les marques uniques (Robustesse si PRODUCTS est vide)
+const allBrands = (PRODUCTS && PRODUCTS.length) 
+    ? [...new Set(PRODUCTS.map(p => p.brand).filter(b => b))].sort() 
+    : [];
 
 // Config pagination
 const PAGE_SIZE = 6;
 let currentPage = 1;
-let filtered = [...PRODUCTS];
+let filtered = PRODUCTS ? [...PRODUCTS] : [];
 
 // DOM elements
 const cardsEl = document.getElementById('cards');
@@ -110,7 +147,7 @@ function saveCart(cart) {
 
 function updateCartCount() {
     const cart = getCart();
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
     if (cartCountEl) {
         cartCountEl.textContent = totalItems;
     }
@@ -153,7 +190,14 @@ function addToCart(productId) {
 
 // Helpers
 function formatPrice(n) {
-    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+    if (n === undefined || n === null) return '0';
+    // Si c'est déjà une chaîne avec FCFA, on le nettoie
+    let val = n.toString().replace(/FCFA/gi, '').trim();
+    // On enlève les espaces existants pour reformater proprement
+    val = val.replace(/\s/g, '');
+    const num = parseFloat(val);
+    if (isNaN(num)) return val;
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
 }
 
 // Générer dynamiquement les filtres de marques
@@ -184,17 +228,25 @@ function renderCards(items) {
             if (p.new) badges += '<span class="badge badge-new">NOUVEAU</span>';
             if (p.featured) badges += '<span class="badge badge-featured">⭐</span>';
 
+            // Mapping de champs robuste
+            const title = p.name || p.title || 'Produit sans nom';
+            const brand = p.brand || '-';
+            const stock = p.quantity !== undefined ? p.quantity : (p.stock !== undefined ? p.stock : 0);
+            const price = p.price !== undefined ? p.price : 0;
+            const img = p.image_url || p.img || p.image || p.photo || '';
+            const imgSrc = img.startsWith('http') ? img : (import.meta.env.VITE_API_URL + '/' + img);
+
             article.innerHTML = `
         <div class="card-badges">${badges}</div>
         <div class="card-thumb">
-          <img src="${p.img}" alt="${p.title}" />
+          <img src="${imgSrc}" alt="${title}" onerror="this.onerror=null;this.src='/images/default-avatar.png'" />
         </div>
         <div class="card-body">
-          <div class="card-brand">${p.brand}</div>
-          <h4>${p.title}</h4>
+          <div class="card-brand">${brand}</div>
+          <h4>${title}</h4>
           <div class="meta">
-            <div class="qty">Stock: <span>${p.stock}</span></div>
-            <div class="price"><span>${formatPrice(p.price)}</span><small>FCFA</small></div>
+            <div class="qty">Stock: <span>${stock}</span></div>
+            <div class="price"><span>${formatPrice(price)}</span><small>FCFA</small></div>
           </div>
           <div class="card-actions">
             <button class="btn-add" data-id="${p.id}">Ajouter au panier</button>
@@ -226,11 +278,15 @@ function renderPagination(totalItems) {
     nextPageBtn.disabled = currentPage === totalPages;
 }
 
-prevPageBtn.addEventListener('click', () => { if (currentPage>1) { currentPage--; renderCards(filtered); }});
-nextPageBtn.addEventListener('click', () => {
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-    if (currentPage < totalPages) { currentPage++; renderCards(filtered); }
-});
+if (prevPageBtn) {
+    prevPageBtn.addEventListener('click', () => { if (currentPage>1) { currentPage--; renderCards(filtered); }});
+}
+if (nextPageBtn) {
+    nextPageBtn.addEventListener('click', () => {
+        const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+        if (currentPage < totalPages) { currentPage++; renderCards(filtered); }
+    });
+}
 
 function applyFilters() {
     const query = searchEl.value.trim().toLowerCase();
@@ -273,6 +329,11 @@ function attachCardEvents() {
 }
 
 function onAddClick(e) {
+    // Vérifier l'authentification avant d'ajouter au panier
+    if (!requireAuth()) {
+        return; // Redirection en cours
+    }
+    
     const id = Number(this.dataset.id || e.currentTarget.dataset.id);
     const success = addToCart(id);
 
@@ -295,33 +356,39 @@ function onQuickView(e) {
 // Quick view modal
 const modal = document.getElementById('quickview');
 const modalBody = document.getElementById('quickview-body');
-document.querySelector('.modal-close').addEventListener('click', closeModal);
-modal.addEventListener('click', (ev)=> { if (ev.target === modal) closeModal(); });
+const modalCloseBtn = document.querySelector('.modal-close');
+if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
+if (modal) modal.addEventListener('click', (ev)=> { if (ev.target === modal) closeModal(); });
 
 function openQuickView(p) {
     if (!p) return;
+
+    const title = p.title || p.name || 'Produit sans nom';
+    const brand = p.brand || '-';
+    const img = p.img || p.image || p.photo || '';
+    const imgSrc = img.startsWith('http') ? img : (import.meta.env.VITE_API_URL + '/' + img);
 
     modalBody.innerHTML = `
     <div class="product-container">
       <!-- Galerie d'images produit -->
       <div class="product-gallery">
         <div class="main-image">
-          <img src="${p.img}" alt="${p.title}" id="mainProductImage" />
+          <img src="${imgSrc}" alt="${title}" id="mainProductImage" onerror="this.src='/images/default-product.png'" />
         </div>
         <div class="thumbnail-gallery">
-          <div class="thumbnail active" onclick="changeImage(this, '${p.img}')">
-            <img src="${p.img}" alt="Vue 1" />
+          <div class="thumbnail active" onclick="changeImage(this, '${imgSrc}')">
+            <img src="${imgSrc}" alt="Vue 1" onerror="this.src='/images/default-product.png'" />
           </div>
         </div>
       </div>
 
       <!-- Informations produit -->
       <div class="product-info">
-        <div class="product-brand-tag">${p.brand}</div>
-        <h1 class="product-title">${p.title}</h1>
+        <div class="product-brand-tag">${brand}</div>
+        <h1 class="product-title">${title}</h1>
         
         <div class="product-category">
-          <span>${p.category}</span>
+          <span>${p.category || 'Général'}</span>
           ${p.new ? '<span class="badge-new-inline">NOUVEAU</span>' : ''}
           ${p.featured ? '<span class="badge-featured-inline">POPULAIRE</span>' : ''}
         </div>
@@ -366,6 +433,11 @@ function openQuickView(p) {
 
 // Fonction globale pour ajouter au panier depuis le modal
 window.addToCartFromModal = function(id) {
+    // Vérifier l'authentification avant d'ajouter au panier
+    if (!requireAuth()) {
+        return; // Redirection en cours
+    }
+    
     const success = addToCart(id);
 
     if (success) {
@@ -392,40 +464,50 @@ function closeModal() {
 }
 
 // Price range UI
-priceRangeEl.addEventListener('input', ()=> {
-    priceMaxEl.textContent = formatPrice(priceRangeEl.value);
-});
+if (priceRangeEl) {
+    priceRangeEl.addEventListener('input', ()=> {
+        priceMaxEl.textContent = formatPrice(priceRangeEl.value);
+    });
+}
 
 // Recherche en "enter"
-searchEl.addEventListener('keyup', (e) => {
-    if (e.key === 'Enter') applyFilters();
-});
+if (searchEl) {
+    searchEl.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') applyFilters();
+    });
+}
 
 // Buttons apply / reset
-applyFiltersBtn.addEventListener('click', applyFilters);
-resetFiltersBtn.addEventListener('click', () => {
-    searchEl.value = '';
-    priceRangeEl.value = priceRangeEl.max;
-    priceMaxEl.textContent = formatPrice(priceRangeEl.max);
-    categoryFiltersEl.querySelectorAll('input').forEach(i => i.checked = false);
-    brandFiltersEl.querySelectorAll('input').forEach(i => i.checked = false);
-    sortEl.value = 'featured';
-    applyFilters();
-});
+if (applyFiltersBtn) applyFiltersBtn.addEventListener('click', applyFilters);
+if (resetFiltersBtn) {
+    resetFiltersBtn.addEventListener('click', () => {
+        searchEl.value = '';
+        priceRangeEl.value = priceRangeEl.max;
+        priceMaxEl.textContent = formatPrice(priceRangeEl.max);
+        categoryFiltersEl.querySelectorAll('input').forEach(i => i.checked = false);
+        brandFiltersEl.querySelectorAll('input').forEach(i => i.checked = false);
+        sortEl.value = 'featured';
+        applyFilters();
+    });
+}
 
 // tri change
-sortEl.addEventListener('change', applyFilters);
+if (sortEl) sortEl.addEventListener('change', applyFilters);
 
-// initial render
-(function init() {
-    initBrandFilters();
-    priceMaxEl.textContent = formatPrice(priceRangeEl.value);
-    filtered = [...PRODUCTS];
-    renderCards(filtered);
-    updateCartCount(); // Mise à jour initiale du compteur
-})();
+// initial render - only run on catalogue page
+if (cardsEl && brandFiltersEl) {
+    (function init() {
+        initBrandFilters();
+        if (priceMaxEl && priceRangeEl) priceMaxEl.textContent = formatPrice(priceRangeEl.value);
+        filtered = [...PRODUCTS];
+        renderCards(filtered);
+        updateCartCount(); // Mise à jour initiale du compteur
+    })();
+}
 
 // Accessibilité: focus trap simple (optionnel)
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
 });
+});
+

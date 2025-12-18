@@ -9,7 +9,7 @@
     <meta name="author" content="Zenbx" />
     <title>@yield('title', 'TechStorm')</title>
 
-    @vite(['ressources/js/app.js', 'resources/css/Cathalogue_css/header-footer.css', 'resources/css/Cathalogue_css/produit.css', 'resources/css/Cathalogue_css/quick-view.css', 'resources/css/Cathalogue_css/catalogue.css'])
+    @vite(['resources/js/auth-guard.js', 'resources/js/app.js', 'resources/css/Cathalogue_css/header-footer.css', 'resources/css/Cathalogue_css/produit.css', 'resources/css/Cathalogue_css/quick-view.css', 'resources/css/Cathalogue_css/catalogue.css'])
 
     @stack('styles')
 
@@ -35,9 +35,9 @@
         </nav>
 
         <div class="buttons">
-            <button class="connexion-button" onclick="window.location.href='{{ url('/account') }}'">Mon Compte</button>
-            <button class="pay-button" onclick="window.location.href='{{ url('/panier') }}'">Panier <span
-                    id="cart-count" aria-live="polite" class="cart-count">0</span></button>
+            <button class="connexion-button" onclick="goIfAuthenticated('/account')">Mon Compte</button>
+            <button class="pay-button" onclick="goIfAuthenticated('/panier')">Panier <span id="cart-count"
+                    aria-live="polite" class="cart-count">0</span></button>
         </div>
     </header>
 

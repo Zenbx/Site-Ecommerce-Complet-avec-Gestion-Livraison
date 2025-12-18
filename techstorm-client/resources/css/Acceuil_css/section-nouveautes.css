@@ -28,14 +28,13 @@
 }
 
 @keyframes grid-move {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(50px);
-  }
+  0% { transform: translateY(0); }
+  100% { transform: translateY(50px); }
 }
 
+/* ------------------------- */
+/* GLITCH TITLES */
+/* ------------------------- */
 .glitch-effect {
   position: relative;
   display: flex;
@@ -48,11 +47,9 @@
 .new-title-V,
 .new-title-B {
   position: absolute;
-  font-size: 5rem;
+  font-size: clamp(2rem, 6vw, 5rem); /* Responsive title */
   font-weight: 900;
   letter-spacing: 3px;
-  /*-webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;*/
 }
 
 .new-title-R {
@@ -73,31 +70,22 @@
 }
 
 @keyframes glitch-r {
-  0%, 90%, 100% {
-    transform: translate(0);
-  }
-  92% {
-    transform: translate(-4px, -4px);
-  }
-  94% {
-    transform: translate(4px, 4px);
-  }
+  0%, 90%, 100% { transform: translate(0); }
+  92% { transform: translate(-4px, -4px); }
+  94% { transform: translate(4px, 4px); }
 }
 
 @keyframes glitch-b {
-  0%, 90%, 100% {
-    transform: translate(0);
-  }
-  92% {
-    transform: translate(4px, 4px);
-  }
-  94% {
-    transform: translate(-4px, -4px);
-  }
+  0%, 90%, 100% { transform: translate(0); }
+  92% { transform: translate(4px, 4px); }
+  94% { transform: translate(-4px, -4px); }
 }
 
+/* ------------------------- */
+/* CONTENT */
+/* ------------------------- */
 .new-content h3 {
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
   color: #ffffff;
   margin-top: 100px;
   margin-bottom: 10px;
@@ -106,4 +94,44 @@
 .new-content p {
   color: rgba(255, 255, 255, 0.8);
   margin-bottom: 20px;
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  padding: 0 20px;
+}
+
+/* ------------------------- */
+/* RESPONSIVE */
+/* ------------------------- */
+
+/* TABLETTE */
+@media (max-width: 992px) {
+  .new-title-R {
+    left: 123px;
+  }
+  .new-title-B {
+    right: 123px;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 576px) {
+  .new-section {
+    padding: 80px 0;
+  }
+
+  .glitch-effect {
+    margin-bottom: 20px;
+  }
+
+  .new-title-R,
+  .new-title-B {
+    display: none; /* Optionnel : retire les offsets trop violents pour petits écrans */
+  }
+
+  .new-title-V {
+    font-size: clamp(2.2rem, 10vw, 3rem);
+  }
+
+  .new-content h3 {
+    margin-top: 40px;
+  }
 }

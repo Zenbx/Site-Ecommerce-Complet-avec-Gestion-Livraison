@@ -1,11 +1,12 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('home'); // Charge home.blade.php qui utilise layouts/app.blade.php
 });
-
+/*
 Route::get('/connexion', function () {
     return view('connexion'); // Charge connexion.blade.php qui utilise layouts/app.blade.php
 });
@@ -13,6 +14,10 @@ Route::get('/connexion', function () {
 Route::get('/inscription', function () {
     return view('inscription'); // Charge inscription.blade.php qui utilise layouts/app.blade.php
 });
+*/
+
+Route::get('/connexion', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/inscription', [AuthController::class, 'showRegister'])->name('register');
 
 Route::get('/catalogue', function () {
     return view('catalogue'); // Charge catalogue.blade.php qui utilise layouts/app.blade.php

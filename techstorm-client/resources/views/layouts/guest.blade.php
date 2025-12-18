@@ -27,6 +27,7 @@
     <main style="height: 100vh; width: 100vw;">
         @yield('content')
     </main>
+    @stack('scripts')
 </body>
 
 </html>

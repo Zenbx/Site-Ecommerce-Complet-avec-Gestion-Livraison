@@ -32,4 +32,7 @@ import './catalogue.js';
 // Importation du fichier JS d'animations de la page panier
 import './panier.js';
 
+//Importation du fichier JS des pages d'authentification
+import './auth.js';
+
 

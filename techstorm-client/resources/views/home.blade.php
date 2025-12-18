@@ -42,7 +42,8 @@
                         <p class="product-description">Son cristallin et design épuré pour une expérience audio
                             exceptionnelle</p>
                         <span class="product-price">25 000 FCFA</span>
-                        <a href="#" class="btn-panier">Ajouter au panier</a>
+                        <a href="javascript:void(0)" class="btn-panier"
+                            onclick="doIfAuthenticated(() => alert('Produit ajouté au panier!'))">Ajouter au panier</a>
                     </div>
                 </div>
 
@@ -53,7 +54,8 @@
                     </div>
                     <div class="product-content">
                         <h3>Airpods 2</h3>
-                        <a href="#" class="btn-panier">Ajouter au panier</a>
+                        <a href="javascript:void(0)" class="btn-panier"
+                            onclick="doIfAuthenticated(() => alert('Produit ajouté au panier!'))">Ajouter au panier</a>
                     </div>
                 </div>
 
@@ -67,7 +69,8 @@
                         <p class="product-description">Réduction de bruit active et mode transparence pour les
                             professionnels</p>
                         <span class="product-price">25 000 FCFA</span>
-                        <a href="#" class="btn-panier">Ajouter au panier</a>
+                        <a href="javascript:void(0)" class="btn-panier"
+                            onclick="doIfAuthenticated(() => alert('Produit ajouté au panier!'))">Ajouter au panier</a>
                     </div>
                 </div>
             </div>

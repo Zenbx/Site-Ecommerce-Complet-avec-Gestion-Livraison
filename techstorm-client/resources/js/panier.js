@@ -92,7 +92,7 @@ function renderCartItems() {
 
         article.innerHTML = `
       <input type="checkbox" class="article-checkbox" data-index="${index}" ${item.selected ? 'checked' : ''}>
-      <img src="${item.img}" alt="${item.title}" />
+      <img src="${item.img.startsWith('http') ? item.img : (import.meta.env.VITE_API_URL + '/' + item.img)}" alt="${item.title}" />
       <div class="article-info">
         <div class="article-name">
           <label for="dialog${index}" style="cursor: pointer; color: inherit;">${item.title}</label>

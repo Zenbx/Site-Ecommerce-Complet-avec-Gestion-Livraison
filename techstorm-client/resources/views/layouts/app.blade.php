@@ -14,7 +14,7 @@
     <!-- Vite va lire resources/js/app.js qui lui-même importe tous les CSS -->
     <!-- LIAISON DES CSS ET JS AVEC vite (Optimisé) -->
 
-    @vite(['resources/css/Acceuil_css/header-footer.css', 'resources/js/app.js'])
+    @vite(['resources/js/auth-guard.js', 'resources/css/Acceuil_css/header-footer.css', 'resources/js/app.js'])
 
     @stack('styles')
 

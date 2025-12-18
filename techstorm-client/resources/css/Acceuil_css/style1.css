@@ -200,52 +200,18 @@
 /* ------------------------- */
 /* RESPONSIVE                */
 /* ------------------------- */
-@media (max-width: 900px) {
-    .hero-image {
-        right: 50px;
-        width: 500px;
-    }
-}
-
 @media (max-width: 768px) {
   .hero {
-    padding: 100px 20px 50px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    padding: 80px 20px;
   }
-  
-  .hero .container {
-      width: 100%;
-      transform: translateY(0);
-      /* Reset specific container positioning if needed */
-  }
-
-  .hero-image {
-      position: relative;
-      width: 80%;
-      height: auto;
-      right: auto;
-      top: auto;
-      margin-top: 40px;
-      margin-bottom: 20px;
-      /* Keep animation or simplify it */
-  }
-
   .hero-subtitle {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
-  
   .hero-button-container {
-    justify-content: center;
-    flex-wrap: wrap; /* Prevent button stacking unless very small */
-    flex-direction: row;
+    flex-direction: column;
   }
-
   .products-grid {
     grid-template-columns: 1fr;
-    padding: 0 20px;
   }
   .section-title {
     font-size: 2rem;
@@ -255,32 +221,16 @@
   }
   .cta-buttons {
     flex-direction: column;
-    align-items: center;
   }
   .new-title-R,
   .new-title-V,
   .new-title-B {
-    font-size: 2rem;
+    font-size: 2.5rem;
   }
-  /* Hide offsets on mobile for better readibility */
-  .new-title-R, .new-title-B {
-      display: none;
+  .new-title-R {
+    left: 50px;
   }
-}
-
-@media (max-width: 480px) {
-    .hero-subtitle {
-        font-size: 2rem;
-    }
-    
-    .hero-button-container {
-        flex-direction: column;
-        width: 100%;
-        align-items: center;
-    }
-    
-    .btn-explorer, .btn-savoir-plus {
-        width: 100%;
-        text-align: center;
-    }
+  .new-title-B {
+    right: 50px;
+  }
 }

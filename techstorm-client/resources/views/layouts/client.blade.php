@@ -7,7 +7,7 @@
     <meta name="description" content="TechStorm - Votre compte client" />
     <meta name="author" content="Zenbx" />
     <title>@yield('title') - TechStorm</title>
-    @vite(['ressources/js/client', 'resources/css/Client_css/commande.css', 'resources/css/Client_css/global.css', 'resources/css/Client_css/header-footer-cc.css', 'resources/css/Client_css/infos_perso.css', 'resources/css/Client_css/profil-client.css', 'resources/css/Client_css/settings.css'])
+    @vite(['resources/js/client.js', 'resources/css/Client_css/commandes.css', 'resources/css/Client_css/global.css', 'resources/css/Client_css/header-footer-cc.css', 'resources/css/Client_css/infos_perso.css', 'resources/css/Client_css/profil-client.css', 'resources/css/Client_css/settings.css'])
 </head>
 
 <body>
@@ -56,12 +56,12 @@
                     <a href="#">Contact</a>
                 </div>
                 <div class="footer-socials">
-                    <a href="{{ url('www.facebook.com') }}"><img src="{{ asset('icones/facebook.svg') }}"
-                            alt="Facebook" /></a>
-                    <a href="{{ url('www.instagram.com') }}"><img src="{{ asset('icones/instagram.svg') }}"
-                            alt="Instagram" /></a>
-                    <a href="{{ url('www.linkedin.com') }}"><img src="{{ asset('icones/linkedin.svg') }}"
-                            alt="LinkedIn" /></a>
+                    <a href="https://www.facebook.com" target="_blank"><img
+                            src="{{ asset('images/icones/facebook.svg') }}" alt="Facebook" /></a>
+                    <a href="https://www.instagram.com" target="_blank"><img
+                            src="{{ asset('images/icones/instagram.svg') }}" alt="Instagram" /></a>
+                    <a href="https://www.linkedin.com" target="_blank"><img
+                            src="{{ asset('images/icones/linkedin.svg') }}" alt="LinkedIn" /></a>
                 </div>
             </div>
 

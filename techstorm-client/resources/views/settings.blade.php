@@ -6,7 +6,7 @@
     <div class="left-side-bar">
         <div class="user-picture-name">
             <div class="user-picture">
-                <img src="images/ERGO PROXY.jpg" alt="photo de profil" />
+                <img src="{{ asset('images/default-avatar.png') }}" alt="photo de profil" id="sidebar-avatar" />
             </div>
             <div class="username">Utilisateur</div>
         </div>
@@ -46,24 +46,37 @@
                     <form class="form-grid" id="accountForm" autocomplete="off" novalidate>
                         <label class="form-group">
                             <span>Nom complet</span>
-                            <input type="text" name="fullname" value="Utilisateur Demo" />
+                            <input type="text" name="fullname" id="settings-fullname" value="Utilisateur Demo" />
                         </label>
 
                         <label class="form-group">
                             <span>Email</span>
-                            <input type="email" name="email" value="user@exemple.com" />
+                            <input type="email" name="email" id="settings-email" value="user@exemple.com" />
+                        </label>
+
+                        <label class="form-group">
+                            <span>Téléphone</span>
+                            <input type="tel" name="phone" id="settings-phone"
+                                placeholder="Votre numéro de téléphone" />
+                        </label>
+
+                        <label class="form-group">
+                            <span>Adresse</span>
+                            <input type="text" name="address" id="settings-address" placeholder="Votre adresse" />
                         </label>
 
                         <label class="form-group">
                             <span>Nouveau mot de passe</span>
-                            <input type="password" name="password" placeholder="Laisser vide pour conserver" />
+                            <input type="password" name="password" id="settings-password"
+                                placeholder="Laisser vide pour conserver" />
                         </label>
 
                         <label class="form-group file-uploader">
                             <span>Photo de profil</span>
                             <div class="uploader-row">
                                 <div class="avatar-preview" id="avatarPreview">
-                                    <img src="images/ERGO PROXY.jpg" alt="aperçu profil" />
+                                    <img src="{{ asset('images/default-avatar.png') }}" alt="aperçu profil"
+                                        id="settings-avatar-preview" />
                                 </div>
                                 <div class="uploader-actions">
                                     <input id="avatarInput" type="file" accept="image/*" />

@@ -21,7 +21,8 @@ export default defineConfig({
                 'resources/css/Contact_css/style.css',
                 'resources/css/Contact_css/main.css',
 
-                'resources/js/client.js'// JS des pages mon compte, paramètres et commandes
+                'resources/js/client.js',// JS des pages mon compte, paramètres et commandes
+                'resources/js/auth.js'// JS des pages connexion et inscription
             ],
             refresh: true,
         }),

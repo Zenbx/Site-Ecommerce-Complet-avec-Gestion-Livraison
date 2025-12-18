@@ -30,13 +30,14 @@
                     <hr class="line">
                 </div>
 
-                <form class="form" action="#" method="POST"> <!-- Added form tag for semantic correctness -->
+                <form class="form" id="login-form" action="{{ route('login') }}">
+                    <!-- Added form tag for semantic correctness -->
                     @csrf <!-- Good practice to include CSRF token even if not yet fully functional -->
                     <div>
-                        <input type="email" name="email" placeholder="E-mail" required />
+                        <input type="email" id="login-email" name="email" placeholder="E-mail" required />
                     </div>
                     <div>
-                        <input type="password" name="password" placeholder="Mot de passe" required />
+                        <input type="password" id="login-password" name="password" placeholder="Mot de passe" required />
                     </div>
 
                     <div id="forgotDiv">
@@ -53,3 +54,7 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/auth.js'])
+@endpush

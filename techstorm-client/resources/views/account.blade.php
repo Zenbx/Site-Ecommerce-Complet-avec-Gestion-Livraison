@@ -7,9 +7,9 @@
     <div class="left-side-bar">
         <div class="user-picture-name">
             <div class="user-picture">
-                <img src="{{ asset('images/ERGO PROXY.jpg') }}" alt="photo de profil" />
+                <img src="{{ asset('images/default-avatar.png') }}" alt="photo de profil" id="user-avatar" />
             </div>
-            <div class="username">Isabelle MAGNE</div>
+            <div class="username" id="sidebar-username">Chargement...</div>
         </div>
 
         <div class="info">
@@ -31,17 +31,19 @@
     <div class="details-personnal-info">
         <h1>Mes informations personnelles</h1>
         <div class="info-card">
-            <div class="info-row"><span class="label">Nom :</span> <span class="value">Isabelle</span></div>
-            <div class="info-row"><span class="label">Prénom :</span> <span class="value">Magne</span></div>
-            <div class="info-row"><span class="label">Numéro de téléphone :</span> <span class="value">+237
-                    123456789</span></div>
-            <div class="info-row"><span class="label">Email :</span> <span class="value">jo@gmail.com</span></div>
-            <div class="info-row"><span class="label">Date d'inscription :</span> <span class="value">12/11/2025</span>
+            <div class="info-row"><span class="label">Nom :</span> <span class="value" id="user-name">Chargement...</span>
             </div>
+            <div class="info-row"><span class="label">Email :</span> <span class="value"
+                    id="user-email">Chargement...</span></div>
+            <div class="info-row"><span class="label">Téléphone :</span> <span class="value" id="user-phone">-</span>
+            </div>
+            <div class="info-row"><span class="label">Adresse :</span> <span class="value" id="user-address">-</span>
+            </div>
+            <div class="info-row"><span class="label">Date d'inscription :</span> <span class="value"
+                    id="user-date">-</span></div>
         </div>
         <button type="button" class="btn-edit-info" onclick="window.location.href='{{ url('/settings') }}'">
             Modifier mes informations
         </button>
-
     </div>
 @endsection
