@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  SafeAreaView,
+  StatusBar
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useDelivery } from '../../context/DeliveryContext';
@@ -40,695 +42,281 @@ export default function DeliveryDetailScreen() {
       setLoading(true);
       const data = await fetchDeliveryDetails(Number(id));
       
-      console.log('📦 Données reçues:', JSON.stringify(data, null, 2));
-      
-      // Vérifier si les coordonnées GPS existent
       const lat = data.latitude || data.lat || 0;
       const lng = data.longitude || data.lng || data.lon || 0;
 
-      // Si pas de coordonnées, essayer de géocoder l'adresse
       if (!isValidCoordinates(lat, lng)) {
-        console.log('⚠️ Coordonnées manquantes, tentative de géocodage...');
-        
         const address = data.delivery_address || data.deliveryAddress || data.address;
-        
         if (address) {
           setGeocoding(true);
           const geocoded = await geocodeAddressWithFallback(address);
-          
           if (geocoded) {
             data.latitude = geocoded.latitude;
             data.longitude = geocoded.longitude;
-            console.log('✅ Adresse géocodée:', geocoded);
           }
           setGeocoding(false);
         }
       }
-      
       setDelivery(data);
     } catch (error) {
-      console.error('❌ Erreur:', error);
-      Alert.alert('Erreur', 'Impossible de charger les détails de la livraison');
+      Alert.alert('Erreur', 'Impossible de charger les détails');
       router.back();
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAccept = async () => {
+  const handleStatusUpdate = async (action: 'accept' | 'pickup' | 'start') => {
     try {
       setActionLoading(true);
-      await deliveryService.acceptDelivery(Number(id));
-      updateDeliveryStatus(Number(id), DELIVERY_STATUS.ACCEPTED);
-      await loadDelivery();
-      Alert.alert('Succès', 'Livraison acceptée');
-    } catch (error) {
-      console.error('❌ Erreur acceptation:', error);
-      Alert.alert('Erreur', 'Impossible d\'accepter la livraison');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handlePickup = async () => {
-    try {
-      setActionLoading(true);
-      const location = await getCurrentLocation();
-      if (!location) throw new Error('Position non disponible');
-
-      await deliveryService.pickupDelivery(Number(id), location.latitude, location.longitude);
-      updateDeliveryStatus(Number(id), DELIVERY_STATUS.PICKED_UP);
-      await loadDelivery();
-      Alert.alert('Succès', 'Colis récupéré');
-    } catch (error) {
-      console.error('❌ Erreur pickup:', error);
-      Alert.alert('Erreur', 'Impossible de marquer comme récupéré');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleStart = async () => {
-    try {
-      setActionLoading(true);
-      const location = await getCurrentLocation();
-      if (!location) throw new Error('Position non disponible');
-
-      await deliveryService.startDelivery(Number(id), location.latitude, location.longitude);
-      updateDeliveryStatus(Number(id), DELIVERY_STATUS.IN_TRANSIT);
-      await loadDelivery();
-      Alert.alert('Succès', 'Livraison démarrée');
-    } catch (error) {
-      console.error('❌ Erreur start:', error);
-      Alert.alert('Erreur', 'Impossible de démarrer la livraison');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const openMaps = () => {
-    const latitude = delivery?.latitude || delivery?.lat || 0;
-    const longitude = delivery?.longitude || delivery?.lng || delivery?.lon || 0;
-    const address = delivery?.delivery_address || delivery?.deliveryAddress || delivery?.address;
-
-    if (!isValidCoordinates(latitude, longitude) && !address) {
-      Alert.alert('Erreur', 'Coordonnées de livraison manquantes');
-      return;
-    }
-
-    // URLs pour différentes apps de navigation
-    const osmUrl = isValidCoordinates(latitude, longitude)
-      ? `https://www.openstreetmap.org/directions?from=&to=${latitude},${longitude}`
-      : `https://www.openstreetmap.org/search?query=${encodeURIComponent(address)}`;
-    
-    const googleUrl = isValidCoordinates(latitude, longitude)
-      ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-    
-    const wazeUrl = isValidCoordinates(latitude, longitude)
-      ? `https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`
-      : null;
-
-    if (Platform.OS === 'web') {
-      window.open(osmUrl, '_blank');
-    } else {
-      const options = [
-        { text: 'OpenStreetMap', onPress: () => Linking.openURL(osmUrl) },
-        { text: 'Google Maps', onPress: () => Linking.openURL(googleUrl) },
-      ];
-
-      if (wazeUrl) {
-        options.push({ text: 'Waze', onPress: () => Linking.openURL(wazeUrl) });
+      const location = action !== 'accept' ? await getCurrentLocation() : null;
+      
+      if (action !== 'accept' && !location) {
+        throw new Error('Position GPS requise');
       }
 
-      options.push({ text: 'Annuler', style: 'cancel' });
+      let nextStatus;
+      if (action === 'accept') {
+        await deliveryService.acceptDelivery(Number(id));
+        nextStatus = DELIVERY_STATUS.ACCEPTED;
+      } else if (action === 'pickup') {
+        await deliveryService.pickupDelivery(Number(id), location!.latitude, location!.longitude);
+        nextStatus = DELIVERY_STATUS.PICKED_UP;
+      } else {
+        await deliveryService.startDelivery(Number(id), location!.latitude, location!.longitude);
+        nextStatus = DELIVERY_STATUS.IN_TRANSIT;
+      }
 
-      Alert.alert('Navigation', 'Choisissez votre application de navigation', options);
+      updateDeliveryStatus(Number(id), nextStatus);
+      await loadDelivery();
+      Alert.alert('Succès', 'Statut mis à jour avec succès');
+    } catch (error) {
+      Alert.alert('Erreur', 'L\'opération a échoué');
+    } finally {
+      setActionLoading(false);
     }
-  };
-
-  const viewMap = () => {
-    const latitude = delivery?.latitude || delivery?.lat || 0;
-    const longitude = delivery?.longitude || delivery?.lng || delivery?.lon || 0;
-
-    if (!isValidCoordinates(latitude, longitude)) {
-      Alert.alert('Erreur', 'Coordonnées de livraison manquantes');
-      return;
-    }
-    setShowMap(true);
-  };
-
-  const callCustomer = () => {
-    const phone = delivery?.customer_phone || delivery?.order?.customer?.phone;
-    if (!phone) {
-      Alert.alert('Erreur', 'Numéro de téléphone manquant');
-      return;
-    }
-    Linking.openURL(`tel:${phone}`);
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4169E1" />
-        <Text style={styles.loadingText}>Chargement des détails...</Text>
-        {geocoding && (
-          <Text style={styles.geocodingText}>🌍 Recherche des coordonnées GPS...</Text>
-        )}
+        <ActivityIndicator size="large" color="#0077ff" />
+        <Text style={styles.loadingText}>Préparation de la course...</Text>
       </View>
     );
   }
 
-  if (!delivery) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>❌ Livraison introuvable</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>← Retour</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  // Normalisation des données (support des deux structures)
-  const customerName = delivery.customer_name || delivery.order?.customer?.name || 'Client inconnu';
-  const customerPhone = delivery.customer_phone || delivery.order?.customer?.phone || 'N/A';
-  const deliveryAddress = delivery.delivery_address || delivery.deliveryAddress || delivery.address || 'Adresse non spécifiée';
-  const items = delivery.items || delivery.order?.items || delivery.order_items || [];
-  const totalAmount = delivery.total_amount || delivery.order?.total_amount || delivery.totalAmount || delivery.amount || 0;
-  const orderNumber = delivery.order_number || delivery.order?.order_number || delivery.orderNumber || delivery.order_id || id;
-  const notes = delivery.notes || delivery.delivery_notes || '';
-  const status = delivery.status || 'unknown';
-  const trackingCode = delivery.tracking_code || delivery.trackingCode || `#${orderNumber}`;
-  const estimatedDelivery = delivery.estimated_delivery || delivery.estimatedDelivery;
-  
-  const latitude = delivery.latitude || delivery.lat || 0;
-  const longitude = delivery.longitude || delivery.lng || delivery.lon || 0;
-  const hasValidCoordinates = isValidCoordinates(latitude, longitude);
+  const status = delivery?.status || 'unknown';
+  const statusColor = DELIVERY_STATUS_COLORS[status] || '#64748B';
 
   return (
-    <>
-      <Stack.Screen 
-        options={{ 
-          title: `Commande ${trackingCode}`, 
-          headerShown: true 
-        }} 
-      />
-      <ScrollView style={styles.container}>
-        {/* Badge de statut */}
-        <View style={[styles.statusBadge, { backgroundColor: DELIVERY_STATUS_COLORS[status] || '#666' }]}>
-          <Text style={styles.statusText}>
-            {DELIVERY_STATUS_LABELS[status] || delivery.status_label || 'Statut inconnu'}
+    <SafeAreaView style={styles.mainContainer}>
+      <StatusBar barStyle="dark-content" />
+      <Stack.Screen options={{ title: 'Détails de la course', headerShadowVisible: false }} />
+      
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Status Header */}
+        <View style={[styles.statusBanner, { backgroundColor: statusColor + '15' }]}>
+          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+          <Text style={[styles.statusLabel, { color: statusColor }]}>
+            {DELIVERY_STATUS_LABELS[status] || 'Statut inconnu'}
           </Text>
         </View>
 
-        {/* Code de suivi */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📋 Code de suivi</Text>
-          <Text style={styles.trackingCode}>{trackingCode}</Text>
-        </View>
-
-        {/* Informations client */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>👤 Client</Text>
-          <Text style={styles.customerName}>{customerName}</Text>
-          {customerPhone !== 'N/A' && (
-            <TouchableOpacity onPress={callCustomer} style={styles.phoneButton}>
-              <Text style={styles.phoneText}>📞 {customerPhone}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Adresse de livraison */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📍 Adresse de livraison</Text>
-          <Text style={styles.address}>{deliveryAddress}</Text>
-          
-          {hasValidCoordinates ? (
-            <View style={styles.mapActions}>
-              <TouchableOpacity onPress={viewMap} style={styles.viewMapButton}>
-                <Text style={styles.mapButtonText}>🗺️ Voir la carte</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity onPress={openMaps} style={styles.navigateButton}>
-                <Text style={styles.mapButtonText}>🧭 Navigation</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.warningBox}>
-              <Text style={styles.warningText}>⚠️ Coordonnées GPS non disponibles</Text>
-              <Text style={styles.warningSubtext}>
-                L'adresse n'a pas pu être géolocalisée automatiquement
-              </Text>
-              <TouchableOpacity onPress={openMaps} style={styles.searchAddressButton}>
-                <Text style={styles.searchAddressText}>🔍 Rechercher l'adresse</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {/* Articles */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📦 Articles ({items.length})</Text>
-          {items.length > 0 ? (
-            items.map((item: any, index: number) => (
-              <View key={index} style={styles.item}>
-                <Text style={styles.itemName}>
-                  {item.name || item.product_name || 'Article'}
-                </Text>
-                <Text style={styles.itemQty}>x{item.quantity || item.qty || 1}</Text>
+        {/* Info Card */}
+        <View style={styles.card}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>CLIENT & COMMANDE</Text>
+            <View style={styles.customerRow}>
+              <View style={styles.customerInfo}>
+                <Text style={styles.customerName}>{delivery.customer_name || delivery.order?.customer?.name}</Text>
+                <Text style={styles.orderId}>Commande {delivery.tracking_code || `#${id}`}</Text>
               </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>Aucun article dans cette commande</Text>
-          )}
-        </View>
-
-        {/* Montant total */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💰 Montant total</Text>
-          <Text style={styles.amount}>
-            {totalAmount > 0 ? formatCurrency(parseFloat(totalAmount)) : '0 FCFA'}
-          </Text>
-        </View>
-
-        {/* Heure de livraison estimée */}
-        {estimatedDelivery && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>⏰ Livraison estimée</Text>
-            <Text style={styles.estimatedTime}>{formatDateTime(estimatedDelivery)}</Text>
-          </View>
-        )}
-
-        {/* Notes */}
-        {notes && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📝 Notes de livraison</Text>
-            <Text style={styles.notes}>{notes}</Text>
-          </View>
-        )}
-
-        {/* Actions selon le statut */}
-        <View style={styles.actions}>
-          {status === DELIVERY_STATUS.ASSIGNED && (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.acceptButton]}
-              onPress={handleAccept}
-              disabled={actionLoading}
-            >
-              {actionLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.actionButtonText}>✅ Accepter la livraison</Text>
-              )}
-            </TouchableOpacity>
-          )}
-
-          {status === DELIVERY_STATUS.ACCEPTED && (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.pickupButton]}
-              onPress={handlePickup}
-              disabled={actionLoading}
-            >
-              {actionLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.actionButtonText}>📦 Marquer comme récupéré</Text>
-              )}
-            </TouchableOpacity>
-          )}
-
-          {status === DELIVERY_STATUS.PICKED_UP && (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.startButton]}
-              onPress={handleStart}
-              disabled={actionLoading}
-            >
-              {actionLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.actionButtonText}>🚚 Démarrer la livraison</Text>
-              )}
-            </TouchableOpacity>
-          )}
-
-          {status === DELIVERY_STATUS.IN_TRANSIT && (
-            <>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.scanButton]}
-                onPress={() => router.push(`/delivery/qr-scanner?id=${id}`)}
+              <TouchableOpacity 
+                style={styles.callButton} 
+                onPress={() => Linking.openURL(`tel:${delivery.customer_phone || delivery.order?.customer?.phone}`)}
               >
-                <Text style={styles.actionButtonText}>📱 Scanner QR Code</Text>
+                <Text style={styles.callIcon}>📞</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.issueButton]}
-                onPress={() => router.push(`/delivery/report-issue?id=${id}`)}
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ADRESSE DE LIVRAISON</Text>
+            <Text style={styles.addressText}>{delivery.delivery_address || delivery.address}</Text>
+            <View style={styles.mapActions}>
+              <TouchableOpacity style={styles.secondaryAction} onPress={() => setShowMap(true)}>
+                <Text style={styles.secondaryActionText}>🗺️ Voir sur la carte</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.secondaryAction, { borderColor: '#34C759' }]}
+                onPress={() => {
+                  const lat = delivery.latitude || 0;
+                  const lng = delivery.longitude || 0;
+                  const url = Platform.select({
+                    ios: `maps://app?daddr=${lat},${lng}`,
+                    android: `google.navigation:q=${lat},${lng}`
+                  });
+                  Linking.openURL(url || '');
+                }}
               >
-                <Text style={styles.actionButtonText}>⚠️ Signaler un problème</Text>
+                <Text style={[styles.secondaryActionText, { color: '#34C759' }]}>🧭 Lancer le GPS</Text>
               </TouchableOpacity>
-            </>
-          )}
+            </View>
+          </View>
         </View>
 
-        {/* Section debug en développement */}
-        {__DEV__ && (
-          <View style={styles.debugSection}>
-            <Text style={styles.debugTitle}>🐛 DEBUG</Text>
-            <Text style={styles.debugText}>ID: {id}</Text>
-            <Text style={styles.debugText}>Statut: {status}</Text>
-            <Text style={styles.debugText}>Lat/Lng: {latitude}, {longitude}</Text>
-            <Text style={styles.debugText}>
-              GPS valides: {hasValidCoordinates ? '✅ Oui' : '❌ Non'}
+        {/* Items Card */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>CONTENU DU COLIS</Text>
+          {(delivery.items || delivery.order?.items || []).map((item: any, index: number) => (
+            <View key={index} style={styles.itemRow}>
+              <View style={styles.qtyBadge}>
+                <Text style={styles.qtyText}>{item.quantity || 1}</Text>
+              </View>
+              <Text style={styles.itemName}>{item.name || item.product_name}</Text>
+            </View>
+          ))}
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Total à encaisser</Text>
+            <Text style={styles.totalValue}>
+              {formatCurrency(parseFloat(delivery.total_amount || delivery.order?.total_amount || 0))}
             </Text>
-            <Text style={styles.debugText}>Items: {items.length}</Text>
-            <Text style={styles.debugText}>Montant: {totalAmount}</Text>
-            <Text style={styles.debugText}>Tracking: {trackingCode}</Text>
+          </View>
+        </View>
+
+        {/* Notes Section */}
+        {delivery.notes && (
+          <View style={styles.notesBox}>
+            <Text style={styles.notesTitle}>📝 Notes importantes</Text>
+            <Text style={styles.notesText}>{delivery.notes}</Text>
           </View>
         )}
+
+        <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Modal de carte */}
-      {hasValidCoordinates && (
-        <Modal
-          visible={showMap}
-          animationType="slide"
-          onRequestClose={() => setShowMap(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>🗺️ Carte de livraison</Text>
-              <TouchableOpacity onPress={() => setShowMap(false)} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>✕ Fermer</Text>
-              </TouchableOpacity>
-            </View>
-            <MapView
-              latitude={latitude}
-              longitude={longitude}
-              deliveryAddress={deliveryAddress}
-            />
+      {/* Floating Action Buttons */}
+      <View style={styles.footerActions}>
+        {status === DELIVERY_STATUS.ASSIGNED && (
+          <TouchableOpacity 
+            style={[styles.mainButton, { backgroundColor: '#34C759' }]}
+            onPress={() => handleStatusUpdate('accept')}
+            disabled={actionLoading}
+          >
+            {actionLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.mainButtonText}>Accepter la course</Text>}
+          </TouchableOpacity>
+        )}
+
+        {status === DELIVERY_STATUS.ACCEPTED && (
+          <TouchableOpacity 
+            style={[styles.mainButton, { backgroundColor: '#5856D6' }]}
+            onPress={() => handleStatusUpdate('pickup')}
+            disabled={actionLoading}
+          >
+            {actionLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.mainButtonText}>Confirmer la récupération</Text>}
+          </TouchableOpacity>
+        )}
+
+        {status === DELIVERY_STATUS.PICKED_UP && (
+          <TouchableOpacity 
+            style={[styles.mainButton, { backgroundColor: '#0077ff' }]}
+            onPress={() => handleStatusUpdate('start')}
+            disabled={actionLoading}
+          >
+            {actionLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.mainButtonText}>Démarrer la livraison</Text>}
+          </TouchableOpacity>
+        )}
+
+        {status === DELIVERY_STATUS.IN_TRANSIT && (
+          <View style={styles.doubleButtonRow}>
+            <TouchableOpacity 
+              style={[styles.mainButton, { backgroundColor: '#FF9500', flex: 1 }]}
+              onPress={() => router.push(`/delivery/qr-scanner?id=${id}`)}
+            >
+              <Text style={styles.mainButtonText}>Scanner QR</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.mainButton, { backgroundColor: '#FF3B30', width: 60 }]}
+              onPress={() => router.push(`/delivery/report-issue?id=${id}`)}
+            >
+              <Text style={styles.mainButtonText}>⚠️</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      )}
-    </>
+        )}
+      </View>
+
+      <Modal visible={showMap} animationType="slide">
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Localisation</Text>
+            <TouchableOpacity onPress={() => setShowMap(false)}>
+              <Text style={styles.closeText}>Fermer</Text>
+            </TouchableOpacity>
+          </View>
+          <MapView latitude={delivery?.latitude} longitude={delivery?.longitude} deliveryAddress={delivery?.delivery_address} />
+        </SafeAreaView>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#f5f5f5' 
-  },
-  loadingContainer: { 
-    flex: 1, 
-    justifyContent: 'center', 
+  mainContainer: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1, padding: 20 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 12, color: '#64748B', fontWeight: '500' },
+  statusBanner: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5'
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  geocodingText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#4169E1',
-    fontStyle: 'italic',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 18,
-    color: '#DC143C',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     marginBottom: 20,
-    textAlign: 'center',
+    alignSelf: 'flex-start'
   },
-  backButton: {
-    backgroundColor: '#4169E1',
-    padding: 12,
-    borderRadius: 8,
-    paddingHorizontal: 24,
-  },
-  backButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  statusBadge: { 
-    padding: 16, 
-    alignItems: 'center',
+  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
+  statusLabel: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase' },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statusText: { 
-    color: '#fff', 
-    fontWeight: 'bold', 
-    fontSize: 16,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  section: { 
-    backgroundColor: '#fff', 
-    padding: 16, 
-    marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowRadius: 15,
     elevation: 2,
   },
-  sectionTitle: { 
-    fontSize: 14, 
-    color: '#666', 
-    marginBottom: 8,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  trackingCode: { 
-    fontSize: 18, 
-    fontWeight: '600', 
-    color: '#4169E1',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  customerName: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    color: '#333',
-    marginBottom: 4,
-  },
-  phoneButton: { 
-    marginTop: 8, 
-    padding: 12,
-    backgroundColor: '#f0f8ff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#4169E1',
-  },
-  phoneText: { 
-    color: '#4169E1', 
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  address: { 
-    fontSize: 16, 
-    color: '#333', 
-    lineHeight: 24,
-    marginBottom: 12,
-  },
-  mapActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  viewMapButton: { 
-    flex: 1,
-    padding: 14, 
-    backgroundColor: '#4169E1', 
-    borderRadius: 8,
-    alignItems: 'center',
-    shadowColor: '#4169E1',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  navigateButton: { 
-    flex: 1,
-    padding: 14, 
-    backgroundColor: '#32CD32', 
-    borderRadius: 8,
-    alignItems: 'center',
-    shadowColor: '#32CD32',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  mapButtonText: { 
-    color: '#fff', 
-    fontWeight: '600',
-    fontSize: 15,
-  },
-  warningBox: {
-    backgroundColor: '#FFF3CD',
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#FFC107',
-  },
-  warningText: {
-    color: '#856404',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  warningSubtext: {
-    color: '#856404',
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  searchAddressButton: {
-    backgroundColor: '#FFC107',
-    padding: 10,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  searchAddressText: {
-    color: '#856404',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  item: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    paddingVertical: 12, 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#f0f0f0',
-    alignItems: 'center',
-  },
-  itemName: { 
-    fontSize: 16, 
-    color: '#333',
-    flex: 1,
-    fontWeight: '500',
-  },
-  itemQty: { 
-    fontSize: 16, 
-    color: '#666',
-    fontWeight: 'bold',
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#999',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    paddingVertical: 20,
-  },
-  amount: { 
-    fontSize: 28, 
-    fontWeight: 'bold', 
-    color: '#32CD32',
-  },
-  estimatedTime: { 
-    fontSize: 16, 
-    color: '#333',
-    fontWeight: '500',
-  },
-  notes: { 
-    fontSize: 14, 
-    color: '#666', 
-    fontStyle: 'italic',
-    lineHeight: 20,
-    backgroundColor: '#fffacd',
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#FFD700',
-  },
-  actions: { 
-    padding: 16, 
-    gap: 12, 
-    marginBottom: 20 
-  },
-  actionButton: { 
-    padding: 16, 
-    borderRadius: 12, 
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  actionButtonText: { 
-    color: '#fff', 
-    fontSize: 16, 
-    fontWeight: '600' 
-  },
-  acceptButton: { backgroundColor: '#32CD32' },
-  pickupButton: { backgroundColor: '#9370DB' },
-  startButton: { backgroundColor: '#4169E1' },
-  scanButton: { backgroundColor: '#FF8C00' },
-  issueButton: { backgroundColor: '#DC143C' },
-  
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#4169E1',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  closeButton: {
-    padding: 8,
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  
-  debugSection: {
-    backgroundColor: '#2C3E50',
-    padding: 16,
-    margin: 16,
-    borderRadius: 8,
-  },
-  debugTitle: {
-    color: '#ECF0F1',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  debugText: {
-    color: '#BDC3C7',
-    fontSize: 12,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    marginVertical: 2,
-  },
+  section: { paddingVertical: 4 },
+  sectionTitle: { fontSize: 11, fontWeight: '800', color: '#94A3B8', letterSpacing: 1, marginBottom: 12 },
+  customerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  customerName: { fontSize: 20, fontWeight: '800', color: '#1E293B' },
+  orderId: { fontSize: 14, color: '#64748B', marginTop: 2 },
+  callButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' },
+  callIcon: { fontSize: 18 },
+  divider: { height: 1, backgroundColor: '#F1F5F9', marginVertical: 16 },
+  addressText: { fontSize: 16, color: '#1E293B', lineHeight: 24, fontWeight: '500' },
+  mapActions: { flexDirection: 'row', gap: 12, marginTop: 16 },
+  secondaryAction: { flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderColor: '#0077ff', alignItems: 'center' },
+  secondaryActionText: { color: '#0077ff', fontWeight: '700', fontSize: 13 },
+  itemRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  qtyBadge: { backgroundColor: '#F1F5F9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginRight: 12 },
+  qtyText: { fontSize: 14, fontWeight: '700', color: '#475569' },
+  itemName: { fontSize: 15, color: '#1E293B', fontWeight: '500' },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F1F5F9' },
+  totalLabel: { fontSize: 15, color: '#64748B', fontWeight: '600' },
+  totalValue: { fontSize: 22, fontWeight: '800', color: '#34C759' },
+  notesBox: { backgroundColor: '#FFFBEB', padding: 16, borderRadius: 16, borderLeftWidth: 4, borderLeftColor: '#F59E0B' },
+  notesTitle: { fontSize: 14, fontWeight: '700', color: '#92400E', marginBottom: 4 },
+  notesText: { fontSize: 14, color: '#B45309', lineHeight: 20 },
+  footerActions: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: 'rgba(248, 250, 252, 0.9)' },
+  mainButton: { height: 60, borderRadius: 20, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 },
+  mainButtonText: { color: '#FFF', fontSize: 17, fontWeight: '800' },
+  doubleButtonRow: { flexDirection: 'row', gap: 12 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  modalTitle: { fontSize: 18, fontWeight: '800' },
+  closeText: { color: '#0077ff', fontWeight: '700' }
 });

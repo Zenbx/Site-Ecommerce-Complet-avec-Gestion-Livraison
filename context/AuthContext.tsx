@@ -4,13 +4,17 @@ import { useRouter, useSegments } from 'expo-router';
 import { STORAGE_KEYS } from '../constants/app';
 import * as authService from '../services/authService';
 
+// Interface mise à jour pour correspondre exactement à la structure delivery_person de l'API
 interface User {
   id: number;
   name: string;
   email: string;
-  phone: string;
-  avatar?: string;
+  id_card_number: string;  // Nouveau : numéro de carte d'identité
+  address: string;         // Nouveau : adresse complète
+  photo_url: string;       // Nouveau : URL de la photo de profil
   is_available: boolean;
+  created_at: string;      // Nouveau : date de création
+  updated_at: string;      // Nouveau : date de mise à jour
 }
 
 interface AuthContextData {
@@ -53,11 +57,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await authService.login(email, password);
       
-      setToken(response.token);
-      setUser(response.user);
+      // Extraction du token et des données utilisateur selon le nouveau schéma API
+      // La réponse contient { success, message, data: { delivery_person, token, token_type } }
+      const authToken = response.data.token;
+      const userData = response.data.delivery_person;
 
-      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.user));
+      setToken(authToken);
+      setUser(userData);
+
+      // Sauvegarde dans le stockage local pour persistance entre les sessions
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, authToken);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
     } catch (error) {
       throw error;
     }
@@ -69,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Erreur logout API:', error);
     } finally {
-      // Effacer les données localement
+      // Effacer les données localement même si l'API échoue
       setToken(null);
       setUser(null);
       await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);

@@ -9,6 +9,8 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  SafeAreaView,
+  StatusBar
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { validateEmail, validatePassword } from '../../utils/validators';
@@ -22,7 +24,6 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState({ email: '', password: '' });
 
   const handleLogin = async () => {
-    // Validation
     const newErrors = { email: '', password: '' };
     
     if (!validateEmail(email)) {
@@ -43,8 +44,6 @@ export default function LoginScreen() {
       setErrors({ email: '', password: '' });
       
       await signIn(email, password);
-      
-      // Navigation automatique via _layout.tsx selon l'état auth
       router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert(
@@ -57,125 +56,214 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <View style={styles.content}>
-        <Text style={styles.title}>Delivery App</Text>
-        <Text style={styles.subtitle}>Connexion livreur</Text>
-
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
-              placeholder="votre@email.com"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              editable={!loading}
-            />
-            {errors.email ? (
-              <Text style={styles.errorText}>{errors.email}</Text>
-            ) : null}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Text style={styles.logoEmoji}>🚚</Text>
+            </View>
+            <Text style={styles.title}>Bienvenue</Text>
+            <Text style={styles.subtitle}>Connectez-vous pour commencer vos livraisons</Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Mot de passe</Text>
-            <TextInput
-              style={[styles.input, errors.password && styles.inputError]}
-              placeholder="••••••••"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!loading}
-            />
-            {errors.password ? (
-              <Text style={styles.errorText}>{errors.password}</Text>
-            ) : null}
+          <View style={styles.form}>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.label}>Adresse Email</Text>
+              <View style={[styles.inputContainer, errors.email && styles.inputError]}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="nom@exemple.com"
+                  placeholderTextColor="#94A3B8"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  editable={!loading}
+                />
+              </View>
+              {errors.email ? (
+                <Text style={styles.errorText}>{errors.email}</Text>
+              ) : null}
+            </View>
+
+            <View style={styles.inputWrapper}>
+              <Text style={styles.label}>Mot de passe</Text>
+              <View style={[styles.inputContainer, errors.password && styles.inputError]}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="************"
+                  placeholderTextColor="#94A3B8"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  editable={!loading}
+                />
+              </View>
+              {errors.password ? (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              ) : null}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Se connecter</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Se connecter</Text>
-            )}
-          </TouchableOpacity>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>En vous connectant, vous acceptez nos </Text>
+            <TouchableOpacity>
+              <Text style={styles.footerLink}>Conditions d'utilisation</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ffffff',
+  },
+  flex: {
+    flex: 1,
   },
   content: {
     flex: 1,
+    paddingHorizontal: 32,
     justifyContent: 'center',
-    padding: 20,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 48,
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    backgroundColor: '#F0F7FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  logoEmoji: {
+    fontSize: 40,
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 8,
+    fontWeight: '800',
+    color: '#1E293B',
+    letterSpacing: -1,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#64748B',
     textAlign: 'center',
-    marginBottom: 40,
+    marginTop: 8,
+    lineHeight: 24,
   },
   form: {
-    gap: 20,
+    width: '100%',
   },
-  inputContainer: {
-    gap: 8,
+  inputWrapper: {
+    marginBottom: 20,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  inputContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
+    height: 56,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
   },
   input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
     fontSize: 16,
+    color: '#1E293B',
+    fontWeight: '500',
   },
   inputError: {
-    borderColor: '#DC143C',
+    borderColor: '#FDA4AF',
+    backgroundColor: '#FFF1F2',
   },
   errorText: {
-    color: '#DC143C',
-    fontSize: 12,
+    color: '#E11D48',
+    fontSize: 13,
+    marginTop: 6,
+    marginLeft: 4,
+    fontWeight: '500',
   },
   button: {
-    backgroundColor: '#4169E1',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: '#0077ff',
+    height: 56,
+    borderRadius: 16,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 12,
+    shadowColor: '#0077ff',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 5,
   },
   buttonDisabled: {
-    backgroundColor: '#a0a0a0',
+    backgroundColor: '#94A3B8',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#ffffff',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  forgotPassword: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  forgotPasswordText: {
+    color: '#0077ff',
+    fontSize: 14,
     fontWeight: '600',
+  },
+  footer: {
+    marginTop: 48,
+    alignItems: 'center',
+  },
+  footerText: {
+    color: '#94A3B8',
+    fontSize: 13,
+  },
+  footerLink: {
+    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+    marginTop: 4,
   },
 });

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Platform, Linking, TouchableOpacity, Text } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 interface MapViewProps {
   latitude: number;
@@ -8,39 +9,36 @@ interface MapViewProps {
 }
 
 export default function MapView({ latitude, longitude, deliveryAddress }: MapViewProps) {
-  // Pour le Web, on utilise un iframe
   if (Platform.OS === 'web') {
     return (
       <View style={styles.container}>
         <iframe
           width="100%"
           height="100%"
-          style={{ border: 0 }}
-          src={`https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.01},${latitude - 0.01},${longitude + 0.01},${latitude + 0.01}&layer=mapnik&marker=${latitude},${longitude}`}
+          style={{ border: 0, borderRadius: 24 }}
+          src={`https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.005},${latitude - 0.005},${longitude + 0.005},${latitude + 0.005}&layer=mapnik&marker=${latitude},${longitude}`}
           title="Carte de livraison"
         />
         <View style={styles.webOverlay}>
-          <Text style={styles.overlayTitle}>📍 {deliveryAddress || 'Point de livraison'}</Text>
+          <View style={styles.addressContainer}>
+            <Text style={styles.pin}>📍</Text>
+            <Text style={styles.overlayTitle} numberOfLines={1}>
+              {deliveryAddress || 'Destination de livraison'}
+            </Text>
+          </View>
           <TouchableOpacity
             style={styles.overlayButton}
             onPress={() => {
-              const url = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=16/${latitude}/${longitude}`;
-              if (Platform.OS === 'web') {
-                window.open(url, '_blank');
-              } else {
-                Linking.openURL(url);
-              }
+              const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+              window.open(url, '_blank');
             }}
           >
-            <Text style={styles.overlayButtonText}>🧭 Ouvrir dans OpenStreetMap</Text>
+            <Text style={styles.overlayButtonText}>Ouvrir dans Google Maps</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   }
-
-  // Pour mobile, on utilise WebView
-  const WebView = require('react-native-webview').WebView;
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -48,77 +46,50 @@ export default function MapView({ latitude, longitude, deliveryAddress }: MapVie
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <style>
           body { margin: 0; padding: 0; }
-          #map { width: 100%; height: 100vh; }
-          .custom-popup {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          #map { height: 100vh; width: 100vw; }
+          .leaflet-control-attribution { display: none; }
+          .custom-popup .leaflet-popup-content-wrapper {
+            border-radius: 16px;
+            padding: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
           }
-          .popup-title {
-            font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 8px;
-            color: #333;
-          }
-          .popup-address {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 12px;
-          }
-          .popup-button {
-            background-color: #4169E1;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            text-align: center;
-            text-decoration: none;
-            display: block;
+          .popup-title { font-weight: 800; font-family: system-ui; color: #1e293b; margin-bottom: 4px; }
+          .popup-address { font-size: 13px; color: #64748b; font-family: system-ui; line-height: 1.4; }
+          .marker-pin {
+            background: #0077ff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            margin: -15px 0 0 -15px;
+            border: 3px solid #fff;
           }
         </style>
       </head>
       <body>
         <div id="map"></div>
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
-          const map = L.map('map').setView([${latitude}, ${longitude}], 15);
-
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
-          }).addTo(map);
-
-          const customIcon = L.icon({
-            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSI0MiIgdmlld0JveD0iMCAwIDMyIDQyIj48cGF0aCBmaWxsPSIjREMxNDNDIiBkPSJNMTYgMEMxMC40ODUgMCA2IDQuNDg1IDYgMTBjMCAxMSAxMCAyNCAxMCAyNHMxMC0xMyAxMC0yNGMwLTUuNTE1LTQuNDg1LTEwLTEwLTEweiIvPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTAiIHI9IjQiIGZpbGw9IiNmZmYiLz48L3N2Zz4=',
-            iconSize: [32, 42],
-            iconAnchor: [16, 42],
-            popupAnchor: [0, -42]
+          const map = L.map('map', { zoomControl: false }).setView([${latitude}, ${longitude}], 16);
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+          
+          const icon = L.divIcon({
+            className: 'custom-div-icon',
+            html: "<div class='marker-pin'></div>",
+            iconSize: [30, 42],
+            iconAnchor: [15, 42]
           });
 
-          const marker = L.marker([${latitude}, ${longitude}], { icon: customIcon }).addTo(map);
-
-          const popupContent = \`
+          const marker = L.marker([${latitude}, ${longitude}], { icon }).addTo(map);
+          
+          marker.bindPopup(\`
             <div class="custom-popup">
-              <div class="popup-title">📍 Point de livraison</div>
+              <div class="popup-title">Destination</div>
               <div class="popup-address">${deliveryAddress || 'Adresse de livraison'}</div>
-              <a href="https://www.openstreetmap.org/directions?from=&to=${latitude},${longitude}" 
-                 target="_blank" 
-                 class="popup-button">
-                🧭 Obtenir l'itinéraire
-              </a>
             </div>
-          \`;
-
-          marker.bindPopup(popupContent, {
-            maxWidth: 300,
-            className: 'custom-leaflet-popup'
-          }).openPopup();
-
-          map.scrollWheelZoom.disable();
+          \`).openPopup();
         </script>
       </body>
     </html>
@@ -130,8 +101,7 @@ export default function MapView({ latitude, longitude, deliveryAddress }: MapVie
         originWhitelist={['*']}
         source={{ html: htmlContent }}
         style={styles.webview}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
+        scrollEnabled={false}
       />
     </View>
   );
@@ -140,40 +110,52 @@ export default function MapView({ latitude, longitude, deliveryAddress }: MapVie
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position: 'relative',
+    backgroundColor: '#f8fafc',
+    overflow: 'hidden',
   },
   webview: {
     flex: 1,
   },
   webOverlay: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 24,
     left: 20,
     right: 20,
-    backgroundColor: 'white',
+    backgroundColor: '#ffffff',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
-  overlayTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+  addressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
+  pin: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  overlayTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1e293b',
+    flex: 1,
+  },
   overlayButton: {
-    backgroundColor: '#4169E1',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: '#0077ff',
+    paddingVertical: 14,
+    borderRadius: 14,
     alignItems: 'center',
   },
   overlayButtonText: {
-    color: 'white',
-    fontWeight: '600',
+    color: '#ffffff',
     fontSize: 14,
+    fontWeight: '800',
   },
 });
