@@ -362,38 +362,39 @@ class StatisticsService
      * @param string $groupBy 'day', 'week', 'month'
      * @return array
      */
-    public function getSalesChartData(string $period = 'month', string $groupBy = 'day'): array
-    {
-        $cacheKey = "sales_chart_{$period}_{$groupBy}";
-        
-        return Cache::remember($cacheKey, now()->addHours(1), function() use ($period, $groupBy) {
-            $dateRange = $this->getDateRange($period);
-            
-            $dateFormat = match($groupBy) {
-                'day' => '%Y-%m-%d',
-                'week' => '%Y-%W',
-                'month' => '%Y-%m',
-                default => '%Y-%m-%d',
-            };
-            
-            $results = Order::where('payment_status', 'COMPLETED')
-                ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
-                ->select(
-                    DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as date"),
-                    DB::raw('COUNT(*) as orders_count'),
-                    DB::raw('SUM(total_amount) as revenue')
-                )
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get();
-            
-            return [
-                'labels' => $results->pluck('date')->toArray(),
-                'orders' => $results->pluck('orders_count')->toArray(),
-                'revenue' => $results->pluck('revenue')->map(fn($v) => (float)$v)->toArray(),
-            ];
-        });
-    }
+  public function getSalesChartData(string $period = 'month', string $groupBy = 'day'): array
+{
+    $cacheKey = "sales_chart_{$period}_{$groupBy}";
+
+    return Cache::remember($cacheKey, now()->addHour(), function () use ($period, $groupBy) {
+
+        $dateRange = $this->getDateRange($period);
+
+        $dateExpression = match ($groupBy) {
+            'day'   => "TO_CHAR(created_at, 'YYYY-MM-DD')",
+            'week'  => "TO_CHAR(DATE_TRUNC('week', created_at), 'YYYY-MM-DD')",
+            'month' => "TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM')",
+            default => "TO_CHAR(created_at, 'YYYY-MM-DD')",
+        };
+
+        $results = Order::where('payment_status', 'COMPLETED')
+            ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
+            ->selectRaw("
+                {$dateExpression} AS date,
+                COUNT(*) AS orders_count,
+                SUM(total_amount) AS revenue
+            ")
+            ->groupByRaw($dateExpression)
+            ->orderBy('date')
+            ->get();
+
+        return [
+            'labels'  => $results->pluck('date')->toArray(),
+            'orders'  => $results->pluck('orders_count')->toArray(),
+            'revenue' => $results->pluck('revenue')->map(fn ($v) => (float) $v)->toArray(),
+        ];
+    });
+}
 
     /**
      * Obtient une plage de dates selon la période demandée
