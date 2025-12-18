@@ -51,7 +51,18 @@ async function updateCartCount() {
 
 // Formatage du prix
 function formatPrice(n) {
-    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+    const num = parseFloat(n);
+    if (isNaN(num)) return '0';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+}
+
+// Nettoyage du prix (en cas de chaîne type "10 000 FCFA")
+function parsePrice(price) {
+    if (typeof price === 'number') return price;
+    if (!price) return 0;
+    // Enlever tout ce qui n'est pas chiffre, point ou signe moins
+    const cleaned = String(price).replace(/[^0-9.-]/g, '');
+    return parseFloat(cleaned) || 0;
 }
 
 // Génération du HTML pour les options de couleur
@@ -110,6 +121,7 @@ async function renderCartItems() {
 
     // Générer les articles
     cart.forEach((item, index) => {
+        console.log(`Rendu article [${index}]:`, item);
         const article = document.createElement('div');
         article.className = 'article';
         const lineId = item.cart_line_id || item.product_id || item.id;
@@ -161,7 +173,7 @@ async function renderCartItems() {
         <div class="quantity-control">
           <input type="number" value="${item.quantity}" min="1" max="${item.stock || 10}" data-id="${lineId}" class="qty-input">
         </div>
-        <div class="article-price">${formatPrice(item.price * item.quantity)} FCFA</div>
+        <div class="article-price">${formatPrice(parsePrice(item.price) * (item.quantity || 1))} FCFA</div>
         <a href="#" class="delete-btn" data-id="${lineId}">
           <i class="fas fa-trash"></i>
         </a>
@@ -247,10 +259,31 @@ function attachCartEvents() {
         btn.addEventListener('click', async function(e) {
             e.preventDefault();
             const lineId = this.dataset.id;
+            console.log('Tentative de suppression de l\'article ID:', lineId);
+            
+            if (!lineId || lineId === 'undefined') {
+                console.error('ID de ligne invalide pour la suppression:', lineId);
+                alert('Erreur: Impossible d\'identifier l\'article à supprimer.');
+                return;
+            }
+
             if (confirm('Voulez-vous vraiment supprimer cet article ?')) {
                 // 1. Suppression LocalStorage
                 let localCart = JSON.parse(localStorage.getItem('techstorm_cart') || '[]');
-                localCart = localCart.filter(i => (i.cart_line_id || i.product_id || i.id) != lineId);
+                console.log('Panier local avant suppression:', localCart);
+                
+                const initialLength = localCart.length;
+                localCart = localCart.filter(i => {
+                    const iId = String(i.cart_line_id || i.product_id || i.id);
+                    return iId !== String(lineId);
+                });
+                
+                if (localCart.length === initialLength) {
+                    console.warn('Aucun article trouvé avec l\'ID:', lineId);
+                } else {
+                    console.log('Article supprimé du LocalStorage. Nouveau panier:', localCart);
+                }
+
                 localStorage.setItem('techstorm_cart', JSON.stringify(localCart));
                 renderCartItems();
                 updateCartCount();
@@ -328,9 +361,12 @@ function updateSummary(cart) {
         .filter(cb => cb.checked)
         .map(cb => cb.dataset.id);
 
-    const selectedItems = cart.filter(item => selectedLineIds.includes(String(item.cart_line_id || item.product_id || item.id)));
+    const selectedItems = cart.filter(item => {
+        const iId = String(item.cart_line_id || item.product_id || item.id);
+        return selectedLineIds.includes(iId);
+    });
 
-    const subtotal = selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = selectedItems.reduce((sum, item) => sum + (parsePrice(item.price) * (item.quantity || 1)), 0);
     const delivery = selectedItems.length > 0 ? 1000 : 0;
     const total = subtotal + delivery;
 

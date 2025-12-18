@@ -35,12 +35,10 @@
             </div>
             <div class="info-row"><span class="label">Email :</span> <span class="value"
                     id="user-email">Chargement...</span></div>
-            <div class="info-row"><span class="label">Téléphone :</span> <span class="value" id="user-phone">-</span>
-            </div>
             <div class="info-row"><span class="label">Adresse :</span> <span class="value" id="user-address">-</span>
             </div>
-            <div class="info-row"><span class="label">Date d'inscription :</span> <span class="value"
-                    id="user-date">-</span></div>
+            <div class="info-row"><span class="label">Membre depuis :</span> <span class="value" id="user-date">-</span>
+            </div>
         </div>
         <button type="button" class="btn-edit-info" onclick="window.location.href='{{ url('/settings') }}'">
             Modifier mes informations

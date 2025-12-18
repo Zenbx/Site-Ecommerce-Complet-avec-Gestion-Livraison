@@ -62,25 +62,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Mettre à jour les informations personnelles (Page Compte)
         const nameValue = document.getElementById('user-name');
         const emailValue = document.getElementById('user-email');
-        const phoneValue = document.getElementById('user-phone');
         const addressValue = document.getElementById('user-address');
         const dateValue = document.getElementById('user-date');
 
         if (nameValue) nameValue.textContent = user.name || '-';
         if (emailValue) emailValue.textContent = user.email || '-';
-        if (phoneValue) phoneValue.textContent = user.phone || user.telephone || '-';
         if (addressValue) addressValue.textContent = user.address || user.adresse || '-';
         if (dateValue) dateValue.textContent = formatDate(user.created_at) || '-';
 
         // Mettre à jour les champs de formulaire (Page Paramètres)
         const settingsFullname = document.getElementById('settings-fullname');
         const settingsEmail = document.getElementById('settings-email');
-        const settingsPhone = document.getElementById('settings-phone');
         const settingsAddress = document.getElementById('settings-address');
 
         if (settingsFullname) settingsFullname.value = user.name || '';
         if (settingsEmail) settingsEmail.value = user.email || '';
-        if (settingsPhone) settingsPhone.value = user.phone || user.telephone || '';
         if (settingsAddress) settingsAddress.value = user.address || user.adresse || '';
     }
 
@@ -123,9 +119,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const fullname = document.getElementById('settings-fullname').value;
             const email = document.getElementById('settings-email').value;
-            const phone = document.getElementById('settings-phone').value;
             const address = document.getElementById('settings-address').value;
-            const password = document.getElementById('settings-password').value;
+            const currentPassword = document.getElementById('settings-current-password').value;
+            const newPassword = document.getElementById('settings-new-password').value;
+            const confirmPassword = document.getElementById('settings-confirm-password').value;
 
             const authHeader = userToken.startsWith('Bearer ') ? userToken : `Bearer ${userToken}`;
 
@@ -141,7 +138,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     body: JSON.stringify({
                         name: fullname,
                         email: email,
-                        tel: phone, // Changé de 'phone' à 'tel'
                         address: address
                     })
                 });
@@ -151,8 +147,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     throw new Error(err.message || 'Erreur lors de la mise à jour du profil');
                 }
 
-                // 2. Mise à jour du mot de passe si rempli
-                if (password) {
+                // 2. Mise à jour du mot de passe si un nouveau est saisi
+                if (newPassword) {
+                    if (!currentPassword) {
+                        throw new Error('Le mot de passe actuel est requis pour changer votre mot de passe.');
+                    }
+                    if (newPassword !== confirmPassword) {
+                        throw new Error('Le nouveau mot de passe et sa confirmation ne correspondent pas.');
+                    }
+
                     const passwordUpdate = await fetch(`${apiUrl}/api/client/profile/password`, {
                         method: 'PUT',
                         headers: {
@@ -160,7 +163,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json'
                         },
-                        body: JSON.stringify({ password: password })
+                        body: JSON.stringify({ 
+                            current_password: currentPassword,
+                            new_password: newPassword,
+                            new_password_confirmation: confirmPassword
+                        })
                     });
 
                     if (!passwordUpdate.ok) {

@@ -55,20 +55,26 @@
                         </label>
 
                         <label class="form-group">
-                            <span>Téléphone</span>
-                            <input type="tel" name="phone" id="settings-phone"
-                                placeholder="Votre numéro de téléphone" />
-                        </label>
-
-                        <label class="form-group">
                             <span>Adresse</span>
                             <input type="text" name="address" id="settings-address" placeholder="Votre adresse" />
                         </label>
 
                         <label class="form-group">
+                            <span>Mot de passe actuel</span>
+                            <input type="password" name="current_password" id="settings-current-password"
+                                placeholder="Confirmez pour changer" />
+                        </label>
+
+                        <label class="form-group">
                             <span>Nouveau mot de passe</span>
-                            <input type="password" name="password" id="settings-password"
+                            <input type="password" name="new_password" id="settings-new-password"
                                 placeholder="Laisser vide pour conserver" />
+                        </label>
+
+                        <label class="form-group">
+                            <span>Confirmer le nouveau mot de passe</span>
+                            <input type="password" name="new_password_confirmation" id="settings-confirm-password"
+                                placeholder="Répétez le nouveau mot de passe" />
                         </label>
 
                         <label class="form-group file-uploader">

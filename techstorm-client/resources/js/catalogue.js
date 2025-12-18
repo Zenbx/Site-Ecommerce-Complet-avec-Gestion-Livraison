@@ -288,13 +288,7 @@ function renderCards(items) {
         for (const p of pageItems) {
             const article = document.createElement('article');
             article.className = 'card';
-            article.setAttribute('data-id', p.id);
-
-            // Badges
-            let badges = '';
-            if (p.new) badges += '<span class="badge badge-new">NOUVEAU</span>';
-            if (p.featured) badges += '<span class="badge badge-featured">⭐</span>';
-
+            
             // Mapping de champs robuste
             const productId = p.id || p._id || p.ID;
             const title = p.name || p.title || 'Produit sans nom';
@@ -303,6 +297,13 @@ function renderCards(items) {
             const price = p.price !== undefined ? p.price : 0;
             const img = p.image_url || p.img || p.image || p.photo || '';
             const imgSrc = img.startsWith('http') ? img : (import.meta.env.VITE_API_URL + '/' + img);
+
+            article.setAttribute('data-id', productId);
+
+            // Badges
+            let badges = '';
+            if (p.new) badges += '<span class="badge badge-new">NOUVEAU</span>';
+            if (p.featured) badges += '<span class="badge badge-featured">⭐</span>';
 
             article.innerHTML = `
         <div class="card-badges">${badges}</div>
@@ -412,8 +413,8 @@ async function onAddClick(e) {
 }
 
 function onQuickView(e) {
-    const id = Number(this.dataset.id || e.currentTarget.dataset.id);
-    const product = PRODUCTS.find(p=>p.id===id);
+    const id = (this.dataset.id || e.currentTarget.dataset.id);
+    const product = PRODUCTS.find(p => (p.id || p._id || p.ID) == id);
     openQuickView(product);
 }
 
