@@ -1,15 +1,19 @@
 /* ------------------------- */
-/* SECTION NOUVEAUTÉS        */
+/* SECTION NOUVEAUTÉS - RESPONSIVE */
 /* ------------------------- */
+
+/* STYLES MOBILE FIRST (par défaut ≤ 767px) */
 .new-section {
   background: linear-gradient(135deg, #0066FF 0%, #8A2BE2 100%);
   width: 100%;
-  padding: 120px 0;
+  padding: 60px 0; /* Réduit pour mobile */
   text-align: center;
   position: relative;
   overflow: hidden;
+  min-height: 300px; /* Hauteur minimum sur mobile */
 }
 
+/* Effet de grille animée - optimisé mobile */
 .new-section::before {
   content: '';
   position: absolute;
@@ -27,111 +31,469 @@
   animation: grid-move 20s linear infinite;
 }
 
+/* Animation ralentie sur mobile pour performance */
 @keyframes grid-move {
   0% { transform: translateY(0); }
   100% { transform: translateY(50px); }
 }
 
 /* ------------------------- */
-/* GLITCH TITLES */
+/* GLITCH EFFECT - RESPONSIVE */
 /* ------------------------- */
 .glitch-effect {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 30px; /* Réduit pour mobile */
+  height: 150px; /* Hauteur fixe pour mobile */
 }
 
+/* Titres glitch avec clamp() pour taille responsive */
 .new-title-R,
 .new-title-V,
 .new-title-B {
   position: absolute;
-  font-size: clamp(2rem, 6vw, 5rem); /* Responsive title */
+  font-size: clamp(1.8rem, 8vw, 5rem); /* Plus responsive : 8% de la largeur de la vue */
   font-weight: 900;
-  letter-spacing: 3px;
+  letter-spacing: 1px; /* Réduit pour mobile */
+  text-align: center;
+  width: 100%; /* Prend toute la largeur */
 }
 
+/* Positionnement responsive pour les titres décalés */
 .new-title-R {
-  left: 180px;
   color: #00E6E6;
   animation: glitch-r 1s infinite;
+  /* Position dynamique selon l'écran */
+  left: 50%;
+  transform: translateX(-50%) translateX(-40px); /* Décalage relatif */
 }
 
 .new-title-V {
   color: #FFFFFF;
   z-index: 1;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .new-title-B {
-  right: 180px;
   color: #FF11DB;
   animation: glitch-b 2s infinite;
+  left: 50%;
+  transform: translateX(-50%) translateX(40px); /* Décalage relatif */
 }
 
+/* Animations optimisées pour mobile */
 @keyframes glitch-r {
-  0%, 90%, 100% { transform: translate(0); }
-  92% { transform: translate(-4px, -4px); }
-  94% { transform: translate(4px, 4px); }
+  0%, 90%, 100% { transform: translateX(-50%) translateX(-40px); }
+  92% { transform: translateX(-50%) translateX(-44px) translateY(-2px); }
+  94% { transform: translateX(-50%) translateX(-36px) translateY(2px); }
 }
 
 @keyframes glitch-b {
-  0%, 90%, 100% { transform: translate(0); }
-  92% { transform: translate(4px, 4px); }
-  94% { transform: translate(-4px, -4px); }
+  0%, 90%, 100% { transform: translateX(-50%) translateX(40px); }
+  92% { transform: translateX(-50%) translateX(44px) translateY(2px); }
+  94% { transform: translateX(-50%) translateX(36px) translateY(-2px); }
 }
 
 /* ------------------------- */
-/* CONTENT */
+/* CONTENT - RESPONSIVE */
 /* ------------------------- */
 .new-content h3 {
-  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-size: clamp(1.3rem, 5vw, 2rem); /* Taille responsive */
   color: #ffffff;
-  margin-top: 100px;
+  margin-top: 60px; /* Réduit pour mobile */
   margin-bottom: 10px;
+  padding: 0 15px; /* Padding pour éviter le bord à bord */
+  line-height: 1.4;
 }
 
 .new-content p {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9); /* Plus visible sur mobile */
   margin-bottom: 20px;
-  font-size: clamp(0.9rem, 2vw, 1rem);
+  font-size: clamp(0.95rem, 3vw, 1rem); /* Taille responsive */
   padding: 0 20px;
+  line-height: 1.6;
+  max-width: 600px; /* Limite la largeur du texte */
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* ------------------------- */
-/* RESPONSIVE */
-/* ------------------------- */
+/* ==================== */
+/* MEDIA QUERIES - MOBILE FIRST */
+/* ==================== */
 
-/* TABLETTE */
-@media (max-width: 992px) {
-  .new-title-R {
-    left: 123px;
-  }
-  .new-title-B {
-    right: 123px;
-  }
-}
-
-/* MOBILE */
-@media (max-width: 576px) {
+/* PETITE TABLETTE (≥ 576px) */
+@media (min-width: 576px) {
   .new-section {
     padding: 80px 0;
+    min-height: 350px;
   }
-
+  
   .glitch-effect {
+    height: 180px;
+    margin-bottom: 40px;
+  }
+  
+  .new-title-R,
+  .new-title-V,
+  .new-title-B {
+    font-size: clamp(2.2rem, 7vw, 5rem);
+    letter-spacing: 1.5px;
+  }
+  
+  .new-title-R {
+    transform: translateX(-50%) translateX(-50px);
+  }
+  
+  .new-title-B {
+    transform: translateX(-50%) translateX(50px);
+  }
+  
+  @keyframes glitch-r {
+    0%, 90%, 100% { transform: translateX(-50%) translateX(-50px); }
+    92% { transform: translateX(-50%) translateX(-54px) translateY(-3px); }
+    94% { transform: translateX(-50%) translateX(-46px) translateY(3px); }
+  }
+  
+  @keyframes glitch-b {
+    0%, 90%, 100% { transform: translateX(-50%) translateX(50px); }
+    92% { transform: translateX(-50%) translateX(54px) translateY(3px); }
+    94% { transform: translateX(-50%) translateX(46px) translateY(-3px); }
+  }
+  
+  .new-content h3 {
+    margin-top: 80px;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+  }
+  
+  .new-content p {
+    font-size: clamp(1rem, 2.5vw, 1.1rem);
+  }
+}
+
+/* TABLETTE (≥ 768px) */
+@media (min-width: 768px) {
+  .new-section {
+    padding: 100px 0;
+    min-height: 400px;
+  }
+  
+  .glitch-effect {
+    height: 200px;
+    margin-bottom: 50px;
+  }
+  
+  .new-title-R,
+  .new-title-V,
+  .new-title-B {
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    letter-spacing: 2px;
+  }
+  
+  .new-title-R {
+    transform: translateX(-50%) translateX(-70px);
+  }
+  
+  .new-title-B {
+    transform: translateX(-50%) translateX(70px);
+  }
+  
+  @keyframes glitch-r {
+    0%, 90%, 100% { transform: translateX(-50%) translateX(-70px); }
+    92% { transform: translateX(-50%) translateX(-74px) translateY(-4px); }
+    94% { transform: translateX(-50%) translateX(-66px) translateY(4px); }
+  }
+  
+  @keyframes glitch-b {
+    0%, 90%, 100% { transform: translateX(-50%) translateX(70px); }
+    92% { transform: translateX(-50%) translateX(74px) translateY(4px); }
+    94% { transform: translateX(-50%) translateX(66px) translateY(-4px); }
+  }
+  
+  .new-content h3 {
+    margin-top: 100px;
+  }
+  
+  .new-content p {
+    padding: 0 40px;
+    font-size: 1.1rem;
+  }
+}
+
+/* DESKTOP (≥ 992px) */
+@media (min-width: 992px) {
+  .new-section {
+    padding: 120px 0;
+    min-height: 450px;
+  }
+  
+  .glitch-effect {
+    height: 250px;
+    margin-bottom: 60px;
+  }
+  
+  .new-title-R,
+  .new-title-V,
+  .new-title-B {
+    font-size: clamp(3rem, 6vw, 5rem);
+    letter-spacing: 3px;
+  }
+  
+  .new-title-R {
+    transform: translateX(-50%) translateX(-100px);
+  }
+  
+  .new-title-B {
+    transform: translateX(-50%) translateX(100px);
+  }
+  
+  @keyframes glitch-r {
+    0%, 90%, 100% { transform: translateX(-50%) translateX(-100px); }
+    92% { transform: translateX(-50%) translateX(-104px) translateY(-4px); }
+    94% { transform: translateX(-50%) translateX(-96px) translateY(4px); }
+  }
+  
+  @keyframes glitch-b {
+    0%, 90%, 100% { transform: translateX(-50%) translateX(100px); }
+    92% { transform: translateX(-50%) translateX(104px) translateY(4px); }
+    94% { transform: translateX(-50%) translateX(96px) translateY(-4px); }
+  }
+  
+  .new-content h3 {
+    margin-top: 120px;
+    font-size: 2rem;
+  }
+  
+  .new-content p {
+    font-size: 1.2rem;
+    padding: 0 60px;
+  }
+}
+
+/* GRAND ÉCRAN (≥ 1200px) */
+@media (min-width: 1200px) {
+  .new-section {
+    padding: 140px 0;
+    min-height: 500px;
+  }
+  
+  .glitch-effect {
+    height: 300px;
+  }
+  
+  .new-title-R {
+    transform: translateX(-50%) translateX(-120px);
+  }
+  
+  .new-title-B {
+    transform: translateX(-50%) translateX(120px);
+  }
+  
+  @keyframes glitch-r {
+    0%, 90%, 100% { transform: translateX(-50%) translateX(-120px); }
+    92% { transform: translateX(-50%) translateX(-124px) translateY(-4px); }
+    94% { transform: translateX(-50%) translateX(-116px) translateY(4px); }
+  }
+  
+  @keyframes glitch-b {
+    0%, 90%, 100% { transform: translateX(-50%) translateX(120px); }
+    92% { transform: translateX(-50%) translateX(124px) translateY(4px); }
+    94% { transform: translateX(-50%) translateX(116px) translateY(-4px); }
+  }
+}
+
+/* ==================== */
+/* CAS SPÉCIAUX MOBILE */
+/* ==================== */
+
+/* TRÈS PETIT MOBILE (≤ 374px) */
+@media (max-width: 374px) {
+  .new-section {
+    padding: 40px 0;
+    min-height: 250px;
+  }
+  
+  .glitch-effect {
+    height: 120px;
     margin-bottom: 20px;
   }
-
+  
   .new-title-R,
+  .new-title-V,
   .new-title-B {
-    display: none; /* Optionnel : retire les offsets trop violents pour petits écrans */
+    font-size: clamp(1.5rem, 9vw, 2.5rem);
+    letter-spacing: 0.5px;
   }
-
-  .new-title-V {
-    font-size: clamp(2.2rem, 10vw, 3rem);
+  
+  .new-title-R {
+    transform: translateX(-50%) translateX(-20px);
   }
-
+  
+  .new-title-B {
+    transform: translateX(-50%) translateX(20px);
+  }
+  
+  @keyframes glitch-r {
+    0%, 90%, 100% { transform: translateX(-50%) translateX(-20px); }
+    92% { transform: translateX(-50%) translateX(-22px) translateY(-1px); }
+    94% { transform: translateX(-50%) translateX(-18px) translateY(1px); }
+  }
+  
+  @keyframes glitch-b {
+    0%, 90%, 100% { transform: translateX(-50%) translateX(20px); }
+    92% { transform: translateX(-50%) translateX(22px) translateY(1px); }
+    94% { transform: translateX(-50%) translateX(18px) translateY(-1px); }
+  }
+  
   .new-content h3 {
     margin-top: 40px;
+    font-size: 1.2rem;
+    padding: 0 10px;
+  }
+  
+  .new-content p {
+    font-size: 0.9rem;
+    padding: 0 15px;
+    line-height: 1.5;
+  }
+}
+
+/* ORIENTATION PAYSAGE MOBILE (≥ 576px et hauteur limitée) */
+@media (min-width: 576px) and (max-height: 500px) and (orientation: landscape) {
+  .new-section {
+    padding: 40px 0;
+    min-height: 250px;
+  }
+  
+  .glitch-effect {
+    height: 120px;
+    margin-bottom: 20px;
+  }
+  
+  .new-content h3 {
+    margin-top: 40px;
+  }
+  
+  .new-content p {
+    padding: 0 20px;
+  }
+}
+
+/* ==================== */
+/* PERFORMANCE & ACCESSIBILITÉ */
+/* ==================== */
+
+/* Réduit les animations si l'utilisateur le préfère */
+@media (prefers-reduced-motion: reduce) {
+  .new-section::before,
+  .new-title-R,
+  .new-title-B {
+    animation: none !important;
+  }
+  
+  .new-section::before {
+    animation: none;
+    opacity: 0.1;
+  }
+}
+
+/* Support du mode sombre/clair natif */
+@media (prefers-color-scheme: light) {
+  .new-section {
+    background: linear-gradient(135deg, #4dabf7 0%, #9775fa 100%);
+  }
+  
+  .new-title-V {
+    color: #1a1a1a;
+  }
+  
+  .new-content h3 {
+    color: #1a1a1a;
+  }
+  
+  .new-content p {
+    color: rgba(26, 26, 26, 0.8);
+  }
+}
+
+/* ==================== */
+/* CORRECTIONS POUR TOUCH DEVICES */
+/* ==================== */
+
+/* Désactive les animations complexes sur les appareils tactiles */
+@media (hover: none) and (pointer: coarse) {
+  .new-title-R,
+  .new-title-B {
+    animation-duration: 3s; /* Ralentit les animations */
+  }
+}
+
+/* Empêche le zoom sur les inputs pour iOS */
+@media (max-width: 767px) {
+  .new-section {
+    /* Prévention du zoom iOS */
+    font-size: 16px;
+  }
+  
+  /* Assure que le texte reste lisible */
+  .new-content p {
+    font-size: max(16px, 1rem);
+  }
+}
+
+/* ==================== */
+/* CLASSES UTILITAIRES RESPONSIVE */
+/* ==================== */
+
+/* Pour cacher/afficher selon l'écran */
+.new-mobile-only {
+  display: block;
+}
+
+.new-desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .new-mobile-only {
+    display: none;
+  }
+  
+  .new-desktop-only {
+    display: block;
+  }
+}
+
+/* Conteneur responsive optionnel */
+.new-container {
+  width: 100%;
+  padding: 0 15px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+@media (min-width: 576px) {
+  .new-container {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .new-container {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .new-container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .new-container {
+    max-width: 1140px;
   }
 }

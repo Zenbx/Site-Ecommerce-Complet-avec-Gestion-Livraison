@@ -1,0 +1,206 @@
+/* ==================== */
+/* OVERRIDE FORCÉ - CORRIGE LES PROBLÈMES */
+/* ==================== */
+
+/* FORCE LE RESPONSIVE SUR MOBILE (≤ 767px) */
+@media (max-width: 767px) {
+    /* HERO SECTION */
+    .hero {
+        padding: 60px 20px !important;
+        text-align: center !important;
+    }
+    
+    .hero .container {
+        text-align: center !important;
+    }
+    
+    .hero-subtitle {
+        font-size: 2rem !important;
+        text-align: center !important;
+        margin-bottom: 10px !important;
+        line-height: 1.2 !important;
+    }
+    
+    .hero-description {
+        font-size: 1rem !important;
+        text-align: center !important;
+        margin: 15px auto 25px !important;
+        max-width: 90% !important;
+    }
+    
+    .hero-image {
+        position: relative !important;
+        width: 80% !important;
+        max-width: 300px !important;
+        margin: 30px auto !important;
+        top: auto !important;
+        right: auto !important;
+        left: auto !important;
+        float: none !important;
+        display: block !important;
+    }
+    
+    .hero-button-container {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 15px !important;
+    }
+    
+    .btn-explorer,
+    .btn-savoir-plus {
+        width: 100% !important;
+        max-width: 280px !important;
+        text-align: center !important;
+        margin: 5px 0 !important;
+    }
+    
+    /* PRODUCTS SECTION */
+    .products-section {
+        padding: 50px 0 !important;
+    }
+    
+    .section-title {
+        font-size: 2rem !important;
+        text-align: center !important;
+    }
+    
+    .section-subtitle {
+        font-size: 1rem !important;
+        text-align: center !important;
+        margin-bottom: 30px !important;
+    }
+    
+    .product-card {
+        margin-bottom: 25px !important;
+    }
+    
+    .product-image {
+        height: 180px !important;
+    }
+    
+    .product-content h3 {
+        font-size: 1.2rem !important;
+    }
+    
+    .product-price {
+        font-size: 1.4rem !important;
+    }
+    
+    .btn-panier {
+        width: 100% !important;
+        padding: 12px !important;
+    }
+    
+    /* NEW SECTION */
+    .new-section {
+        padding: 60px 0 !important;
+    }
+    
+    .new-title-R,
+    .new-title-V,
+    .new-title-B {
+        font-size: 1.8rem !important;
+        position: relative !important;
+        left: 0 !important;
+        right: 0 !important;
+        transform: none !important;
+        text-align: center !important;
+        display: block !important;
+        margin: 5px 0 !important;
+    }
+    
+    .new-title-R {
+        color: #00E6E6 !important;
+    }
+    
+    .new-title-B {
+        color: #FF11DB !important;
+    }
+    
+    /* CTA SECTION */
+    .cta-section {
+        padding: 50px 0 !important;
+    }
+    
+    .cta-title {
+        font-size: 2rem !important;
+        text-align: center !important;
+    }
+    
+    .cta-subtitle {
+        font-size: 1rem !important;
+        text-align: center !important;
+        padding: 0 15px !important;
+    }
+    
+    .cta-buttons {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 15px !important;
+    }
+    
+    .cta-btn-primary,
+    .cta-btn-secondary {
+        width: 100% !important;
+        max-width: 280px !important;
+        padding: 14px 20px !important;
+        font-size: 1rem !important;
+    }
+    
+    .cta-features {
+        grid-template-columns: 1fr !important;
+        margin-top: 40px !important;
+        gap: 25px !important;
+    }
+    
+    .cta-feature {
+        padding: 15px !important;
+    }
+    
+    /* CORRECTIONS GÉNÉRALES */
+    h1, h2, h3, h4 {
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    p {
+        word-wrap: break-word !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* EMPÊCHE LE DÉBORDEMENT HORIZONTAL */
+    * {
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+}
+
+/* TABLETTE (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    .hero-image {
+        width: 50% !important;
+        max-width: 350px !important;
+        position: absolute !important;
+        right: 5% !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+    }
+    
+    .hero {
+        text-align: left !important;
+        padding: 100px 40px !important;
+    }
+    
+    .hero-subtitle {
+        font-size: 3rem !important;
+    }
+    
+    .products-grid {
+        gap: 25px !important;
+    }
+    
+    .cta-features {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 30px !important;
+    }
+}
