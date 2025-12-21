@@ -11,6 +11,7 @@ use App\Http\Resources\ProductCollection;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 /**
  * Controller pour la gestion des produits par les administrateurs
