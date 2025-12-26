@@ -14,7 +14,7 @@ return new class extends Migration
     {
         DB::statement("DROP TYPE IF EXISTS delivery_status_enum");
         // Créer le type ENUM pour les statuts de livraison
-        DB::statement("CREATE TYPE delivery_status_enum AS ENUM ('PENDING', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'FAILED')");
+        DB::statement("CREATE TYPE delivery_status_enum AS ENUM ('PENDING', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'FAILED', 'CANCELLED')");
         
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
