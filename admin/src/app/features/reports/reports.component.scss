@@ -1,15 +1,15 @@
 // src/app/features/dashboard/dashboard.component.scss
 
 // --- 1. Variables & Design Tokens (Google Material Palette) ---
-$primary: #1a73e8;        // Google Blue 600
+$primary: #1a73e8; // Google Blue 600
 $primary-variant: #1557b0; // Google Blue 700 (Hover)
-$secondary: #5f6368;      // Google Gray 700
-$background: #f8f9fa;     // Google Gray 50 (App Background)
-$surface: #ffffff;        // White (Card Surface)
-$error: #d93025;          // Google Red 600
-$warning: #e37400;        // Google Orange 600
-$success: #1e8e3e;        // Google Green 600
-$border-color: #dadce0;   // Google Gray 300
+$secondary: #5f6368; // Google Gray 700
+$background: #f8f9fa; // Google Gray 50 (App Background)
+$surface: #ffffff; // White (Card Surface)
+$error: #d93025; // Google Red 600
+$warning: #e37400; // Google Orange 600
+$success: #1e8e3e; // Google Green 600
+$border-color: #dadce0; // Google Gray 300
 
 // Text Colors
 $text-high-emphasis: #202124; // ~87% black
@@ -21,19 +21,19 @@ $motion-duration: 250ms;
 $motion-easing: cubic-bezier(0.4, 0.0, 0.2, 1);
 
 // Shadows (Elevation)
-$elevation-1: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
-$elevation-2: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
-$elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
+$elevation-1: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+$elevation-2: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+$elevation-3: 0 4px 8px 3px rgba(60, 64, 67, 0.15), 0 1px 3px rgba(60, 64, 67, 0.3);
 
 // --- 2. Mixins ---
 @mixin card-base {
   background: $surface;
   border: 1px solid $border-color; // Style "Outlined Card" de Material 3
-  border-radius: 8px; 
-  transition: box-shadow $motion-duration $motion-easing, 
-              transform $motion-duration $motion-easing,
-              border-color $motion-duration $motion-easing;
-  
+  border-radius: 8px;
+  transition: box-shadow $motion-duration $motion-easing,
+    transform $motion-duration $motion-easing,
+    border-color $motion-duration $motion-easing;
+
   // Au survol, on monte légèrement la carte (Elevation)
   &:hover {
     box-shadow: $elevation-1;
@@ -45,6 +45,12 @@ $elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 // --- 3. Layout ---
@@ -65,7 +71,7 @@ $elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
   position: sticky; // Garde la barre en haut
   top: 0;
   z-index: 100;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.05); // Ombre très subtile
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05); // Ombre très subtile
 
   .top-bar-left {
     display: flex;
@@ -80,78 +86,98 @@ $elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
       letter-spacing: -0.5px;
     }
 
-    .divider { color: $border-color; font-weight: 300; }
-    .context { color: $text-medium-emphasis; font-size: 14px; font-weight: 400; }
+    .divider {
+      color: $border-color;
+      font-weight: 300;
+    }
+
+    .context {
+      color: $text-medium-emphasis;
+      font-size: 14px;
+      font-weight: 400;
+    }
   }
 
   .top-bar-right {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 16px;
 
-    .meta-info {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      line-height: 1.4;
+    .action-group {
+      // Assure l'alignement vertical des inputs et boutons
+      height: 40px; 
     }
 
-    .ws-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      color: $text-medium-emphasis;
-      
-      .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background-color: $text-disabled;
-        transition: background-color 0.3s ease;
-      }
-
-      &.connected {
-        color: $success;
-        .dot { background-color: $success; box-shadow: 0 0 0 2px rgba($success, 0.2); }
-      }
-    }
-
-    .last-update {
-      color: $text-medium-emphasis;
-      font-size: 11px;
-    }
-
-    .btn-action {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    // Styles des inputs de filtre pour matcher les boutons
+    .filter-select, .form-control {
       height: 36px;
+      padding: 0 12px;
+      border: 1px solid $border-color;
+      border-radius: 4px;
+      background: $surface;
+      color: $text-high-emphasis;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+
+      &:focus {
+        border-color: $primary;
+        box-shadow: 0 0 0 2px rgba($primary, 0.1);
+      }
+    }
+    
+    // --- Styles des Boutons d'Action (Export/Refresh) ---
+    // Cohérence garantie pour tous les éléments avec la classe .btn-action
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 36px; // Hauteur fixe identique aux inputs
       padding: 0 16px;
       border-radius: 4px;
       border: 1px solid $border-color;
       background: $surface;
-      color: $primary;
+      color: $primary; // Texte en bleu Google
       font-weight: 500;
       font-size: 14px;
+      text-transform: none; // Pas de majuscules forcées
       cursor: pointer;
+      white-space: nowrap;
       transition: all 0.2s $motion-easing;
-      
-      // Material Ripple effect simulation
+      box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+
+      i.material-icons {
+        font-size: 18px; // Taille d'icône calibrée
+        color: inherit;
+      }
+
+      span {
+        line-height: 1;
+        margin-top: 1px; // Micro-ajustement vertical du texte
+      }
+
+      // Material Ripple effect simulation & Hover
       &:hover:not(:disabled) {
         background-color: rgba($primary, 0.04);
-        border-color: rgba($primary, 0.2);
+        border-color: $primary; // Bordure bleue au survol
+        box-shadow: 0 1px 2px rgba(26, 115, 232, 0.15);
+        transform: translateY(-1px);
       }
-      
+
       &:active:not(:disabled) {
         background-color: rgba($primary, 0.1);
+        transform: translateY(0);
+        box-shadow: none;
       }
-      
+
       &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
         background-color: #f1f3f4;
+        border-color: transparent;
+        color: $text-disabled;
+        box-shadow: none;
       }
     }
   }
@@ -164,16 +190,19 @@ $elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
   background: #e8eaed; // Couleur track plus claire
   overflow: hidden;
   position: relative;
-  
+  margin-bottom: -4px; // Hack pour ne pas décaler le layout
+  z-index: 99;
+
   .indeterminate {
     background-color: $primary;
     height: 100%;
     position: absolute;
     width: 50%;
     will-change: left;
-    animation: loading 2s infinite cubic-bezier(0.65, 0.815, 0.735, 0.395); // Animation plus fluide
+    animation: loading 2s infinite cubic-bezier(0.65, 0.815, 0.735, 0.395);
   }
 }
+
 @keyframes loading {
   0% { left: -35%; width: 35%; }
   60% { left: 100%; width: 10%; }
@@ -183,76 +212,66 @@ $elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
 // --- 6. Main Content ---
 .dashboard-content {
   padding: 24px;
-  max-width: 1440px;
+  max-width: 1600px; // Largeur augmentée pour grands écrans
   margin: 0 auto;
 }
 
-// --- 7. Alerts ---
-.alert-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-  font-size: 14px;
-  border: 1px solid transparent;
+// --- 7. Animations ---
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
 
-  // Variantes basées sur des fonds légers (Surface variants)
-  &.warning { background: #fef7e0; color: #8f4d00; border-color: rgba(227, 116, 0, 0.1); .alert-icon {color: $warning;} }
-  &.error { background: #fce8e6; color: #a50e0e; border-color: rgba(217, 48, 37, 0.1); .alert-icon {color: $error;} }
-  &.success { background: #e6f4ea; color: #0d652d; border-color: rgba(30, 142, 62, 0.1); .alert-icon {color: $success;} }
-  &.info { background: #e8f0fe; color: #174ea6; border-color: rgba(26, 115, 232, 0.1); .alert-icon {color: $primary;} }
-
-  .alert-body {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    line-height: 1.5;
-  }
-  .alert-time { font-size: 11px; opacity: 0.7; margin-top: 4px; font-weight: 500; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 // --- 8. KPI Cards ---
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); // Cartes un peu plus larges
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
 }
 
 .kpi-card {
   @include card-base;
-  padding: 24px; // Padding augmenté pour l'aération
+  padding: 24px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
   .kpi-header {
     @include flex-center-between;
-    margin-bottom: 12px;
-    
+    margin-bottom: 16px;
+
     .kpi-label {
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 600;
       text-transform: uppercase;
       color: $text-medium-emphasis;
-      letter-spacing: 0.8px; // Tracking augmenté pour les labels
+      letter-spacing: 0.5px;
     }
-    
+
     .kpi-icon {
       color: $text-disabled;
       font-size: 24px;
+      background: #f1f3f4;
+      padding: 8px;
+      border-radius: 50%;
     }
   }
 
   .kpi-body {
     display: flex;
-    align-items: baseline;
+    align-items: flex-end;
     gap: 12px;
-    
+    margin-top: auto; // Pousse le contenu vers le bas si hauteur variable
+
     .kpi-value {
-      font-size: 36px; // Plus grand pour l'impact
-      font-weight: 400; // Light/Regular
+      font-size: 32px;
+      font-weight: 400;
       color: $text-high-emphasis;
       line-height: 1;
     }
@@ -264,21 +283,21 @@ $elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
       align-items: center;
       padding: 2px 6px;
       border-radius: 4px;
-      background: transparent;
+      margin-bottom: 4px;
 
       &.up { color: $success; background: rgba($success, 0.1); }
       &.down { color: $error; background: rgba($error, 0.1); }
+      
+      i { font-size: 16px; margin-right: 2px; }
     }
   }
 
-  // Barre progressive en bas
   .kpi-progress {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
     height: 4px;
-    opacity: 1;
 
     &.warning { background: $warning; }
     &.info { background: $primary; }
@@ -287,41 +306,234 @@ $elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
   }
 }
 
-// --- 9. Split Layout ---
+// --- 9. Split Layout & Graph Section ---
 .split-layout {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 24px;
-  align-items: start; // Empêche l'étirement vertical inutile
+  align-items: stretch;
+  margin-bottom: 24px;
 }
 
-// --- 10. Panels ---
+// --- 10. Panels (Container commun) ---
 .panel {
   @include card-base;
   display: flex;
   flex-direction: column;
+  height: 100%; // Assure l'égalité des hauteurs en grid
+  overflow: hidden; // S'assure que rien ne déborde du conteneur arrondi
 
   .panel-header {
     padding: 16px 24px;
     border-bottom: 1px solid $border-color;
     @include flex-center-between;
+    min-height: 69px; // Hauteur minimale standardisée
 
     h2 {
-      font-size: 16px;
-      font-weight: 500; // Medium
+      font-size: 18px;
+      font-weight: 500;
       color: $text-high-emphasis;
       margin: 0;
     }
-    
+
     .indicator {
       font-size: 12px;
-      color: $success;
+      color: $primary;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      background: rgba($primary, 0.1);
+      padding: 4px 12px;
+      border-radius: 12px;
+    }
+
+    // Réutilisation cohérente du bouton exporter dans le header
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 4px;
+      border: 1px solid $border-color;
+      background: $surface;
+      color: $primary;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: rgba($primary, 0.04);
+        border-color: $primary;
+      }
+    }
+  }
+
+  // --- STYLE DU GRAPHIQUE CORRIGÉ & DÉFILABLE ---
+  .panel-body {
+    padding: 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%; 
+    box-sizing: border-box; // Important
+
+    // Conteneur du graphique (Fenêtre de défilement)
+    .chart-container {
+      width: 100%;
+      height: 300px;
+      position: relative;
+      // C'est ici que la magie opère :
+      overflow-x: auto; // Permet le scroll horizontal
+      overflow-y: hidden; // Cache le scroll vertical
+      -webkit-overflow-scrolling: touch; // Fluidité sur mobile
+      
+      // Personnalisation de la barre de scroll pour être discrète
+      &::-webkit-scrollbar {
+        height: 8px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba($border-color, 0.5);
+        border-radius: 4px;
+        
+        &:hover {
+          background-color: rgba($border-color, 0.8);
+        }
+      }
+    }
+
+    // Le contenu qui peut être très large
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      height: 100%;
+      // width: max-content permet au contenu de s'étendre
+      // min-width: 100% assure que ça prend toute la place s'il y a peu de données
+      min-width: 100%; 
+      width: max-content; 
+      gap: 16px; // Espacement fixe entre les colonnes
+      padding-bottom: 20px;
+      padding-right: 16px; // Petit padding fin pour ne pas couper la dernière date
+      box-sizing: border-box;
+
+      .chart-column {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+        justify-content: flex-end;
+        position: relative;
+        // Figer la taille des colonnes pour qu'elles ne s'écrasent pas
+        flex: 0 0 auto; 
+        min-width: 40px; // Taille min d'une colonne
+
+        .column-track {
+          width: 100%; 
+          max-width: 32px; // La barre visuelle
+          height: 100%;
+          display: flex;
+          align-items: flex-end;
+          background: #f1f3f4;
+          border-radius: 4px;
+          overflow: hidden;
+          position: relative;
+        }
+
+        // La barre colorée
+        .fill-bar {
+          width: 100%;
+          background-color: $primary;
+          transition: height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+          border-radius: 2px 2px 0 0;
+          position: relative;
+          min-height: 4px;
+          
+          &:hover {
+            background-color: $primary-variant;
+            
+            .tooltip-value {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          // Tooltip
+          .tooltip-value {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: $text-high-emphasis;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            z-index: 10;
+            pointer-events: none;
+            
+            &::after {
+              content: '';
+              position: absolute;
+              bottom: -4px;
+              left: 50%;
+              margin-left: -4px;
+              border-width: 4px;
+              border-style: solid;
+              border-color: $text-high-emphasis transparent transparent transparent;
+            }
+          }
+        }
+
+        .column-label {
+          margin-top: 12px;
+          font-size: 11px;
+          color: $text-medium-emphasis;
+          text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+        }
+      }
+    }
+  }
+
+  // --- Widget Statuts (Panel de droite) ---
+  .status-list-widget {
+    display: flex;
+    flex-direction: column;
+    
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid #f1f3f4;
+      transition: background-color 0.2s;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background-color: #fafafa;
+      }
+
+      .count {
+        font-size: 16px;
+        font-weight: 600;
+        color: $text-high-emphasis;
+      }
     }
   }
 }
@@ -329,7 +541,7 @@ $elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
 // --- 11. Data Table ---
 .table-container {
   overflow-x: auto;
-  border-radius: 0 0 8px 8px; // Arrondir le bas
+  width: 100%;
 }
 
 .modern-table {
@@ -338,58 +550,60 @@ $elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
 
   th {
     text-align: left;
-    padding: 12px 24px;
+    padding: 16px 24px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
     color: $text-medium-emphasis;
-    border-bottom: 1px solid $border-color;
-    background: #f9f9fa; // Header très léger
-    text-transform: uppercase; // Style data dense
+    border-bottom: 2px solid #f1f3f4;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
   }
 
   td {
-    padding: 16px 24px; // Plus d'espace vertical
+    padding: 16px 24px;
     font-size: 14px;
     border-bottom: 1px solid #f1f3f4;
     color: $text-high-emphasis;
-    transition: background-color 0.2s;
+    vertical-align: middle;
   }
 
-  tr:last-child td { border-bottom: none; }
-  
-  // Interactions
-  tbody tr:hover { 
-    background-color: rgba($primary, 0.04); 
+  tr:last-child td {
+    border-bottom: none;
   }
 
-  .primary-text { font-weight: 500; color: $text-high-emphasis; }
+  tbody tr {
+    transition: background-color 0.15s ease;
+    
+    &:hover {
+      background-color: rgba($primary, 0.02);
+    }
+  }
+
   .text-right { text-align: right; }
-  .meta-text { color: $text-medium-emphasis; font-size: 13px; }
   
-  .empty-cell { 
-    text-align: center; 
-    color: $text-medium-emphasis; 
-    padding: 48px; 
-    font-style: italic;
+  .primary-text {
+    font-weight: 500;
+    color: $text-high-emphasis;
   }
 
   .user-cell {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 
     .avatar-initial {
-      width: 32px;
-      height: 32px;
-      background: $primary;
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, $primary, $primary-variant);
       color: white;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 500;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba($primary, 0.2);
     }
   }
 }
@@ -400,116 +614,87 @@ $elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
   align-items: center;
   justify-content: center;
   padding: 4px 12px;
-  border-radius: 16px; // Pill shape complet
+  border-radius: 16px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600; // Plus gras pour lisibilité
   white-space: nowrap;
-  letter-spacing: 0.2px;
 
-  &.status-pending { background: #fef7e0; color: #b06000; }
-  &.status-assigned { background: #e8f0fe; color: $primary; }
-  &.status-in-progress { 
-    background: white; 
-    color: $primary; 
-    border: 1px solid $border-color;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  &.status-pending {
+    background: #fef7e0;
+    color: #b06000;
   }
-  &.status-delivered { background: #e6f4ea; color: #0d652d; }
-  &.status-failed { background: #fce8e6; color: $error; }
+
+  &.status-delivered {
+    background: #e6f4ea;
+    color: #0d652d;
+  }
+
+  &.status-failed {
+    background: #fce8e6;
+    color: $error;
+  }
 }
 
-// --- 13. Sidebar/Driver Elements ---
-.driver-list {
-  padding: 0;
+// --- 13. Empty State ---
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: #fff;
+  border: 1px dashed $border-color;
   
-  .driver-item {
-    display: flex;
-    align-items: center;
-    padding: 16px 24px;
-    gap: 16px;
-    border-bottom: 1px solid #f1f3f4;
-    cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:hover { background-color: #fafafa; }
-    &:last-child { border-bottom: none; }
-
-    .rank-col {
-      font-size: 14px;
-      font-weight: 500;
-      color: $text-disabled;
-      width: 24px;
-      text-align: center;
-    }
-
-    .driver-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-
-      .driver-name { 
-        font-size: 14px; 
-        font-weight: 500; 
-        color: $text-high-emphasis;
-        margin-bottom: 4px; 
-      }
-      
-      .driver-metrics {
-        font-size: 12px;
-        color: $text-medium-emphasis;
-        display: flex;
-        gap: 8px;
-        
-        .success-rate { color: $success; font-weight: 500; }
-      }
-    }
-
-    .driver-time {
-      font-size: 12px;
-      color: $text-medium-emphasis;
-      font-family: 'Roboto Mono', monospace;
-      background: #f1f3f4;
-      padding: 4px 8px;
-      border-radius: 4px;
-    }
+  i {
+    opacity: 0.5;
+    margin-bottom: 16px;
   }
 }
 
-// --- 14. Pulse Animation (Material Ripple-like) ---
-.pulse-ring {
-  width: 10px;
-  height: 10px;
-  background: $success;
-  border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba($success, 0.4);
-  animation: pulse-green 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-}
-
-@keyframes pulse-green {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba($success, 0.4); }
-  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba($success, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba($success, 0); }
-}
-
-// --- Responsive ---
+// --- 14. Responsive Adaptation ---
 @media (max-width: 1024px) {
   .split-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; // Stack vertical sur tablette
   }
-  
+
   .top-bar {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-    padding: 16px;
+    height: auto;
+    position: relative; // Décolle le sticky sur mobile si besoin
 
     .top-bar-right {
       width: 100%;
-      justify-content: space-between;
+      flex-wrap: wrap;
+      
+      .action-group {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
     }
   }
   
   .kpi-grid {
-    gap: 16px;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-content {
+    padding: 16px;
+  }
+  
+  .btn-action span {
+    display: none; // Cache le texte sur très petit écran, garde l'icône
+  }
+  
+  .btn-action {
+    padding: 0 10px; // Réduit le padding
   }
 }

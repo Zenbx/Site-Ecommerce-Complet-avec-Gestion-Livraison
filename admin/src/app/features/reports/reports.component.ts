@@ -30,7 +30,7 @@ export class ReportsComponent implements OnInit {
   ];
 
   // Données
-  stats: DeliveriesReportData | null = null;
+  stats!: DeliveriesReportData;
   deliveryPersons: DeliveryPersonStat[] = [];
 
   constructor(private reportsService: ReportsService) {}
@@ -56,6 +56,8 @@ export class ReportsComponent implements OnInit {
     this.reportsService.getDeliveriesReport(params).subscribe({
       next: (data) => {
         this.stats = data;
+        console.log('Stats loaded:', this.stats.by_day);
+        
         this.loading = false; // On arrête le loading principal quand les stats arrivent
       },
       error: (err) => {
@@ -65,7 +67,11 @@ export class ReportsComponent implements OnInit {
     });
 
     this.reportsService.getDeliveryPersonsReport(params).subscribe({
-      next: (data) => this.deliveryPersons = data,
+      next: (data) => {
+        this.deliveryPersons = data;
+        console.log(this.deliveryPersons);
+        
+      },
       error: (err) => console.error('Erreur livreurs', err)
     });
   }
@@ -121,10 +127,13 @@ export class ReportsComponent implements OnInit {
     });
   }
 
-  // Helpers UI
   getBarHeight(count: number): number {
     if (!this.stats?.by_day) return 0;
-    const max = Math.max(...this.stats.by_day.map(d => d.count), 1); // Évite division par 0
+    const max = Math.max(...this.stats.by_day.map(d => d.total), 1); // Évite division par 0
     return (count / max) * 100;
+  }
+
+  getDriverRatingStars(driver: DeliveryPersonStat): number {
+    return Math.round(driver.statistics.success_rate / 20);
   }
 }

@@ -52,7 +52,7 @@
           <i class="material-icons kpi-icon">local_shipping</i>
         </div>
         <div class="kpi-body">
-          <span class="kpi-value">{{ stats.totals.total }}</span>
+          <span class="kpi-value">{{ stats.totals.deliveries }}</span>
         </div>
         <div class="kpi-progress info"></div>
       </div>
@@ -63,7 +63,7 @@
           <i class="material-icons kpi-icon">check_circle</i>
         </div>
         <div class="kpi-body">
-          <span class="kpi-value">{{ stats.totals.delivered }}</span>
+          <span class="kpi-value">{{ stats.totals.successful }}</span>
         </div>
         <div class="kpi-progress success"></div>
       </div>
@@ -74,12 +74,12 @@
           <i class="material-icons kpi-icon">show_chart</i>
         </div>
         <div class="kpi-body">
-          <span class="kpi-value">{{ stats.rates.successRate }}%</span>
-          <span class="trend-badge" [ngClass]="stats.rates.successRate >= 80 ? 'up' : 'down'">
-            <i class="material-icons">{{ stats.rates.successRate >= 80 ? 'trending_up' : 'trending_down' }}</i>
+          <span class="kpi-value">{{ stats.rates.success_rate }}%</span>
+          <span class="trend-badge" [ngClass]="stats.rates.success_rate >= 50 ? 'up' : 'down'">
+            <i class="material-icons">{{ stats.rates.success_rate >= 50 ? 'trending_up' : 'trending_down' }}</i>
           </span>
         </div>
-        <div class="kpi-progress" [ngClass]="stats.rates.successRate >= 80 ? 'success' : 'warning'"></div>
+        <div class="kpi-progress" [ngClass]="stats.rates.success_rate >= 80 ? 'success' : 'warning'"></div>
       </div>
 
       <div class="kpi-card">
@@ -88,7 +88,7 @@
           <i class="material-icons kpi-icon">schedule</i>
         </div>
         <div class="kpi-body">
-          <span class="kpi-value">{{ stats.timing.averageTime }}</span>
+          <span class="kpi-value">{{ stats.timing.average_delivery_time }}</span>
         </div>
         <div class="kpi-progress info"></div>
       </div>
@@ -109,12 +109,12 @@
             <div class="bar-chart">
               <div *ngFor="let item of stats.by_day" class="chart-column">
                 <div class="column-track">
-                  <div class="fill-bar" [style.height.%]="getBarHeight(item.count)"
-                    [title]="item.count + ' livraisons'">
-                    <span class="tooltip-value">{{ item.count }}</span>
+                  <div class="fill-bar" [style.height.%]="getBarHeight(item.total)"
+                    [title]="item.total + ' livraisons'">
+                    <span class="tooltip-value">{{ item.total }}</span>
                   </div>
                 </div>
-                <span class="column-label">{{ item.day }}</span>
+                <span class="column-label">{{ item.date }}</span>
               </div>
             </div>
           </div>
@@ -129,7 +129,7 @@
           <div class="status-list-widget">
             <div class="status-row">
               <span class="status-chip status-delivered">Livrées</span>
-              <span class="count">{{ stats.totals.delivered }}</span>
+              <span class="count">{{ stats.totals.successful }}</span>
             </div>
             <div class="status-row">
               <span class="status-chip status-failed">Échouées</span>
@@ -141,7 +141,7 @@
             </div>
             <div class="status-row">
               <span class="status-chip" style="background: #f1f3f4; color: #5f6368;">Annulées</span>
-              <span class="count">{{ stats.totals.canceled }}</span>
+              <span class="count">{{ stats.totals.failed }}</span>
             </div>
           </div>
         </div>
@@ -151,9 +151,9 @@
     <section class="panel" style="margin-top: 24px;" *ngIf="deliveryPersons.length > 0">
       <div class="panel-header">
         <h2>Performance des livreurs</h2>
-        <button class="btn-action" style="padding: 4px 12px; font-size: 12px;" (click)="exportDriversPdf()">
-          <i class="material-icons" style="font-size: 16px;">picture_as_pdf</i>
-          Export
+        <button class="btn-action" (click)="exportDriversPdf()" [disabled]="exporting || loading">
+          <i class="material-icons">picture_as_pdf</i>
+          <span>PDF</span>
         </button>
       </div>
 
@@ -177,22 +177,22 @@
                   <span class="primary-text">{{ driver.name }}</span>
                 </div>
               </td>
-              <td class="text-right">{{ driver.totalDeliveries }}</td>
-              <td class="text-right" style="color: #1e8e3e; font-weight: 500;">{{ driver.completedDeliveries }}</td>
-              <td class="text-right" style="color: #d93025;">{{ driver.failedDeliveries }}</td>
+              <td class="text-right">{{ driver.statistics.total_deliveries }}</td>
+              <td class="text-right" style="color: #1e8e3e; font-weight: 500;">{{ driver.statistics.successful }}</td>
+              <td class="text-right" style="color: #d93025;">{{ driver.statistics.failed }}</td>
               <td class="text-right">
                 <span class="status-chip" [ngClass]="{
-                  'status-delivered': driver.successRate >= 80,
-                  'status-pending': driver.successRate >= 50 && driver.successRate < 80,
-                  'status-failed': driver.successRate < 50
+                  'status-delivered': driver.statistics.success_rate >= 80,
+                  'status-pending': driver.statistics.success_rate >= 50 && driver.statistics.success_rate < 80,
+                  'status-failed': driver.statistics.success_rate < 50
                 }">
-                  {{ driver.successRate }}%
+                  {{ driver.statistics.success_rate }}%
                 </span>
               </td>
               <td class="text-right">
                 <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
                   <i class="material-icons" style="font-size: 16px; color: #e37400;">star</i>
-                  <span>{{ driver.rating | number:'1.1-1' }}</span>
+                  <span>{{ getDriverRatingStars(driver) | number:'1.1-1' }}</span>
                 </div>
               </td>
             </tr>

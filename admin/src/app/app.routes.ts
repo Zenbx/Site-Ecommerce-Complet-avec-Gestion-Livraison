@@ -11,7 +11,7 @@ import { DeliveryDriversListComponent } from './features/delivery-drivers/delive
 import { DriverFormComponent } from './features/delivery-drivers/driver-form/driver-form.component';
 import { DeliveriesListComponent } from './features/deliveries/deliveries-list/deliveries-list.component'
 import { DeliveryDetailsComponent } from './features/deliveries/delivery-details/delivery-details.component';
-// import { DeliveryTrackingComponent } from './features/deliveries/delivery-tracking/delivery-tracking.component';
+import { DeliveryTrackingComponent } from './features/deliveries/delivery-tracking/delivery-tracking.component';
 import { MapComponent } from './features/map/map.component';
 import { DeliveryProofComponent } from './features/deliveries/delivery-proof/delivery-proof.component';
 import { ReportsComponent } from './features/reports/reports.component';
@@ -74,10 +74,10 @@ export const routes: Routes = [
         path: 'deliveries/:id',
         component: DeliveryDetailsComponent
       },
-      // {
-      //   path: 'deliveries/track/:id',
-      //   component: DeliveryTrackingComponent
-      // },
+      {
+        path: 'deliveries/track/:id',
+        component: DeliveryTrackingComponent
+      },
       {
         path: 'deliveries/proof/:id',
         component: DeliveryProofComponent

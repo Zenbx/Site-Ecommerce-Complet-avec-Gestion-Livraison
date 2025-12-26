@@ -13,35 +13,49 @@ export interface DeliveriesReportData {
     end: string;
   };
   totals: {
-    total: number;
-    delivered: number;
+    deliveries: number;
     failed: number;
+    in_progress: number;
     pending: number;
-    canceled: number;
+    successful: number;
   };
+
   rates: {
-    successRate: number;
-    failureRate: number;
+    failure_rate: number;
+    success_rate: number;
   };
+
   timing: {
-    averageTime: string; // ex: "45m" ou "1h 20m"
-    averageDistance?: string;
+    average_delivery_time: string;
+    fastest_delivery: {
+      tracking_code: string;
+      time: string;
+    };
+    slowest_delivery: {
+      tracking_code: string;
+      time: string;
+    };
   };
+
   by_day: Array<{
-    day: string; // Label (ex: "Lun", "12/05")
-    count: number;
+    date: string;
+    failed: number;
+    successful: number;
+    total: number;
   }>;
 }
 
 // Stats par livreur
 export interface DeliveryPersonStat {
   id: number;
+  email: string;
   name: string;
-  totalDeliveries: number;
-  completedDeliveries: number;
-  failedDeliveries: number;
-  successRate: number;
-  rating: number;
+  statistics: {
+    failed: number;
+    success_rate: number;
+    successful: number;
+    total_deliveries: number;
+  };
 }
 
 export interface ApiResponse<T> {

@@ -1,14 +1,3 @@
-// src/app/features/deliveries/models/delivery.model.ts
-
-// export enum DeliveryStatus {
-//   PENDING = 'pending',
-//   ASSIGNED = 'assigned',
-//   IN_PROGRESS = 'in_progress',
-//   DELIVERED = 'delivered',
-//   FAILED = 'failed',
-//   CANCELLED = 'cancelled'
-// }
-
 export enum ProofType {
   SIGNATURE = 'signature',
   QR_CODE = 'qr_code',

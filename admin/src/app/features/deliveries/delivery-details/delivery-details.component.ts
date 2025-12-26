@@ -592,12 +592,12 @@ export class DeliveryDetailsComponent implements OnInit, OnDestroy {
    */
   getStatusLabel(status: string): string {
     const labels: { [key: string]: string } = {
-      'pending': 'En attente',
-      'assigned': 'Assignée',
-      'in_progress': 'En cours',
-      'delivered': 'Livrée',
-      'failed': 'Échouée',
-      'cancelled': 'Annulée'
+      'PENDING': 'EN ATTENTE',
+      'ASSIGNED': 'ASSIGNÉE',
+      'IN_TRNASIT': 'EN COURS',
+      'DELIVERED': 'LIVRÉE',
+      'FAILED': 'ÉCHOUÉE',
+      'CANCELLED': 'ANNULÉE'
     };
     return labels[status] || status;
   }

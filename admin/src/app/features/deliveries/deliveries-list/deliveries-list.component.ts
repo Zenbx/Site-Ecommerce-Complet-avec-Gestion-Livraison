@@ -309,7 +309,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
     const statusLabels: { [key: string]: string } = {
       'PENDING': 'En attente',
       'ASSIGNED': 'Assignée',
-      'IN_TRANSIT': 'En cours',
+      'PICKED_UP': 'En cours',
       'DELIVERED': 'Livrée',
       'FAILED': 'Échouée',
       'CANCELLED': 'Annulée'
@@ -321,17 +321,13 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
     return Math.ceil(this.totalDeliveries / this.perPage);
   }
 
-  canAssign(delivery: Delivery): boolean {
-    return delivery.status === 'pending';
-  }
-
   canUnassign(delivery: Delivery): boolean {
-    return delivery.status === 'assigned';
+    return delivery.status === 'ASSIGNED';
   }
 
   canTrack(delivery: Delivery): boolean {
-    return delivery.status === 'in_progress' || 
-           delivery.status === 'assigned';
+    return delivery.status === 'PICKED_UP' || 
+           delivery.status === 'ASSIGNED';
   }
 
   // Méthodes communes à ajouter dans les composants

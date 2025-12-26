@@ -1,1294 +1,718 @@
-// src/app/features/deliveries/delivery-tracking/delivery-tracking.component.scss
-
 // ============================================
-// VARIABLES MATERIAL GOOGLE DESIGN
+// 1. VARIABLES & TOKENS
 // ============================================
 
-// Couleurs principales
 $primary: #1a73e8;
-$primary-dark: #1557b0;
-$primary-light: #4285f4;
+$primary-hover: #1557b0;
+$success: #1e8e3e;
+$warning: #e37400;
+$error: #d93025;
+$neutral: #5f6368;
 
-$success: #34a853;
-$warning: #fbbc04;
-$error: #ea4335;
-$info: #4285f4;
+$bg-app: #f8f9fa;
+$bg-surface: #ffffff;
+$border-color: #dadce0;
 
-// Texte
-$text-primary: #202124;
-$text-secondary: #5f6368;
-$text-tertiary: #80868b;
-$text-disabled: #9aa0a6;
+$shadow-card: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+$shadow-float: 0 4px 6px rgba(0, 0, 0, 0.1);
 
-// Surfaces
-$bg-main: #f8f9fa;
-$surface: #ffffff;
-$surface-hover: #f8f9fa;
-$border: #e8eaed;
-$divider: #e8eaed;
-
-// Ombres Material
-$shadow-sm: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
-$shadow-md: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
-$shadow-lg: 0 2px 6px 2px rgba(60, 64, 67, 0.15), 0 8px 24px 4px rgba(60, 64, 67, 0.15);
-
-// Radius
-$radius-sm: 8px;
-$radius-md: 12px;
-$radius-lg: 16px;
-$radius-full: 50%;
-
-// Transitions
-$transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-$transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$radius-card: 12px;
+$radius-btn: 8px;
 
 // ============================================
-// CONTENEUR PRINCIPAL
+// 2. MIXINS
 // ============================================
 
-.tracking-page {
-  min-height: 100vh;
-  background: $bg-main;
-  padding-bottom: 32px;
-}
-
-// ============================================
-// TOP BAR AVEC NAVIGATION
-// ============================================
-
-.top-bar {
-  background: $surface;
-  border-bottom: 1px solid $border;
-  padding: 16px 24px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: $shadow-sm;
-}
-
-.top-bar-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.btn-back {
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: transparent;
-  border-radius: $radius-full;
+@mixin flex-center {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: background $transition;
-  flex-shrink: 0;
-
-  &:hover {
-    background: $surface-hover;
-  }
-
-  .material-icons {
-    font-size: 24px;
-    color: $text-primary;
-  }
 }
 
-.title-section {
-  flex: 1;
-  min-width: 0;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: 500;
-  color: $text-primary;
-  margin: 0 0 4px 0;
-  line-height: 1.3;
-}
-
-.page-subtitle {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 0;
-  
-  strong {
-    color: $primary;
-    font-weight: 500;
-  }
-}
-
-.status-section {
+@mixin flex-between {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+}
+
+@mixin card-base {
+  background: $bg-surface;
+  border-radius: $radius-card;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+  border: 1px solid transparent;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
 }
 
 // ============================================
-// STATUS CHIP
+// 3. LAYOUT GLOBAL
 // ============================================
 
-.status-chip {
+.tracking-page {
+  background-color: $bg-app;
+  min-height: 100vh;
+  color: #202124;
+  font-family: 'Roboto', sans-serif;
+  padding-bottom: 40px;
+}
+
+.main-content {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+// ============================================
+// 4. TOP BAR
+// ============================================
+
+.top-bar {
+  background: $bg-surface;
+  border-bottom: 1px solid $border-color;
+  padding: 12px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  .top-bar-content {
+    max-width: 1440px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.btn-icon-back {
+  @include flex-center;
+  background: transparent;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: $neutral;
+  transition: background 0.2s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #202124;
+  }
+}
+
+.header-info {
+  flex: 1;
+  line-height: 1.2;
+
+  .page-title {
+    font-size: 16px; // Réduit de 20px à 16px
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  .page-subtitle {
+    margin: 0;
+    font-size: 12px; // Réduit de 13px à 12px
+    color: $neutral;
+    display: flex;
+    gap: 4px;
+
+    .highlight {
+      color: $primary;
+      font-weight: 500;
+    }
+  }
+}
+
+.status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border-radius: $radius-lg;
+  border-radius: 20px;
   font-size: 13px;
-  font-weight: 500;
-  line-height: 1;
-  white-space: nowrap;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 
-  .material-icons {
+  .icon-sm {
     font-size: 16px;
   }
 
-  &.status-pending {
-    background: rgba(251, 188, 4, 0.12);
-    color: #f29900;
-  }
-
-  &.status-assigned {
-    background: rgba(66, 133, 244, 0.12);
+  &.status-in_progress {
+    background: rgba($primary, 0.1);
     color: $primary;
   }
 
-  &.status-in-progress,
-  &.status-in_progress {
-    background: rgba(26, 115, 232, 0.12);
-    color: $primary-dark;
-  }
-
   &.status-delivered {
-    background: rgba(52, 168, 83, 0.12);
+    background: rgba($success, 0.1);
     color: $success;
   }
 
   &.status-failed {
-    background: rgba(234, 67, 53, 0.12);
+    background: rgba($error, 0.1);
     color: $error;
   }
 
-  &.status-cancelled {
-    background: rgba(95, 99, 104, 0.12);
-    color: $text-secondary;
-  }
-}
-
-// ============================================
-// INDICATEUR WEBSOCKET
-// ============================================
-
-.websocket-indicator {
-  max-width: 1400px;
-  margin: 12px auto 0;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.ws-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: $radius-lg;
-  font-size: 12px;
-  font-weight: 500;
-  transition: all $transition;
-
-  &.connected {
-    background: rgba(52, 168, 83, 0.08);
-    color: $success;
-
-    .ws-dot {
-      background: $success;
-      animation: pulse 2s infinite;
-    }
-  }
-
-  &.disconnected {
-    background: rgba(95, 99, 104, 0.08);
-    color: $text-secondary;
-
-    .ws-dot {
-      background: $text-tertiary;
-    }
-  }
-}
-
-.ws-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: $radius-full;
-  transition: background $transition;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.ws-label {
-  font-size: 13px;
-}
-
-// ============================================
-// ÉTATS LOADING ET ERROR
-// ============================================
-
-.loading-state,
-.error-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  padding: 48px 24px;
-}
-
-.loading-container,
-.error-container {
-  text-align: center;
-  max-width: 400px;
-}
-
-// Loading
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid $border;
-  border-top-color: $primary;
-  border-radius: $radius-full;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 24px;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-text {
-  font-size: 16px;
-  font-weight: 500;
-  color: $text-primary;
-  margin: 0 0 8px 0;
-}
-
-.loading-subtext {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 0;
-}
-
-// Error
-.error-icon {
-  font-size: 64px;
-  color: $error;
-  margin-bottom: 16px;
-}
-
-.error-title {
-  font-size: 20px;
-  font-weight: 500;
-  color: $text-primary;
-  margin: 0 0 8px 0;
-}
-
-.error-message {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 0 0 24px 0;
-}
-
-.btn-retry {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  background: $primary;
-  color: $surface;
-  border: none;
-  border-radius: $radius-md;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all $transition;
-
-  &:hover {
-    background: $primary-dark;
-    transform: translateY(-1px);
-    box-shadow: $shadow-md;
-  }
-
-  .material-icons {
-    font-size: 18px;
-  }
-}
-
-// ============================================
-// GRILLE DE TRACKING
-// ============================================
-
-.tracking-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px;
-}
-
-.tracking-grid {
-  display: grid;
-  grid-template-columns: 1fr 420px;
-  gap: 24px;
-  align-items: start;
-}
-
-// ============================================
-// CARTE GÉNÉRIQUE
-// ============================================
-
-.card {
-  background: $surface;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-sm;
-  overflow: hidden;
-  transition: box-shadow $transition;
-
-  &:hover {
-    box-shadow: $shadow-md;
-  }
-}
-
-.card-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid $border;
-}
-
-.card-title {
-  font-size: 16px;
-  font-weight: 500;
-  color: $text-primary;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  .material-icons {
-    font-size: 20px;
-    color: $primary;
-  }
-}
-
-.card-body {
-  padding: 24px;
-}
-
-// ============================================
-// COLONNE CARTE
-// ============================================
-
-.map-column {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-// Carte interactive
-.map-card {
-  position: relative;
-  height: 500px;
-
-  &:hover {
-    box-shadow: $shadow-lg;
-  }
-}
-
-.map-container {
-  width: 100%;
-  height: 100%;
-  border-radius: $radius-lg;
-  overflow: hidden;
-  
-  // Leaflet va injecter sa carte ici
-}
-
-// Contrôles de la carte
-.map-controls {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 10;
-}
-
-.map-control-btn {
-  width: 40px;
-  height: 40px;
-  background: $surface;
-  border: none;
-  border-radius: $radius-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: $shadow-md;
-  transition: all $transition;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: $shadow-lg;
-  }
-
-  .material-icons {
-    font-size: 20px;
-    color: $text-primary;
-  }
-}
-
-// Légende de la carte
-.map-legend {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  background: $surface;
-  border-radius: $radius-md;
-  padding: 12px 16px;
-  box-shadow: $shadow-lg;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 10;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: $text-primary;
-}
-
-.legend-marker {
-  width: 16px;
-  height: 16px;
-  border-radius: $radius-full;
-  border: 2px solid $surface;
-  box-shadow: $shadow-sm;
-
-  &.driver {
-    background: $primary;
-  }
-
-  &.destination {
-    background: $error;
-  }
-}
-
-// ============================================
-// CARTE DE PROGRESSION
-// ============================================
-
-.progress-card {
-  .card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-}
-
-// Barre de progression
-.progress-bar-container {
-  margin-bottom: 8px;
-}
-
-.progress-bar-track {
-  height: 8px;
-  background: $border;
-  border-radius: $radius-lg;
-  overflow: hidden;
-  position: relative;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, $primary, $primary-light);
-  border-radius: $radius-lg;
-  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-right: 8px;
-  position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
-    background: $surface;
-    border: 3px solid $primary;
-    border-radius: $radius-full;
-    box-shadow: $shadow-sm;
-  }
-}
-
-.progress-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: $surface;
-  margin-right: 20px;
-}
-
-// Statistiques de progression
-.progress-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 16px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-  background: $surface-hover;
-  border-radius: $radius-md;
-  transition: all $transition;
-
-  &:hover {
-    background: $border;
-    transform: translateY(-2px);
-  }
-
-  > .material-icons {
-    font-size: 24px;
-    color: $primary;
-    flex-shrink: 0;
-  }
-}
-
-.stat-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: $text-secondary;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: 500;
-  color: $text-primary;
-  line-height: 1.2;
-}
-
-// Précision GPS
-.gps-accuracy {
-  padding: 12px;
-  background: $surface-hover;
-  border-radius: $radius-md;
-}
-
-.accuracy-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-
-  .material-icons {
-    font-size: 18px;
-  }
-
-  &.good {
-    color: $success;
-  }
-
-  &.medium {
+  &.status-pending {
+    background: rgba($warning, 0.1);
     color: $warning;
   }
-
-  &.poor {
-    color: $error;
-  }
 }
 
-.accuracy-text {
-  color: $text-primary;
+// Indicateur WS
+.connection-status {
+  max-width: 1440px;
+  margin: 8px auto 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 24px; // Align avec le contenu
 }
 
-.accuracy-quality {
-  margin-left: 4px;
-  font-weight: 500;
-}
-
-// Dernière mise à jour
-.last-update {
+.ws-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
-  color: $text-tertiary;
+  color: $neutral;
 
-  .material-icons {
-    font-size: 16px;
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #bdc1c6;
+    border-radius: 50%;
+    transition: background 0.3s;
+  }
+
+  &.active {
+    color: $success;
+    font-weight: 500;
+
+    .pulse-dot {
+      background: $success;
+      box-shadow: 0 0 0 2px rgba($success, 0.2);
+    }
   }
 }
 
 // ============================================
-// MESSAGE PAS DE GPS
+// 5. GRID & CARDS
 // ============================================
 
-.no-gps-card {
-  .card-body {
-    padding: 48px 24px;
-  }
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  margin-top: 24px;
 }
 
-.empty-state {
-  text-align: center;
-}
-
-.empty-icon {
-  font-size: 64px;
-  color: $text-tertiary;
-  margin-bottom: 16px;
-}
-
-.empty-title {
-  font-size: 18px;
-  font-weight: 500;
-  color: $text-primary;
-  margin: 0 0 8px 0;
-}
-
-.empty-text {
-  font-size: 14px;
-  color: $text-secondary;
-  margin: 0;
-  line-height: 1.5;
-}
-
-// ============================================
-// COLONNE INFORMATIONS
-// ============================================
-
-.info-column {
+.column-primary {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  position: sticky;
-  top: 88px; // En dessous de la top bar
 }
 
-// ============================================
-// CARTE D'INFORMATIONS
-// ============================================
-
-.info-card {
-  .card-body {
-    padding: 24px;
-  }
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-}
-
-.info-item {
+.column-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 24px;
+  // Sticky sidebar pour les grands écrans
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
 
-  &.full-width {
-    grid-column: 1 / -1;
+.card {
+  @include card-base;
+  padding: 20px;
+
+  .card-header {
+    border-bottom: 1px solid #f1f3f4;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+      color: #202124;
+    }
   }
 }
 
-.info-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: $text-secondary;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+// ============================================
+// 6. MAP SECTION
+// ============================================
+
+.map-wrapper {
+  padding: 0; // Pas de padding pour la map
+  height: 700px;
+  width: 100%;
+  position: relative;
+  background: #e8eaed; // Placeholder gris
+
+  app-map {
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: block;
+  }
+
+  .map-overlay-legend {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: $shadow-float;
+    display: flex;
+    gap: 16px;
+    pointer-events: none; // Permet de cliquer à travers si besoin
+
+    .legend-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #202124;
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+
+      &.driver .dot {
+        background: $primary;
+        border: 2px solid white;
+        box-shadow: 0 0 0 1px $primary;
+      }
+
+      &.dest .dot {
+        background: $error;
+      }
+    }
+  }
 }
 
-.info-value {
-  font-size: 14px;
-  color: $text-primary;
-  line-height: 1.5;
+// ============================================
+// 7. GPS & INFO PANELS
+// ============================================
 
-  &.address {
+.info-panel {
+  .panel-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
+    margin-bottom: 16px;
+    color: $neutral;
+
+    h3 {
+      font-size: 14px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+
+  .gps-signal-box {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #e8eaed;
+
+    &[data-accuracy="high"] {
+      border-color: rgba($success, 0.3);
+      background: rgba($success, 0.05);
+
+      .material-icons,
+      .signal-grade {
+        color: $success;
+      }
+    }
+
+    .signal-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      .signal-label {
+        font-size: 12px;
+        color: $neutral;
+      }
+
+      .signal-value {
+        font-weight: 500;
+        color: #202124;
+      }
+    }
+
+    .signal-grade {
+      font-weight: 600;
+      font-size: 13px;
+    }
+  }
+
+  .last-ping {
+    margin-top: 12px;
+    font-size: 12px;
+    color: $neutral;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+
+    .icon-xs {
+      font-size: 14px;
+    }
+  }
+}
+
+.empty-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: $neutral;
+  text-align: center;
+
+  .material-icons {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+// ============================================
+// 8. SIDEBAR COMPONENTS (Details, Driver, Time)
+// ============================================
+
+.list-group {
+  .list-item {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f3f4;
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    &:first-child {
+      padding-top: 0;
+    }
+
+    .label {
+      font-size: 12px;
+      color: $neutral;
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-size: 14px;
+      color: #202124;
+      font-weight: 500;
+    }
+
+    .link-action {
+      color: $primary;
+      text-decoration: none;
+      font-weight: 500;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .address-item .address-value {
+    display: flex;
+    gap: 8px;
+    line-height: 1.4;
 
     .material-icons {
-      font-size: 18px;
       color: $primary;
-      flex-shrink: 0;
+      font-size: 18px;
       margin-top: 2px;
     }
   }
 }
 
-.phone-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: $primary;
-  text-decoration: none;
-  transition: color $transition;
-
-  &:hover {
-    color: $primary-dark;
-  }
-
-  .material-icons {
-    font-size: 16px;
-  }
-}
-
-// Badge de priorité
-.priority-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: $radius-lg;
-  font-size: 12px;
-  font-weight: 500;
-  width: fit-content;
-
-  .material-icons {
-    font-size: 16px;
-  }
-
-  &.priority-high {
-    background: rgba(234, 67, 53, 0.12);
-    color: $error;
-  }
-
-  &.priority-medium {
-    background: rgba(251, 188, 4, 0.12);
-    color: #f29900;
-  }
-
-  &.priority-low {
-    background: rgba(66, 133, 244, 0.12);
-    color: $primary;
-  }
-}
-
-// Instructions spéciales
-.special-instructions {
-  margin-top: 16px;
-  padding: 16px;
-  background: rgba(26, 115, 232, 0.04);
-  border-left: 3px solid $primary;
-  border-radius: $radius-md;
-}
-
-.instructions-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-
-  .material-icons {
-    font-size: 18px;
-    color: $primary;
-  }
-}
-
-.instructions-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: $text-primary;
-}
-
-.instructions-text {
-  font-size: 14px;
-  color: $text-primary;
-  margin: 0;
-  line-height: 1.5;
-}
-
-// ============================================
-// CARTE LIVREUR
-// ============================================
-
 .driver-card {
-  .card-body {
+  .driver-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .avatar-circle {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, $primary, $primary-hover);
+    border-radius: 50%;
+    @include flex-center;
+    color: white;
+  }
+
+  .driver-info {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+
+    .role-label {
+      font-size: 12px;
+      color: $neutral;
+    }
+
+    .driver-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #202124;
+    }
   }
 }
 
-.driver-profile {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.driver-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: $radius-full;
-  background: linear-gradient(135deg, $primary, $primary-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: $shadow-sm;
-
-  .material-icons {
-    font-size: 28px;
-    color: $surface;
-  }
-}
-
-.driver-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.driver-name {
+// Timeline
+.timeline-card h3 {
   font-size: 16px;
-  font-weight: 500;
-  color: $text-primary;
-  margin: 0 0 8px 0;
+  margin: 0 0 20px 0;
 }
 
-.driver-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  color: $text-secondary;
-
-  .material-icons {
-    font-size: 16px;
-  }
-}
-
-// Contact livreur
-.driver-contact {
-  padding-top: 4px;
-}
-
-.btn-contact {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px 20px;
-  background: $primary;
-  color: $surface;
-  border: none;
-  border-radius: $radius-md;
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all $transition;
-
-  &:hover {
-    background: $primary-dark;
-    transform: translateY(-1px);
-    box-shadow: $shadow-md;
-  }
-
-  .material-icons {
-    font-size: 18px;
-  }
-}
-
-// Statistiques livreur
-.driver-stats {
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  background: $surface-hover;
-  border-radius: $radius-md;
-}
-
-.stat-badge {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: $text-primary;
-
-  .material-icons {
-    font-size: 16px;
-    color: $warning;
-  }
-}
-
-// ============================================
-// TIMELINE
-// ============================================
-
-.timeline-card {
-  .card-body {
-    padding: 24px;
-  }
-}
-
-.timeline {
+.timeline-container {
   position: relative;
-  padding-left: 32px;
+  padding-left: 20px;
 
   &::before {
     content: '';
     position: absolute;
-    left: 9px;
-    top: 8px;
-    bottom: 8px;
+    left: 7px;
+    top: 5px;
+    bottom: 5px;
     width: 2px;
-    background: $border;
-  }
-}
-
-.timeline-step {
-  position: relative;
-  padding-bottom: 32px;
-
-  &:last-child {
-    padding-bottom: 0;
+    background: #f1f3f4;
   }
 
-  // Ligne de connexion active
-  &.completed,
-  &.active {
-    &::after {
-      content: '';
+  .timeline-item {
+    position: relative;
+    padding-bottom: 24px;
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+
+    .point {
       position: absolute;
-      left: -22px;
+      left: -20px;
       top: 0;
-      width: 2px;
-      height: 100%;
-      background: $primary;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #bdc1c6; // Gris par défaut
+      border: 3px solid $bg-surface;
+      z-index: 2;
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+
+      .time {
+        font-size: 12px;
+        color: $neutral;
+        margin-bottom: 2px;
+      }
+
+      .text {
+        font-size: 14px;
+        color: #202124;
+        font-weight: 500;
+      }
+
+      .pending {
+        font-style: italic;
+        opacity: 0.7;
+      }
+    }
+
+    // États
+    &.completed {
+      .point {
+        background: $success;
+      }
+    }
+
+    &.active {
+      .point {
+        background: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.2);
+      }
+
+      .text {
+        color: $primary;
+      }
+    }
+
+    &.failed {
+      .point {
+        background: $error;
+      }
+
+      .text {
+        color: $error;
+      }
     }
   }
-
-  &.failed {
-    &::after {
-      content: '';
-      position: absolute;
-      left: -22px;
-      top: 0;
-      width: 2px;
-      height: 100%;
-      background: $error;
-    }
-  }
 }
 
-.step-marker {
-  position: absolute;
-  left: -32px;
-  top: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: $radius-full;
-  background: $surface;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-
-  .material-icons {
-    font-size: 20px;
-  }
-
-  .timeline-step.completed & .material-icons {
-    color: $primary;
-  }
-
-  .timeline-step.active & .material-icons {
-    color: $primary;
-    animation: pulse 2s infinite;
-  }
-
-  .timeline-step.failed & .material-icons {
-    color: $error;
-  }
-
-  .timeline-step:not(.completed):not(.active):not(.failed) & .material-icons {
-    color: $text-tertiary;
-  }
-}
-
-.step-content {
-  padding-left: 8px;
-}
-
-.step-title {
-  font-size: 15px;
-  font-weight: 500;
-  color: $text-primary;
-  margin: 0 0 4px 0;
-}
-
-.step-time {
-  font-size: 13px;
-  color: $text-secondary;
-  margin: 0 0 6px 0;
-
-  &.pending {
-    color: $text-tertiary;
-    font-style: italic;
-  }
-}
-
-.step-description {
-  font-size: 13px;
-  color: $text-secondary;
-  margin: 0;
-  line-height: 1.5;
-
-  &.error {
-    color: $error;
-  }
-}
-
-// ============================================
-// CARTE PREUVE
-// ============================================
-
-.proof-card {
-  .card-body {
-    padding: 20px;
-  }
-}
-
-.btn-proof {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+// Boutons
+.btn-primary,
+.btn-outlined {
+  @include flex-center;
   gap: 8px;
-  width: 100%;
-  padding: 12px 20px;
-  background: $surface-hover;
-  color: $text-primary;
-  border: 2px solid $border;
-  border-radius: $radius-md;
-  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: $radius-btn;
   font-weight: 500;
   cursor: pointer;
-  transition: all $transition;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: $primary;
+  color: white;
+  border: none;
 
   &:hover {
-    background: $surface;
+    background: $primary-hover;
+    box-shadow: $shadow-card;
+  }
+}
+
+.btn-outlined {
+  background: transparent;
+  border: 1px solid $border-color;
+  color: $neutral;
+  width: 100%;
+
+  &:hover {
     border-color: $primary;
     color: $primary;
-    transform: translateY(-1px);
-    box-shadow: $shadow-md;
+    background: rgba($primary, 0.04);
+  }
+}
+
+// ============================================
+// 9. LOADING & ERROR STATES
+// ============================================
+
+.state-container {
+  min-height: 400px;
+  @include flex-center;
+  flex-direction: column;
+  text-align: center;
+
+  .state-icon {
+    font-size: 64px;
+    color: $neutral;
+    margin-bottom: 16px;
+    opacity: 0.5;
   }
 
-  .material-icons {
+  .state-title {
     font-size: 18px;
+    font-weight: 500;
+    color: #202124;
+    margin: 0 0 8px;
+  }
+
+  .state-desc {
+    color: $neutral;
+    margin-bottom: 24px;
+  }
+
+  &.error .state-icon {
+    color: $error;
+    opacity: 1;
+  }
+
+  .loader-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f1f3f4;
+    border-top-color: $primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
   }
 }
 
 // ============================================
-// RESPONSIVE DESIGN
+// 10. RESPONSIVE
 // ============================================
-
-@media (max-width: 1200px) {
-  .tracking-grid {
-    grid-template-columns: 1fr 380px;
-    gap: 20px;
-  }
-
-  .info-column {
-    top: 80px;
-  }
-}
 
 @media (max-width: 1024px) {
-  .tracking-grid {
-    grid-template-columns: 1fr;
-    gap: 24px;
+  .dashboard-grid {
+    grid-template-columns: 1fr; // Stack vertical
   }
 
-  .info-column {
-    position: static;
+  .column-sidebar {
+    position: static; // Plus de sticky sur mobile
   }
 
-  .map-card {
-    height: 400px;
-  }
-
-  .progress-stats {
-    grid-template-columns: 1fr;
+  .map-wrapper {
+    height: 400px; // Un peu moins haut
   }
 }
 
-@media (max-width: 768px) {
-  .tracking-content {
+@media (max-width: 600px) {
+  .main-content {
     padding: 16px;
   }
 
   .top-bar {
     padding: 12px 16px;
+
+    .top-bar-content {
+      flex-wrap: wrap;
+    }
   }
 
-  .top-bar-content {
-    flex-wrap: wrap;
+  .header-info {
+    order: 1;
+    width: calc(100% - 50px);
   }
 
-  .page-title {
-    font-size: 20px;
+  .btn-icon-back {
+    order: 0;
   }
 
-  .page-subtitle {
-    font-size: 13px;
-  }
-
-  .status-section {
-    flex: 1 0 100%;
-    justify-content: flex-start;
+  .header-status {
+    order: 2;
+    width: 100%;
     margin-top: 8px;
-  }
-
-  .websocket-indicator {
-    margin-top: 8px;
-    justify-content: flex-start;
-  }
-
-  .map-card {
-    height: 350px;
-  }
-
-  .card-body {
-    padding: 16px;
-  }
-
-  .card-header {
-    padding: 16px;
-  }
-
-  .driver-profile {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .timeline {
-    padding-left: 28px;
-  }
-
-  .step-marker {
-    left: -28px;
-    width: 18px;
-    height: 18px;
-
-    .material-icons {
-      font-size: 18px;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .tracking-content {
-    padding: 12px;
-  }
-
-  .tracking-grid {
-    gap: 16px;
-  }
-
-  .map-card {
-    height: 300px;
-  }
-
-  .map-controls {
-    top: 12px;
-    right: 12px;
-    gap: 6px;
-  }
-
-  .map-control-btn {
-    width: 36px;
-    height: 36px;
-
-    .material-icons {
-      font-size: 18px;
-    }
-  }
-
-  .map-legend {
-    bottom: 12px;
-    left: 12px;
-    padding: 8px 12px;
-    gap: 6px;
-  }
-
-  .legend-item {
-    font-size: 12px;
-  }
-
-  .info-grid {
-    gap: 16px;
-  }
-
-  .progress-stats {
-    gap: 12px;
-  }
-
-  .stat-item {
-    padding: 12px;
-  }
-
-  .stat-value {
-    font-size: 18px;
-  }
-
-  .driver-avatar {
-    width: 48px;
-    height: 48px;
-
-    .material-icons {
-      font-size: 24px;
-    }
-  }
-
-  .driver-name {
-    font-size: 15px;
-  }
-
-  .meta-item {
-    font-size: 12px;
+    padding-left: 56px; // Align avec titre
   }
 }
