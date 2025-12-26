@@ -41,7 +41,7 @@
           </div>
         </div>
         <div class="dropdown-footer">
-          <a href="#">Voir toutes les alertes</a>
+          <a href="#" class="mark-read-btn">Voir toutes les alertes</a>
         </div>
       </div>
     </div>
@@ -50,11 +50,11 @@
 
     <div class="user-profile" (click)="logout()">
       <div class="user-info-text">
-        <span class="user-name">Admin</span>
+        <span class="user-name"> {{ adminProfile.name }} </span>
         <span class="user-status">En ligne</span>
       </div>
       <div class="user-avatar-circle">
-        A
+        {{ adminProfile.name.charAt(0) }}
       </div>
       <i class="material-icons arrow-icon">expand_more</i>
     </div>

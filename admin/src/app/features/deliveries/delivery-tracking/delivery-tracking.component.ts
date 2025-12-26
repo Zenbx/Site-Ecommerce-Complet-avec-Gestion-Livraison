@@ -8,7 +8,7 @@
 
 // import { DeliveriesService } from '../../../core/services/deliveries.service';
 // import { WebSocketService } from '../../../core/services/websocket.service';
-// import { Delivery, DeliveryStatus } from '../../../core/models/delivery.model';
+// import { Delivery } from '../../../core/models/delivery.model';
 // import { MapComponent } from '../../map/map.component';
 
 // // ============================================
@@ -148,14 +148,14 @@
 //           this.loading = false;
 
 //           // Calculer la distance totale
-//           if (delivery.driver?.currentLocation && delivery.address?.latitude) {
-//             this.totalDistance = this.calculateDistanceBetweenPoints(
-//               delivery.driver.currentLocation.latitude,
-//               delivery.driver.currentLocation.longitude,
-//               delivery.address.latitude,
-//               delivery.address.longitude
-//             );
-//           }
+//         //   if (delivery.delivery_person?.currentLocation && delivery.address?.latitude) {
+//         //     this.totalDistance = this.calculateDistanceBetweenPoints(
+//         //       delivery.delivery_person.currentLocation.latitude,
+//         //       delivery.delivery_person.currentLocation.longitude,
+//         //       delivery.address.latitude,
+//         //       delivery.address.longitude
+//         //     );
+//         //   }
 
 //           // Initialiser la carte
 //           setTimeout(() => {
@@ -163,7 +163,7 @@
 //           }, 100);
 
 //           // Si mode test, simuler le GPS
-//           if (this.TEST_MODE && delivery.status === DeliveryStatus.IN_PROGRESS) {
+//           if (this.TEST_MODE && delivery.status === 'in_progress') {
 //             this.startGPSSimulation(deliveryId);
 //           }
 //         },
@@ -195,7 +195,7 @@
 //       .subscribe((message) => {
 //         console.log('📍 Position GPS reçue:', message.data);
         
-//         if (this.delivery?.driver && message.data.driverId === this.delivery.driver.id) {
+//         if (this.delivery?.delivery_person && message.data.driverId === this.delivery.delivery_person.id) {
 //           this.updateDriverLocation(message.data);
 //         }
 //       });
@@ -245,7 +245,7 @@
 //     this.driverLocation = {
 //       id: locationData.id || Date.now(),
 //       driverId: locationData.driverId,
-//       driverName: locationData.driverName || `${this.delivery?.driver?.firstName} ${this.delivery?.driver?.lastName}`,
+//       driverName: locationData.driverName || `${this.delivery?.delivery_person?.name}`,
 //       latitude: locationData.latitude,
 //       longitude: locationData.longitude,
 //       speed: locationData.speed || 0,
@@ -257,7 +257,7 @@
 //     this.lastUpdateTime = new Date();
 
 //     // Recalculer la distance restante
-//     if (this.delivery?.address?.latitude) {
+//     if (this.delivery?.delivery_address?.latitude) {
 //       this.completedDistance = this.totalDistance - parseFloat(this.calculateDistance());
 //     }
 

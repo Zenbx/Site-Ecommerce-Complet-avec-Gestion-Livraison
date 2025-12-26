@@ -1,89 +1,67 @@
 <div class="drivers-wrapper">
-  
+
   <header class="top-bar">
-    <div class="title-section">
-      <h1>Gestion des livreurs</h1>
-      <span class="badge-count">{{ totalDrivers }} total</span>
+    <div class="top-bar-left">
+      <h1>Livreurs</h1>
+      <span class="divider">|</span>
+      <span class="context">{{ filteredDrivers().length }} actifs</span>
     </div>
-    
-    <div class="actions-section">
-      <button class="icon-btn" (click)="refresh()" title="Actualiser">
-        <i class="material-icons">sync</i>
-      </button>
-      <button class="btn-primary" (click)="createDriver()">
+
+    <div class="top-bar-right">
+      <div class="search-box">
+        <i class="material-icons">search</i>
+        <input type="text" placeholder="Rechercher..." (input)="onSearch($event)">
+      </div>
+      <button class="fab-btn" (click)="createDriver()" title="Ajouter un livreur">
         <i class="material-icons">add</i>
-        <span>Nouveau Livreur</span>
       </button>
     </div>
   </header>
 
-  <div class="toolbar-section">
-    <div class="search-input-wrapper">
-      <i class="material-icons">search</i>
-      <input type="text" placeholder="Rechercher par nom, email..." (input)="onSearch($event)">
-    </div>
-    
-    <div class="filter-groups">
-      <button class="filter-chip active">Tous</button>
-      <button class="filter-chip">Disponibles ({{ availableDriversCount }})</button>
+  <div class="dashboard-content">
+    <div class="filter-bar">
+      <button class="chip" [class.active]="filter === 'all'" (click)="setFilter('all')">Tous</button>
+      <button class="chip" [class.active]="filter === 'available'" (click)="setFilter('available')">Disponibles</button>
     </div>
 
-    <div class="spacer"></div>
+    <div class="driver-grid">
+      <div class="driver-card" *ngFor="let driver of filteredDrivers()">
 
-    <div class="export-actions">
-       <button class="text-btn" (click)="exportToExcel()">Export Excel</button>
-    </div>
-  </div>
+        <div class="card-header">
+          <div class="avatar-container">
+            <img *ngIf="driver.photo_url" [src]="driver.photo_url" class="driver-photo">
+            <div *ngIf="!driver.photo_url" class="avatar-placeholder">
+              {{ driver.name.charAt(0) }}
+            </div>
+            <div class="status-dot" [class.online]="driver.is_available"></div>
+          </div>
 
-  <div class="table-card">
-    <table class="google-table">
-      <thead>
-        <tr>
-          <th class="col-avatar"></th> <th>Livreur</th>
-          <th>Contact</th>
-          <th>Statut</th>
-          <th class="text-right">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let driver of drivers" class="table-row">
-          <td class="col-avatar">
-           <div class="avatar-circle">
-              {{ driver.name ? driver.name.charAt(0) : '?' }}
-           </div>
-          </td>
-          <td class="col-primary">
-            <span class="name">{{ driver.name }}</span>
-            <span class="sub-text">ID: {{ driver.id }}</span>
-          </td>
-          <td>
-             <div class="cell-stack">
-               <span>{{ driver.email }}</span>
-               <span class="sub-text">{{ driver.phone }}</span>
-             </div>
-          </td>
-          <td>
-            <span class="status-indicator" [class.available]="driver.isAvailable">
-              {{ driver.isAvailable ? 'Disponible' : 'Occupé' }}
-            </span>
-          </td>
-          <td class="text-right actions-cell">
-            <button class="icon-action" (click)="editDriver(driver)" title="Modifier">
-              <i class="material-icons">edit</i>
-            </button>
-            <button class="icon-action delete" (click)="deleteDriver(driver)" title="Supprimer">
-              <i class="material-icons">delete</i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          <div class="actions-menu">
+            <button class="icon-btn" (click)="editDriver(driver)"><i class="material-icons">edit</i></button>
+            <button class="icon-btn delete" (click)="deleteDriver(driver)"><i class="material-icons">delete</i></button>
+          </div>
+        </div>
 
-    <div class="pagination-footer">
-      <span class="page-info">Page {{ currentPage }} sur {{ getTotalPages() }}</span>
-      <div class="page-controls">
-        <button class="btn-page" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">Précédent</button>
-        <button class="btn-page" [disabled]="currentPage >= getTotalPages()" (click)="onPageChange(currentPage + 1)">Suivant</button>
+        <div class="card-body">
+          <h3 class="driver-name">{{ driver.name }}</h3>
+          <p class="driver-id"> {{ driver.is_available ? 'Disponible' : 'Indisponible' }}</p>
+
+          <div class="contact-info">
+            <div class="info-row">
+              <i class="material-icons">email</i>
+              <span>{{ driver.email }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button class="icon-action" (click)="editDriver(driver)" title="Modifier">
+            <i class="material-icons">edit</i>
+          </button>
+          <button class="icon-action delete" (click)="deleteDriver(driver)" title="Supprimer">
+            <i class="material-icons">delete</i>
+          </button>
+        </div>
       </div>
     </div>
   </div>

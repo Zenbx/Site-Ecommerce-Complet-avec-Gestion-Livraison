@@ -1,192 +1,515 @@
-// Variables Google Style
-$primary: #1a73e8;
-$success: #1e8e3e;
-$warning: #e37400;
-$error: #d93025;
-$border: #dadce0;
-$bg-body: #f8f9fa;
-$text-main: #202124;
-$text-sub: #5f6368;
+// src/app/features/dashboard/dashboard.component.scss
 
-.reports-wrapper {
-  background-color: $bg-body;
-  min-height: 100vh;
-  padding: 24px;
-  font-family: 'Roboto', sans-serif;
-  color: $text-main;
+// --- 1. Variables & Design Tokens (Google Material Palette) ---
+$primary: #1a73e8;        // Google Blue 600
+$primary-variant: #1557b0; // Google Blue 700 (Hover)
+$secondary: #5f6368;      // Google Gray 700
+$background: #f8f9fa;     // Google Gray 50 (App Background)
+$surface: #ffffff;        // White (Card Surface)
+$error: #d93025;          // Google Red 600
+$warning: #e37400;        // Google Orange 600
+$success: #1e8e3e;        // Google Green 600
+$border-color: #dadce0;   // Google Gray 300
+
+// Text Colors
+$text-high-emphasis: #202124; // ~87% black
+$text-medium-emphasis: #5f6368; // ~60% black
+$text-disabled: #9aa0a6;
+
+// Motion (Standard Easing)
+$motion-duration: 250ms;
+$motion-easing: cubic-bezier(0.4, 0.0, 0.2, 1);
+
+// Shadows (Elevation)
+$elevation-1: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+$elevation-2: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+$elevation-3: 0 4px 8px 3px rgba(60,64,67,0.15), 0 1px 3px rgba(60,64,67,0.3);
+
+// --- 2. Mixins ---
+@mixin card-base {
+  background: $surface;
+  border: 1px solid $border-color; // Style "Outlined Card" de Material 3
+  border-radius: 8px; 
+  transition: box-shadow $motion-duration $motion-easing, 
+              transform $motion-duration $motion-easing,
+              border-color $motion-duration $motion-easing;
+  
+  // Au survol, on monte légèrement la carte (Elevation)
+  &:hover {
+    box-shadow: $elevation-1;
+    border-color: transparent; // L'ombre remplace la bordure
+  }
 }
 
-// Header
-.page-header {
+@mixin flex-center-between {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+}
 
-  .header-title h1 {
-    font-size: 24px;
-    font-weight: 400;
-    margin: 0 0 4px 0;
+// --- 3. Layout ---
+.dashboard-wrapper {
+  background-color: $background;
+  min-height: 100vh;
+  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  color: $text-high-emphasis;
+  -webkit-font-smoothing: antialiased;
+}
+
+// --- 4. Top Bar ---
+.top-bar {
+  @include flex-center-between;
+  padding: 16px 24px;
+  background: $surface;
+  border-bottom: 1px solid $border-color;
+  position: sticky; // Garde la barre en haut
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05); // Ombre très subtile
+
+  .top-bar-left {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+
+    h1 {
+      font-size: 22px;
+      font-weight: 400;
+      margin: 0;
+      color: $text-high-emphasis;
+      letter-spacing: -0.5px;
+    }
+
+    .divider { color: $border-color; font-weight: 300; }
+    .context { color: $text-medium-emphasis; font-size: 14px; font-weight: 400; }
   }
-  .subtitle { color: $text-sub; font-size: 14px; }
 
-  .btn-outlined {
-    background: white;
-    border: 1px solid $border;
-    color: $text-main;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-weight: 500;
-    cursor: pointer;
+  .top-bar-right {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-left: 12px;
-    
-    &:hover { background: #f1f3f4; }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    gap: 24px;
+
+    .meta-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      line-height: 1.4;
+    }
+
+    .ws-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: $text-medium-emphasis;
+      
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: $text-disabled;
+        transition: background-color 0.3s ease;
+      }
+
+      &.connected {
+        color: $success;
+        .dot { background-color: $success; box-shadow: 0 0 0 2px rgba($success, 0.2); }
+      }
+    }
+
+    .last-update {
+      color: $text-medium-emphasis;
+      font-size: 11px;
+    }
+
+    .btn-action {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 4px;
+      border: 1px solid $border-color;
+      background: $surface;
+      color: $primary;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s $motion-easing;
+      
+      // Material Ripple effect simulation
+      &:hover:not(:disabled) {
+        background-color: rgba($primary, 0.04);
+        border-color: rgba($primary, 0.2);
+      }
+      
+      &:active:not(:disabled) {
+        background-color: rgba($primary, 0.1);
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #f1f3f4;
+      }
+    }
   }
 }
 
-// KPI Top Row
-.summary-cards {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 24px;
+// --- 5. Loading ---
+.loading-bar {
+  height: 4px;
+  width: 100%;
+  background: #e8eaed; // Couleur track plus claire
+  overflow: hidden;
+  position: relative;
   
-  .summary-item {
-    flex: 1;
-    background: white;
-    border: 1px solid $border;
-    border-radius: 8px;
-    padding: 20px;
+  .indeterminate {
+    background-color: $primary;
+    height: 100%;
+    position: absolute;
+    width: 50%;
+    will-change: left;
+    animation: loading 2s infinite cubic-bezier(0.65, 0.815, 0.735, 0.395); // Animation plus fluide
+  }
+}
+@keyframes loading {
+  0% { left: -35%; width: 35%; }
+  60% { left: 100%; width: 10%; }
+  100% { left: 100%; width: 10%; }
+}
+
+// --- 6. Main Content ---
+.dashboard-content {
+  padding: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+// --- 7. Alerts ---
+.alert-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  border: 1px solid transparent;
+
+  // Variantes basées sur des fonds légers (Surface variants)
+  &.warning { background: #fef7e0; color: #8f4d00; border-color: rgba(227, 116, 0, 0.1); .alert-icon {color: $warning;} }
+  &.error { background: #fce8e6; color: #a50e0e; border-color: rgba(217, 48, 37, 0.1); .alert-icon {color: $error;} }
+  &.success { background: #e6f4ea; color: #0d652d; border-color: rgba(30, 142, 62, 0.1); .alert-icon {color: $success;} }
+  &.info { background: #e8f0fe; color: #174ea6; border-color: rgba(26, 115, 232, 0.1); .alert-icon {color: $primary;} }
+
+  .alert-body {
     display: flex;
     flex-direction: column;
+    width: 100%;
+    line-height: 1.5;
+  }
+  .alert-time { font-size: 11px; opacity: 0.7; margin-top: 4px; font-weight: 500; }
+}
 
-    .label { font-size: 12px; color: $text-sub; font-weight: 500; text-transform: uppercase; margin-bottom: 8px; }
-    .value { font-size: 28px; font-weight: 400; }
-    .success-text { color: $success; }
+// --- 8. KPI Cards ---
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); // Cartes un peu plus larges
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.kpi-card {
+  @include card-base;
+  padding: 24px; // Padding augmenté pour l'aération
+  position: relative;
+  overflow: hidden;
+
+  .kpi-header {
+    @include flex-center-between;
+    margin-bottom: 12px;
+    
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      color: $text-medium-emphasis;
+      letter-spacing: 0.8px; // Tracking augmenté pour les labels
+    }
+    
+    .kpi-icon {
+      color: $text-disabled;
+      font-size: 24px;
+    }
+  }
+
+  .kpi-body {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    
+    .kpi-value {
+      font-size: 36px; // Plus grand pour l'impact
+      font-weight: 400; // Light/Regular
+      color: $text-high-emphasis;
+      line-height: 1;
+    }
+
+    .trend-badge {
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: transparent;
+
+      &.up { color: $success; background: rgba($success, 0.1); }
+      &.down { color: $error; background: rgba($error, 0.1); }
+    }
+  }
+
+  // Barre progressive en bas
+  .kpi-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    opacity: 1;
+
+    &.warning { background: $warning; }
+    &.info { background: $primary; }
+    &.success { background: $success; }
+    &.error { background: $error; }
   }
 }
 
-// Charts Section
-.charts-layout {
+// --- 9. Split Layout ---
+.split-layout {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 24px;
+  align-items: start; // Empêche l'étirement vertical inutile
 }
 
-.chart-panel {
-  background: white;
-  border: 1px solid $border;
-  border-radius: 8px;
-  padding: 24px;
-
-  .panel-header {
-    margin-bottom: 24px;
-    h2 { font-size: 16px; font-weight: 500; margin: 0; }
-  }
-}
-
-// Histogramme Custom
-.bar-chart {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  height: 250px;
-  padding-top: 20px;
-
-  .chart-column {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100%;
-    margin: 0 4px;
-    
-    .column-track {
-      flex: 1;
-      width: 100%;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      // Optionnel: fond gris clair derrière la barre .column-track { background: #f1f3f4; border-radius: 4px; }
-    }
-
-    .fill-bar {
-      width: 12px; // Barres fines
-      background-color: $primary;
-      border-radius: 4px 4px 0 0;
-      transition: height 0.4s ease;
-      position: relative;
-      
-      &:hover {
-        background-color: darken($primary, 10%);
-        &::after {
-          content: attr(data-value);
-          position: absolute;
-          top: -25px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #333;
-          color: white;
-          padding: 2px 6px;
-          border-radius: 4px;
-          font-size: 11px;
-        }
-      }
-    }
-
-    .column-label {
-      margin-top: 12px;
-      font-size: 11px;
-      color: $text-sub;
-    }
-  }
-}
-
-// Liste des statuts
-.status-list {
+// --- 10. Panels ---
+.panel {
+  @include card-base;
   display: flex;
   flex-direction: column;
-  gap: 20px;
 
-  .status-row {
-    .row-info {
+  .panel-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid $border-color;
+    @include flex-center-between;
+
+    h2 {
+      font-size: 16px;
+      font-weight: 500; // Medium
+      color: $text-high-emphasis;
+      margin: 0;
+    }
+    
+    .indicator {
+      font-size: 12px;
+      color: $success;
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 6px;
-      font-size: 13px;
+      gap: 8px;
       font-weight: 500;
-      
-      .dot { width: 10px; height: 10px; border-radius: 50%; }
-      .dot.success { background: $success; }
-      .dot.primary { background: $primary; }
-      .dot.warning { background: $warning; }
-      .dot.error { background: $error; }
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+// --- 11. Data Table ---
+.table-container {
+  overflow-x: auto;
+  border-radius: 0 0 8px 8px; // Arrondir le bas
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    text-align: left;
+    padding: 12px 24px;
+    font-size: 12px;
+    font-weight: 500;
+    color: $text-medium-emphasis;
+    border-bottom: 1px solid $border-color;
+    background: #f9f9fa; // Header très léger
+    text-transform: uppercase; // Style data dense
+  }
+
+  td {
+    padding: 16px 24px; // Plus d'espace vertical
+    font-size: 14px;
+    border-bottom: 1px solid #f1f3f4;
+    color: $text-high-emphasis;
+    transition: background-color 0.2s;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  
+  // Interactions
+  tbody tr:hover { 
+    background-color: rgba($primary, 0.04); 
+  }
+
+  .primary-text { font-weight: 500; color: $text-high-emphasis; }
+  .text-right { text-align: right; }
+  .meta-text { color: $text-medium-emphasis; font-size: 13px; }
+  
+  .empty-cell { 
+    text-align: center; 
+    color: $text-medium-emphasis; 
+    padding: 48px; 
+    font-style: italic;
+  }
+
+  .user-cell {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .avatar-initial {
+      width: 32px;
+      height: 32px;
+      background: $primary;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+  }
+}
+
+// --- 12. Status Chips (Pills) ---
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 16px; // Pill shape complet
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+
+  &.status-pending { background: #fef7e0; color: #b06000; }
+  &.status-assigned { background: #e8f0fe; color: $primary; }
+  &.status-in-progress { 
+    background: white; 
+    color: $primary; 
+    border: 1px solid $border-color;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  &.status-delivered { background: #e6f4ea; color: #0d652d; }
+  &.status-failed { background: #fce8e6; color: $error; }
+}
+
+// --- 13. Sidebar/Driver Elements ---
+.driver-list {
+  padding: 0;
+  
+  .driver-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    gap: 16px;
+    border-bottom: 1px solid #f1f3f4;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover { background-color: #fafafa; }
+    &:last-child { border-bottom: none; }
+
+    .rank-col {
+      font-size: 14px;
+      font-weight: 500;
+      color: $text-disabled;
+      width: 24px;
+      text-align: center;
     }
 
-    .row-metric {
+    .driver-info {
+      flex: 1;
       display: flex;
-      align-items: center;
-      gap: 12px;
+      flex-direction: column;
+
+      .driver-name { 
+        font-size: 14px; 
+        font-weight: 500; 
+        color: $text-high-emphasis;
+        margin-bottom: 4px; 
+      }
       
-      .percent { min-width: 40px; font-size: 12px; color: $text-sub; text-align: right; }
-      
-      .mini-bar {
-        flex: 1;
-        height: 4px;
-        background: #f1f3f4;
-        border-radius: 2px;
-        overflow: hidden;
+      .driver-metrics {
+        font-size: 12px;
+        color: $text-medium-emphasis;
+        display: flex;
+        gap: 8px;
         
-        .fill { height: 100%; }
-        .fill.success { background: $success; }
-        .fill.primary { background: $primary; }
-        .fill.warning { background: $warning; }
-        .fill.error { background: $error; }
+        .success-rate { color: $success; font-weight: 500; }
       }
     }
+
+    .driver-time {
+      font-size: 12px;
+      color: $text-medium-emphasis;
+      font-family: 'Roboto Mono', monospace;
+      background: #f1f3f4;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  }
+}
+
+// --- 14. Pulse Animation (Material Ripple-like) ---
+.pulse-ring {
+  width: 10px;
+  height: 10px;
+  background: $success;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba($success, 0.4);
+  animation: pulse-green 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba($success, 0.4); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba($success, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba($success, 0); }
+}
+
+// --- Responsive ---
+@media (max-width: 1024px) {
+  .split-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+
+    .top-bar-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+  
+  .kpi-grid {
+    gap: 16px;
   }
 }

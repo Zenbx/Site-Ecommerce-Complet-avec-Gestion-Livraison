@@ -34,8 +34,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         Authorization: `Bearer ${token}`
       }
     });
-    
-    console.log('🔐 Requête interceptée avec token:', req.url);
   }
 
   // Passer la requête au handler suivant et gérer les erreurs

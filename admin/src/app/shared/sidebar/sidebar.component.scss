@@ -50,8 +50,11 @@ $border-color: #dadce0;
       font-weight: 500;
       color: $text-main;
       letter-spacing: -0.5px;
-      
-      span { font-weight: 700; color: $primary-blue; }
+
+      span {
+        font-weight: 700;
+        color: $primary-blue;
+      }
     }
   }
 }
@@ -63,6 +66,13 @@ $border-color: #dadce0;
   display: flex;
   flex-direction: column;
   gap: 4px;
+
+  // Suppression des puces ici
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
 
   .nav-item {
     position: relative;
@@ -96,8 +106,10 @@ $border-color: #dadce0;
       background-color: $nav-active-bg;
       color: $nav-active-text;
 
-      .nav-icon { color: $nav-active-text; }
-      
+      .nav-icon {
+        color: $nav-active-text;
+      }
+
       // La petite barre verticale sur le côté
       &::before {
         content: "";
@@ -108,6 +120,44 @@ $border-color: #dadce0;
         background: $nav-active-text;
         border-radius: 0 4px 4px 0;
       }
+    }
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #64748b;
+    gap: 12px; // Espace entre l'icône et le texte
+
+    .material-icons {
+      font-size: 22px;
+    }
+
+    &.active {
+      color: #3b82f6;
+      background-color: #eff6ff;
+
+      .material-icons {
+        color: #3b82f6;
+      }
+    }
+  }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #ef4444;
+
+    .material-icons {
+      font-size: 22px;
     }
   }
 }
@@ -173,7 +223,9 @@ $border-color: #dadce0;
     cursor: pointer;
     transition: background 0.2s;
 
-    i { font-size: 18px; }
+    i {
+      font-size: 18px;
+    }
 
     &:hover {
       background: #fdf2f2;

@@ -1,46 +1,207 @@
-<div class="products-dashboard">
+<div class="dashboard-wrapper">
 
-	<!-- Onglets catégories -->
-	<div class="categories-tabs">
-		<button *ngFor="let cat of categories" (click)="selectedCategoryId = cat.id"
-			[class.active]="selectedCategoryId === cat.id">
-			{{ cat.name }}
-		</button>
-		<button (click)="selectedCategoryId = null" [class.active]="selectedCategoryId === null">
-			Tous
-		</button>
-	</div>
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <h1>Catalogue</h1>
+      <span class="divider">|</span>
+    </div>
 
-	<!-- Grille de produits -->
-	<div class="products-grid">
-		<div class="product-card" *ngFor="let product of filteredProducts()">
+    <div class="top-bar-right">
+      <div class="category-scroll-container">
+        <div class="category-filters">
+          <button (click)="selectedCategoryId = null" 
+                  [class.active]="selectedCategoryId === null" 
+                  class="filter-chip">
+            Tous
+          </button>
+          <button *ngFor="let cat of categories" 
+                  (click)="selectedCategoryId = cat.id"
+                  [class.active]="selectedCategoryId === cat.id" 
+                  class="filter-chip">
+            {{ cat.name }}
+            <span class="count-badge">({{ countProductsByCategory(cat.id) }})</span>
+          </button>
+        </div>
+      </div>
 
-			<img [src]="product.image_url" alt="{{ product.name }}" class="product-image" />
+      <div class="actions-group">
+        <button class="btn-action secondary" (click)="showCategoryForm = true">
+          <i class="material-icons">category</i>
+          <span>Nouvelle catégorie</span>
+        </button>
+        
+        <button class="btn-action primary" (click)="openCreateForm()">
+          <i class="material-icons">add</i>
+          <span>Nouveau produit</span>
+        </button>
+      </div>
+    </div>
+  </header>
 
-			<div class="product-info">
-				<h3>{{ product.name }}</h3>
-				<p class="description">{{ product.description }}</p>
-				<p class="price">{{ product.price | currency:'EUR' }}</p>
-				<p class="quantity">Quantité: {{ product.quantity }}</p>
-				<p class="status" [class.active]="product.is_active" [class.inactive]="!product.is_active">
-					{{ product.is_active ? 'Actif' : 'Inactif' }}
-				</p>
-			</div>
+  <div class="dashboard-content">
 
-			<div class="product-actions">
-				<button class="icon-action" (click)="startEdit(product)" title="Modifier">
-					<i class="material-icons">edit</i>
-				</button>
-				<button class="icon-action delete" (click)="deleteProduct(product)" title="Supprimer">
-					<i class="material-icons">delete</i>
-				</button>
-			</div>
+    <div class="empty-state" *ngIf="filteredProducts().length === 0">
+      <div class="empty-icon">
+        <i class="material-icons">inventory_2</i>
+      </div>
+      <h3>Aucun produit trouvé</h3>
+      <p>Il n'y a pas de produits dans cette catégorie pour le moment.</p>
+    </div>
 
-		</div>
+    <div class="products-grid" *ngIf="filteredProducts().length > 0">
+      <div class="product-card" *ngFor="let product of filteredProducts()">
+        
+        <div class="card-image-header">
+          <img [src]="product.image_url || 'assets/placeholder.png'" alt="{{ product.name }}" />
+          <div class="overlay-actions">
+            <button class="icon-btn" (click)="startEdit(product)" title="Modifier">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="icon-btn delete" (click)="deleteProduct(product)" title="Supprimer">
+              <i class="material-icons">delete</i>
+            </button>
+          </div>
+        </div>
 
-		<!-- Message si aucun produit -->
-		<p class="empty-msg" *ngIf="filteredProducts().length === 0">
-			Aucun produit dans cette catégorie
-		</p>
-	</div>
+        <div class="card-body">
+          <div class="header-row">
+            <span class="category-label" *ngIf="product.category_id">
+              {{ getCategoryName(product.category_id) }}
+            </span>
+            <span class="status-chip" 
+                  [ngClass]="product.is_active ? 'status-delivered' : 'status-failed'">
+              {{ product.is_active ? 'Actif' : 'Inactif' }}
+            </span>
+          </div>
+
+          <h3 class="product-title">{{ product.name }}</h3>
+          <p class="product-desc">{{ product.description }}</p>
+
+          <div class="metrics-row">
+            <div class="metric">
+              <span class="label">Prix</span>
+              <span class="value price">{{ product.price | currency:'EUR':'symbol':'1.0-0' }}</span>
+            </div>
+            <div class="metric">
+              <span class="label">Stock</span>
+              <span class="value" [class.low-stock]="product.quantity < 10">
+                {{ product.quantity }}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-progress" [class.active]="product.is_active"></div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showCreateForm || (showEditForm && editingProduct)" class="modal-backdrop" (click)="cancelAll()">
+    <div class="modal-card panel" (click)="$event.stopPropagation()">
+      
+      <div class="panel-header">
+        <h2>
+          {{ showCreateForm ? 'Nouveau Produit' : 'Modifier le Produit' }}
+        </h2>
+        <button class="icon-btn close" (click)="cancelAll()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form class="material-form">
+          <ng-container *ngTemplateOutlet="formFields; context: { target: showCreateForm ? newProduct : editingProduct }"></ng-container>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-text" (click)="cancelAll()">Annuler</button>
+        <button class="btn-action primary" 
+                (click)="showCreateForm ? createProduct() : saveEdit()"
+                [disabled]="!isValid(showCreateForm ? newProduct : editingProduct)">
+          <i class="material-icons">save</i>
+          {{ showCreateForm ? 'Créer' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showCategoryForm" class="modal-backdrop" (click)="showCategoryForm = false">
+    <div class="modal-card panel" (click)="$event.stopPropagation()">
+      <div class="panel-header">
+        <h2>Nouvelle Catégorie</h2>
+        <button class="icon-btn close" (click)="showCategoryForm = false">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form class="material-form">
+          <div class="form-group">
+            <label>Nom de la catégorie</label>
+            <input type="text" [(ngModel)]="newCategory.name" name="catName" class="modern-input" placeholder="Ex: Electronics" />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea [(ngModel)]="newCategory.description" name="catDesc" rows="3" class="modern-input" placeholder="Description de la catégorie..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>URL Image</label>
+            <input type="url" [(ngModel)]="newCategory.image_url" name="catImg" class="modern-input" placeholder="http://..." />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-text" (click)="showCategoryForm = false">Annuler</button>
+        <button class="btn-action primary" (click)="createCategory()" [disabled]="!newCategory.name">
+          <i class="material-icons">save</i>
+          Créer la catégorie
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #formFields let-target="target">
+    <div class="form-group">
+      <label>Nom du produit</label>
+      <input type="text" [(ngModel)]="target.name" name="name" class="modern-input" placeholder="Ex: iPhone 15" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Prix (FCFA)</label>
+        <input type="number" [(ngModel)]="target.price" name="price" class="modern-input" />
+      </div>
+      <div class="form-group">
+        <label>Quantité</label>
+        <input type="number" [(ngModel)]="target.quantity" name="quantity" class="modern-input" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Catégorie</label>
+      <select [(ngModel)]="target.category_id" name="category" class="modern-select">
+        <option [ngValue]="null">Sélectionner...</option>
+        <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>
+      <textarea [(ngModel)]="target.description" name="description" rows="3" class="modern-input"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>URL Image</label>
+      <input type="url" [(ngModel)]="target.image_url" name="img" class="modern-input" placeholder="http://..." />
+    </div>
+
+    <div class="form-group checkbox-wrapper">
+      <label class="switch">
+        <input type="checkbox" [(ngModel)]="target.is_active" name="active">
+        <span class="slider round"></span>
+      </label>
+      <span>Produit actif et visible</span>
+    </div>
+  </ng-template>
+
 </div>

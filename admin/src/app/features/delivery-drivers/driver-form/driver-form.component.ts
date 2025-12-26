@@ -6,14 +6,12 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { DriverService } from '../../../core/services/driver.service';
-import { 
-  Driver, 
-  DriverCreateRequest, 
-  DriverUpdateRequest,
-  DriverFormData,
+import { DomSanitizer } from '@angular/platform-browser';
+
+import {
+  Driver,
   PhotoSourceType,
   PhotoSelectionState,
-  DriverValidator
 } from '../../../core/models/driver.model';
 
 @Component({
@@ -31,7 +29,7 @@ export class DriverFormComponent implements OnInit, OnDestroy {
   uploadingPhoto = false;
   error: string | null = null;
   isEditMode = false;
-  
+
   // Photo management
   photoState: PhotoSelectionState = {
     sourceType: PhotoSourceType.NONE,
@@ -39,17 +37,18 @@ export class DriverFormComponent implements OnInit, OnDestroy {
     url: '',
     previewUrl: ''
   };
-  
+
   photoError: string | null = null;
   readonly PhotoSourceType = PhotoSourceType;
-  
+
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private driverService: DriverService
+    private driverService: DriverService,
+    private sanitizer: DomSanitizer
   ) {
     this.initializeForm();
   }
@@ -91,35 +90,28 @@ export class DriverFormComponent implements OnInit, OnDestroy {
    */
   private loadDriver(driverId: number): void {
     this.loading = true;
+
     this.driverService.getDriver(driverId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (driver) => {
-          console.log('📦 Driver loaded:', driver);
           this.driver = driver;
+
           this.form.patchValue({
             name: driver.name,
             email: driver.email,
             idCardNumber: driver.id_card_number,
             address: driver.address,
-            photoUrl: driver.photo_url,
             isAvailable: driver.is_available
           });
-          
-          // Set existing photo as URL type
+
           if (driver.photo_url) {
-            this.photoState = {
-              sourceType: PhotoSourceType.URL,
-              file: null,
-              url: driver.photo_url,
-              previewUrl: driver.photo_url
-            };
+            this.photoState.previewUrl = driver.photo_url;
           }
-          
+
           this.loading = false;
         },
-        error: (error) => {
-          console.error('❌ Error loading driver:', error);
+        error: () => {
           this.error = 'Impossible de charger les détails du livreur';
           this.loading = false;
         }
@@ -130,26 +122,54 @@ export class DriverFormComponent implements OnInit, OnDestroy {
    * Handle photo file selection
    */
   onPhotoFileSelected(event: Event): void {
+    console.log('🔥 onPhotoFileSelected CALLED!', event);
+
     const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
+    console.log('📂 Input element:', input);
+    console.log('📂 Files:', input.files);
 
-    const file = input.files[0];
-    this.photoError = null;
-
-    // Validate file
-    const validation = this.driverService.validatePhotoFile(file);
-    if (!validation.valid) {
-      this.photoError = validation.error || 'Fichier invalide';
-      input.value = '';
+    if (!input.files || input.files.length === 0) {
+      console.log('❌ No files selected');
       return;
     }
 
-    // Revoke previous preview URL
-    this.revokePreviewUrl();
+    const file = input.files[0];
+    console.log('✅ File selected:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
 
-    // Create preview URL
+    // Validation simple
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+    if (!allowedTypes.includes(file.type)) {
+      console.log('❌ Invalid file type');
+      this.photoError = 'Format non supporté. Utilisez JPG, PNG ou WebP.';
+      return;
+    }
+
+    if (file.size > maxSize) {
+      console.log('❌ File too large');
+      this.photoError = 'La taille du fichier ne doit pas dépasser 5MB.';
+      return;
+    }
+
+    console.log('✅ File validation passed');
+    this.photoError = null;
+
+    // Revoke previous URL
+    if (this.photoState.previewUrl && this.photoState.sourceType === PhotoSourceType.FILE) {
+      URL.revokeObjectURL(this.photoState.previewUrl);
+      console.log('🗑️ Previous URL revoked');
+    }
+
+    // Create new preview URL
     const previewUrl = URL.createObjectURL(file);
+    console.log('🎨 Preview URL created:', previewUrl);
 
+    // Update state
     this.photoState = {
       sourceType: PhotoSourceType.FILE,
       file: file,
@@ -157,59 +177,32 @@ export class DriverFormComponent implements OnInit, OnDestroy {
       previewUrl: previewUrl
     };
 
-    console.log('📸 Photo file selected:', file.name);
+    console.log('📦 Updated photoState:', this.photoState);
+    console.log('🖼️ Preview should show:', this.photoState.previewUrl);
   }
 
-  /**
-   * Handle photo URL input
-   */
-  onPhotoUrlChanged(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const url = input.value;
-    
-    this.photoError = null;
-    
-    if (!url.trim()) {
-      this.photoState = {
-        sourceType: PhotoSourceType.NONE,
-        file: null,
-        url: '',
-        previewUrl: ''
-      };
-      return;
-    }
-
-    if (!DriverValidator.isValidPhotoUrl(url)) {
-      this.photoError = 'URL invalide';
-      return;
-    }
-
-    this.revokePreviewUrl();
-
-    this.photoState = {
-      sourceType: PhotoSourceType.URL,
-      file: null,
-      url: url,
-      previewUrl: url
-    };
-
-    this.form.patchValue({ photoUrl: url });
-  }
 
   /**
    * Clear photo selection
    */
   clearPhoto(): void {
-    this.revokePreviewUrl();
+    console.log('🗑️ Clearing photo');
+
+    if (this.photoState.previewUrl && this.photoState.sourceType === PhotoSourceType.FILE) {
+      URL.revokeObjectURL(this.photoState.previewUrl);
+    }
+
     this.photoState = {
       sourceType: PhotoSourceType.NONE,
       file: null,
       url: '',
       previewUrl: ''
     };
-    this.form.patchValue({ photoUrl: '' });
+
     this.photoError = null;
+    console.log('✅ Photo cleared');
   }
+
 
   /**
    * Revoke object URL to free memory
@@ -217,6 +210,7 @@ export class DriverFormComponent implements OnInit, OnDestroy {
   private revokePreviewUrl(): void {
     if (this.photoState.previewUrl && this.photoState.sourceType === PhotoSourceType.FILE) {
       URL.revokeObjectURL(this.photoState.previewUrl);
+      console.log('🗑️ Previous preview URL revoked');
     }
   }
 
@@ -245,35 +239,30 @@ export class DriverFormComponent implements OnInit, OnDestroy {
    * Create new driver
    */
   private createDriver(formValue: any): void {
-    const request: DriverCreateRequest = {
-      name: formValue.name,
-      email: formValue.email,
-      id_card_number: formValue.idCardNumber,
-      address: formValue.address,
-      photo_url: this.photoState.url || formValue.photoUrl || '',
-      is_available: formValue.isAvailable
-    };
 
-    // If file is selected, upload it first
-    const observable = this.photoState.sourceType === PhotoSourceType.FILE && this.photoState.file
-      ? this.driverService.createDriverWithPhoto(request, this.photoState.file)
-      : this.driverService.createDriver(request);
+    const formData = new FormData();
+    formData.append('name', formValue.name);
+    formData.append('email', formValue.email);
+    formData.append('id_card_number', formValue.idCardNumber);
+    formData.append('address', formValue.address);
+    formData.append('is_available', String(formValue.isAvailable));
+    if (this.photoState.file)
+      formData.append('photo', this.photoState.file);
 
-    observable
+    this.driverService.createDriver(formData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (newDriver) => {
-          console.log('✅ Driver created successfully:', newDriver);
+        next: () => {
           alert('Livreur créé avec succès');
           this.router.navigate(['/drivers']);
         },
-        error: (error) => {
-          console.error('❌ Error creating driver:', error);
-          this.error = error.message || 'Erreur lors de la création du livreur';
+        error: (err) => {
+          this.error = err.message || 'Erreur lors de la création';
           this.submitting = false;
         }
       });
   }
+
 
   /**
    * Update existing driver
@@ -281,35 +270,26 @@ export class DriverFormComponent implements OnInit, OnDestroy {
   private updateDriver(formValue: any): void {
     if (!this.driver) return;
 
-    const request: DriverUpdateRequest = {
-      name: formValue.name,
-      email: formValue.email,
-      id_card_number: formValue.idCardNumber,
-      address: formValue.address,
-      is_available: formValue.isAvailable
-    };
+    const formData = new FormData();
+    formData.append('name', formValue.name);
+    formData.append('email', formValue.email);
+    formData.append('id_card_number', formValue.idCardNumber);
+    formData.append('address', formValue.address);
+    formData.append('is_available', String(formValue.isAvailable));
 
-    // Only update photo if changed
-    if (this.photoState.sourceType === PhotoSourceType.URL) {
-      request.photo_url = this.photoState.url;
+    if (this.photoState.file) {
+      formData.append('photo', this.photoState.file);
     }
 
-    // If file is selected, upload it first
-    const observable = this.photoState.sourceType === PhotoSourceType.FILE && this.photoState.file
-      ? this.driverService.updateDriverWithPhoto(this.driver.id, request, this.photoState.file)
-      : this.driverService.updateDriver(this.driver.id, request);
-
-    observable
+    this.driverService.updateDriver(this.driver.id, formData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (updatedDriver) => {
-          console.log('✅ Driver updated successfully:', updatedDriver);
+        next: () => {
           alert('Livreur mis à jour avec succès');
           this.router.navigate(['/drivers']);
         },
-        error: (error) => {
-          console.error('❌ Error updating driver:', error);
-          this.error = error.message || 'Erreur lors de la mise à jour du livreur';
+        error: (err) => {
+          this.error = err.message || 'Erreur lors de la mise à jour';
           this.submitting = false;
         }
       });

@@ -1,0 +1,243 @@
+<div class="orders-wrapper">
+  <!-- Top Bar Style Google Admin -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <h1>Commandes</h1>
+      <span class="divider">|</span>
+      <span class="context">{{ totalOrders }} au total</span>
+    </div>
+
+    <div class="top-bar-right">
+      <div class="search-box">
+        <i class="material-icons">search</i>
+        <input type="text" placeholder="Rechercher (Numéro, client...)" [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()" />
+      </div>
+
+      <div class="filter-group">
+        <select class="material-select" [(ngModel)]="assignedFilter" (change)="onFilterChange()">
+          <option value="ALL">Tous les statuts</option>
+          <option value="UNASSIGNED">Non assignées</option>
+          <option value="ASSIGNED">Assignées</option>
+        </select>
+      </div>
+
+      <button class="btn-primary-google" (click)="onSearch()">
+        <i class="material-icons">filter_list</i>
+        <span>Filtrer</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Barre de chargement indéterminée Google -->
+  <div *ngIf="loading" class="loading-bar">
+    <div class="indeterminate"></div>
+  </div>
+
+  <main class="dashboard-content">
+
+    <!-- Grid de Commandes -->
+    <div *ngIf="!loading" class="orders-grid">
+      <div *ngFor="let order of orders" class="order-card">
+
+        <div class="card-header">
+          <div class="order-id">
+            <span class="number">#{{ order.order_number }}</span>
+            <span class="payment-badge" [ngClass]="ordersService.getPaymentStatusClass(order.payment_status)">
+              <i class="material-icons">payments</i>
+              {{ order.payment_status_label }}
+            </span>
+          </div>
+          <span class="status-chip" [ngClass]="ordersService.getStatusClass(order.status)">
+            {{ order.status_label }}
+          </span>
+        </div>
+
+        <div class="card-body">
+          <div class="info-row">
+            <div class="avatar">{{ order.client.name.charAt(0) }}</div>
+            <div class="info-text">
+              <span class="main">{{ order.client.name }}</span>
+              <span class="sub">{{ order.client.email }}</span>
+            </div>
+          </div>
+
+          <div class="info-row compact">
+            <i class="material-icons">place</i>
+            <span class="main truncate">{{ order.client.address }}</span>
+          </div>
+          <div class="info-row compact">
+            <i class="material-icons">inventory_2</i>
+            <span class="main">{{ getTotalItemsCount(order) }} article(s)</span>
+          </div>
+
+          <div class="price-section">
+            <span class="total-label">Total</span>
+            <span class="total-value">{{ ordersService.formatPrice(order.total) }}</span>
+          </div>
+
+          <div class="driver-status" [class.assigned]="order.delivery?.delivery_person">
+            <ng-container *ngIf="order.delivery?.delivery_person; else unassigned">
+              <i class="material-icons">local_shipping</i>
+              <span>Assigné à <strong>{{ order.delivery?.delivery_person?.name }}</strong></span>
+            </ng-container>
+            <ng-template #unassigned>
+              <i class="material-icons">error_outline</i>
+              <span>Aucun livreur assigné</span>
+            </ng-template>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-text" (click)="openDetailsModal(order)">
+            <i class="material-icons">visibility</i>
+            Détails
+          </button>
+          <button *ngIf="canAssign(order)" class="btn-filled-blue" (click)="openAssignModal(order)">
+            <i class="material-icons">person_add</i>
+            Assigner
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- État vide -->
+    <div *ngIf="!loading && orders.length === 0" class="empty-state">
+      <div class="illustration">
+        <i class="material-icons">inbox</i>
+      </div>
+      <h3>Aucune commande</h3>
+      <p>Ajustez vos filtres ou lancez une nouvelle recherche.</p>
+    </div>
+  </main>
+
+  <!-- Pagination -->
+  <footer *ngIf="!loading && orders.length > 0" class="pagination-footer">
+    <div class="pagination-controls">
+      <button class="btn-icon" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
+        <i class="material-icons">chevron_left</i>
+      </button>
+      <span class="page-info">Page <strong>{{ currentPage }}</strong> sur {{ getTotalPages() }}</span>
+      <button class="btn-icon" [disabled]="currentPage >= getTotalPages()" (click)="onPageChange(currentPage + 1)">
+        <i class="material-icons">chevron_right</i>
+      </button>
+    </div>
+  </footer>
+</div>
+
+<!-- MODAL DÉTAILS -->
+<div *ngIf="showDetailsModal && selectedOrder" class="modal-overlay" (click)="closeDetailsModal()">
+  <div class="modal-surface" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-left">
+        <i class="material-icons">receipt_long</i>
+        <h2>Commande #{{ selectedOrder.order_number }}</h2>
+      </div>
+      <button class="btn-icon-close" (click)="closeDetailsModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <div class="modal-body-scroll">
+      <section class="detail-group">
+        <label>Informations Client</label>
+        <div class="customer-preview">
+          <div class="avatar-large">{{ selectedOrder.client.name.charAt(0) }}</div>
+          <div class="details">
+            <h4>{{ selectedOrder.client.name }}</h4>
+            <p>{{ selectedOrder.client.email }}</p>
+            <p class="address">{{ selectedOrder.client.address }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="detail-group">
+        <label>Articles commandés</label>
+        <div class="order-items-list">
+          <div *ngFor="let item of selectedOrder.items" class="item-entry">
+            <div class="item-img-container">
+              <img [src]="item.product.image_url" onerror="this.src='https://placehold.co/40x40?text=P'" />
+            </div>
+            <div class="item-info">
+              <span class="name">{{ item.product.name }}</span>
+              <span class="qty">Quantité : {{ item.quantity }}</span>
+            </div>
+            <span class="price">{{ ordersService.formatPrice(item.subtotal) }}</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="summary-card-google">
+        <div class="row"><span>Sous-total</span><span>{{ ordersService.formatPrice(selectedOrder.subtotal) }}</span>
+        </div>
+        <div class="row"><span>Frais de livraison</span><span>{{ ordersService.formatPrice(selectedOrder.delivery_fee)
+            }}</span></div>
+        <div class="row total"><span>Total</span><span>{{ ordersService.formatPrice(selectedOrder.total) }}</span></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ASSIGNATION LIVREUR -->
+<div *ngIf="showAssignModal && selectedOrder" class="modal-overlay" (click)="closeAssignModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>
+        <i class="material-icons">local_shipping</i>
+        Assigner un livreur
+      </h2>
+      <button class="btn-close" (click)="closeAssignModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="order-summary">
+        <h3>Commande #{{ selectedOrder.order_number }}</h3>
+        <p><strong>Client:</strong> {{ selectedOrder.client.name }}</p>
+        <p><strong>Adresse:</strong> {{ selectedOrder.client.address }}</p>
+      </div>
+
+
+      <h3 class="section-title">Sélectionner un livreur</h3>
+
+      <div *ngIf="availableDrivers.length === 0" class="no-drivers">
+        <p>Aucun livreur disponible pour le moment</p>
+      </div>
+
+
+      <div class="drivers-list">
+        <div *ngFor="let driver of availableDrivers" class="driver-card"
+          [class.selected]="selectedDriverId === driver.id" (click)="selectedDriverId = driver.id">
+
+          <div class="driver-avatar">
+            {{ getDriverInitials(driver) }}
+          </div>
+
+          <div class="driver-details">
+            <div class="driver-name">{{ getDriverFullName(driver) }}</div>
+            <div class="driver-phone">{{ driver.phone }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeAssignModal()" [disabled]="assigning">
+        Annuler
+      </button>
+
+      <button class="btn btn-primary" (click)="confirmAssignment()" [disabled]="!selectedDriverId || assigning">
+        <span *ngIf="!assigning">
+          <i class="material-icons">check_circle</i>
+          Confirmer
+        </span>
+        <span *ngIf="assigning">
+          <i class="material-icons">hourglass_top</i>
+          Assignation...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>

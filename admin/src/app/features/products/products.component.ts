@@ -4,8 +4,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductsService, Product, Category } from '../../core/services/products.service';
 
-// import { SupabaseService } from '../../core/services/supabase.service'; // Service pour upload fichiers
-
 @Component({
   selector: 'app-products',
   templateUrl: './products.component.html',
@@ -14,22 +12,28 @@ import { ProductsService, Product, Category } from '../../core/services/products
   imports: [CommonModule, FormsModule],
 })
 export class ProductsComponent implements OnInit {
-  // Produit en cours de création ou édition
-  uploading = false;
   products: Product[] = [];
-  categories: Category[] = [];  // <-- ajouter ceci
-  loading = false;
+  categories: Category[] = [];
   selectedCategoryId: number | null = null;
   newProduct: Partial<Product> = {};
   editingProduct: Product | null = null;
   newProductName = '';
   newProductPrice: number | null = null;
   newProductStock: number | null = null;
+  uploading = false;
+  loading = false;
+  showCreateForm = false;
+  showEditForm = false;
+  showCategoryForm = false;
+  newCategory: Partial<Category> = {
+    name: '',
+    description: '',
+    image_url: ''
+  };
 
   constructor(
     private productsService: ProductsService,
-    // private supabase: SupabaseService
-  ) {}
+  ) { }
 
 
   ngOnInit(): void {
@@ -50,11 +54,15 @@ export class ProductsComponent implements OnInit {
 
   startEdit(product: Product) {
     this.editingProduct = { ...product };
+    this.showEditForm = true;
   }
+
 
   cancelEdit() {
     this.editingProduct = null;
+    this.showEditForm = false;
   }
+
 
   saveEdit() {
     if (!this.editingProduct) return;
@@ -105,75 +113,151 @@ export class ProductsComponent implements OnInit {
     this.productsService.getCategories().subscribe(res => (this.categories = res.data));
   }
 
-  getCategoryName(product: Product): string {
-    const cat = this.categories.find(c => c.id === product.category_id);
-    return cat ? cat.name : '—';
+  /**
+ * Get category name - accepts Product object OR category ID
+ */
+  getCategoryName(productOrId: Product | number): string {
+    let categoryId: number;
+
+    if (typeof productOrId === 'number') {
+      categoryId = productOrId;
+    } else {
+      categoryId = productOrId.category_id;
+    }
+
+    const category = this.categories.find(c => c.id === categoryId);
+    return category ? category.name : 'Sans catégorie';
   }
 
   async saveProduct() {
-  if (!this.editingProduct) return;
+    if (!this.editingProduct) return;
 
-  // if ((this.editingProduct as any).image_file) {
-  //   const url = await this.supabase.uploadFile((this.editingProduct as any).image_file);
-  //   this.editingProduct.image_url = url;
-  // }
-
-  this.productsService.updateProduct(this.editingProduct.id, this.editingProduct)
-    .subscribe({
-      next: () => {
-        const idx = this.products.findIndex(p => p.id === this.editingProduct!.id);
-        if (idx > -1) this.products[idx] = { ...this.editingProduct! };
-        this.editingProduct = null;
-      },
-      error: console.error
-    });
-}
-
-
-// Filtrage des produits par catégorie
-filteredProducts(): Product[] {
-  if (!this.selectedCategoryId) return this.products;
-  return this.products.filter(p => p.category_id === this.selectedCategoryId);
-}
-
-// ---------------- CRUD ----------------
-
-  async createProduct() {
-  if (!this.newProduct.name || !this.newProduct.category_id || !this.newProduct.price) {
-    alert("Veuillez remplir les champs obligatoires !");
-    return;
+    this.productsService
+      .updateProduct(this.editingProduct.id, this.editingProduct)
+      .subscribe({
+        next: () => {
+          this.loadProducts();
+          this.cancelEdit();
+        },
+        error: console.error,
+      });
   }
 
-  this.uploading = true;
 
-  // Upload image si fournie
-  // if (this.newProduct.image_file) {
-  //   const url = await this.supabase.uploadFile(this.newProduct.image_file);
-  //   this.newProduct.image_url = url;
-  // }
 
-  this.productsService.createProduct(this.newProduct as Product).subscribe({
-    next: res => {
-      this.products.push(res);
-      this.newProduct = {};
-      this.uploading = false;
-    },
-    error: err => {
-      console.error(err);
-      this.uploading = false;
+  // Filtrage des produits par catégorie
+  filteredProducts(): Product[] {
+    if (!this.selectedCategoryId) return this.products;
+    return this.products.filter(p => p.category_id === this.selectedCategoryId);
+  }
+
+  openCreateForm() {
+    this.newProduct = {
+      is_active: true
+    };
+    this.showCreateForm = true;
+  }
+
+  cancelCreate() {
+    this.newProduct = {};
+    this.showCreateForm = false;
+  }
+
+  createProduct() {
+    if (
+      !this.newProduct.name ||
+      !this.newProduct.price ||
+      !this.newProduct.quantity ||
+      !this.newProduct.category_id
+    ) {
+      alert('Tous les champs obligatoires doivent être remplis');
+      return;
     }
-  });
-}
 
+    this.productsService.createProduct(this.newProduct).subscribe({
+      next: () => {
+        this.loadProducts();
+        this.cancelCreate();
+      },
+      error: console.error,
+    });
+  }
 
+  countProductsByCategory(categoryId: number): number {
+    return this.products.filter(p => p.category_id === categoryId).length;
+  }
 
-  // ---------------- Helper ----------------
-
-  // onFileSelected(event: any, target: 'new' | 'edit') {
-  //   const file = event.target.files[0];
-  //   if (!file) return;
-  //   if (target === 'new') this.newProduct.image_file = file;
-  //   else if (this.editingProduct) (this.editingProduct as any).image_file = file;
+  // onImageError(event: Event) {
+  //   const img = event.target as HTMLImageElement;
+  //   if (img) {
+  //     img.src = this.placeholderImage;
+  //   }
   // }
 
+
+  /**
+   * Cancel both create and edit forms (universal close)
+   */
+  cancelAll(): void {
+    if (this.showCreateForm) {
+      this.cancelCreate();
+    }
+    if (this.showEditForm) {
+      this.cancelEdit();
+    }
+    if (this.showCategoryForm) {
+      this.showCategoryForm = false;
+      this.resetCategoryForm();
+    }
+  }
+
+  /**
+ * Validate product data (for both create and edit)
+ */
+  isValid(product: Partial<Product> | null): boolean {
+    if (!product) return false;
+
+    return !!(
+      product.name?.trim() &&
+      product.price !== null &&
+      product.price !== undefined &&
+      product.price > 0 &&
+      product.quantity !== null &&
+      product.quantity !== undefined &&
+      product.quantity >= 0 &&
+      product.category_id
+    );
+  }
+
+  /**
+ * Crée une nouvelle catégorie
+ */
+  createCategory() {
+    if (!this.newCategory.name) return;
+
+    this.productsService.createCategory(this.newCategory).subscribe({
+      next: (res) => {
+        // Recharger les catégories pour mettre à jour la liste défilable
+        this.loadCategories();
+        // Réinitialiser et fermer
+        this.resetCategoryForm();
+        this.showCategoryForm = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors de la création de la catégorie', err);
+        alert('Erreur lors de la création de la catégorie');
+      }
+    });
+  }
+
+  /**
+   * Réinitialise l'objet catégorie
+   */
+  resetCategoryForm() {
+    this.newCategory = {
+      name: '',
+      description: '',
+      image_url: ''
+    };
+  }
 }

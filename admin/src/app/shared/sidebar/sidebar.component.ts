@@ -1,8 +1,7 @@
-// src/app/shared/sidebar/sidebar.component.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
+import { Admin, AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -13,44 +12,57 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class SidebarComponent {
   menuItems = [
-    { 
-      icon: '📊', 
-      label: 'Dashboard', 
+    {
+      icon: 'dashboard',
+      label: 'Dashboard',
       route: '/dashboard'
     },
     {
-      icon: '📦',
+      icon: 'inventory_2',
       label: 'Produits',
       route: '/products'
     },
-    { 
-      icon: '🚚', 
-      label: 'Livraisons', 
-      route: '/deliveries',
-      // children: [
-      //   { label: 'Liste', route: '/deliveries' },
-      //   { label: 'En cours', route: '/deliveries/active' },
-      //   { label: 'Historique', route: '/deliveries/history' }
-      // ]
+    {
+      icon: 'shopping_cart',
+      label: 'Commandes',
+      route: '/orders'
     },
-    { 
-      icon: '👥', 
-      label: 'Livreurs', 
-      route: '/drivers' 
+    {
+      icon: 'local_shipping',
+      label: 'Livraisons',
+      route: '/deliveries'
     },
-    { 
-      icon: '🗺️', 
-      label: 'Carte', 
-      route: '/map' 
+    {
+      icon: 'group',
+      label: 'Livreurs',
+      route: '/drivers'
     },
-    { 
-      icon: '📈', 
-      label: 'Rapports', 
-      route: '/reports' 
+    {
+      icon: 'map',
+      label: 'Carte',
+      route: '/map'
+    },
+    {
+      icon: 'analytics',
+      label: 'Rapports',
+      route: '/reports'
     }
   ];
 
-  constructor(public authService: AuthService) {}
+  adminProfile?: Admin;
+
+  constructor(private authService: AuthService) { }
+
+  async ngOnInit(): Promise<void> {
+    this.authService.getProfile().subscribe({
+      next: (profile) => {
+        this.adminProfile = profile;
+      },
+      error: (err) => {
+        console.error('Failed to load profile', err);
+      }
+    });
+  }
 
   logout(): void {
     if (confirm('Voulez-vous vraiment vous déconnecter ?')) {

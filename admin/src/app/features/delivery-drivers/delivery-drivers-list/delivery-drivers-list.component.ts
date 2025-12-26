@@ -3,8 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DeliveryDriversService } from '../../../core/services/delivery-drivers.service';
-import { DeliveryDriver } from '../../../core/models/delivery.model';
+import { DeliveryDriversService, DeliveryDriver } from '../../../core/services/delivery-drivers.service';
 
 @Component({
   selector: 'app-delivery-drivers-list',
@@ -16,50 +15,28 @@ import { DeliveryDriver } from '../../../core/models/delivery.model';
 export class DeliveryDriversListComponent implements OnInit {
   drivers: DeliveryDriver[] = [];
   loading = true;
-  currentPage = 1;
-  perPage = 10;
-  totalDrivers = 0;
   searchTerm = '';
-  filterAvailability: string = 'all';
-  filterVehicleType: string = 'all';
-  sortBy: 'name' | 'availability' | 'vehicle' = 'name';
-  sortDirection: 'asc' | 'desc' = 'asc';
+  filter: 'all' | 'available' | 'busy' = 'all';
 
   constructor(
     private driversService: DeliveryDriversService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadDrivers();
   }
 
   /**
-   * Charge la liste des livreurs
+   * Charge les livreurs via le service
    */
   loadDrivers(): void {
     this.loading = true;
-    const filters: any = {};
-
-    if (this.searchTerm) {
-      filters.search = this.searchTerm;
-    }
-
-    if (this.filterAvailability !== 'all') {
-      filters.is_available = this.filterAvailability === 'available';
-    }
-
-    if (this.filterVehicleType !== 'all') {
-      filters.vehicleType = this.filterVehicleType;
-    }
-
-    this.driversService.getDrivers(this.currentPage, this.perPage, filters)
+    // On récupère une large plage pour la gestion locale des filtres style "Classroom"
+    this.driversService.getDrivers(1, 100, { search: this.searchTerm })
       .subscribe({
         next: (response) => {
-          // Adapt API shape: API may return drivers with 'name', 'email', 'is_available'
-          this.drivers = this.normalizeDrivers(response.data);
-          this.drivers = this.sortDrivers(this.drivers);
-          this.totalDrivers = response.total;
+          this.drivers = response.data;
           this.loading = false;
         },
         error: (error) => {
@@ -70,292 +47,103 @@ export class DeliveryDriversListComponent implements OnInit {
   }
 
   /**
-   * Tri des livreurs
+   * Retourne la liste filtrée pour le template
    */
-  private sortDrivers(drivers: DeliveryDriver[]): DeliveryDriver[] {
-    return drivers.sort((a, b) => {
-      let comparison = 0;
+  filteredDrivers(): DeliveryDriver[] {
+    if (!this.drivers) return [];
+    
+    let list = this.drivers;
 
-      switch (this.sortBy) {
-        case 'name':
-          comparison = this.getDriverDisplayName(a).localeCompare(this.getDriverDisplayName(b));
-          break;
-        case 'availability':
-          comparison = (a.isAvailable === b.isAvailable) ? 0 : a.isAvailable ? -1 : 1;
-          break;
-      }
-
-      return this.sortDirection === 'asc' ? comparison : -comparison;
-    });
-  }
-
-  /**
-   * Normalize drivers coming from API (supporting both legacy and new API shape)
-   */
-  private normalizeDrivers(payload: any[]): DeliveryDriver[] {
-    return payload.map(p => {
-      // If API already sends fields matching DeliveryDriver interface, keep them.
-      if ((p as any).firstName || (p as any).lastName) {
-        return p as DeliveryDriver;
-      }
-
-      // New API shape: { id, name, email, is_available, statistics }
-      const name = (p as any).name || '';
-      const [firstName, ...rest] = name.split(' ');
-      const lastName = rest.join(' ') || '';
-
-      const driver: any = {
-        id: p.id,
-        name: p.name,
-        phone: (p as any).phone || '',
-        isAvailable: (p as any).is_available ?? (p as any).isAvailable ?? false,
-        currentLocation: (p as any).currentLocation,
-        email: (p as any).email
-      } as DeliveryDriver & { email?: string };
-
-      return driver;
-    });
-  }
-
-  getDriverDisplayName(d: DeliveryDriver): string {
-    // Prefer name if present on payload
-    const name = (d as any).name as string | undefined;
-    if (name) return name;
-    return `${d.name || ''}`.trim() || 'N/A';
-  }
-
-  /** Initiales pour avatar */
-  getDriverInitials(d: DeliveryDriver): string {
-    const name = (d as any).name as string | undefined;
-    if (name) {
-      return name
-        .split(' ')
-        .map(n => n.charAt(0))
-        .slice(0, 2)
-        .join('')
-        .toUpperCase();
+    // Filtre de statut (Tabs)
+    if (this.filter === 'available') {
+      list = list.filter(d => d.is_available);
+    } else if (this.filter === 'busy') {
+      list = list.filter(d => !d.is_available);
     }
-    return (d.name?.charAt(0) || '').toUpperCase();
-  }
 
-  /** Email si présent */
-  getDriverEmail(d: DeliveryDriver): string {
-    return (d as any).email ?? '';
-  }
-
-  /** Disponibilité unifiée (supporte is_available ou isAvailable) */
-  isDriverAvailable(d: DeliveryDriver): boolean {
-    if ((d as any).is_available !== undefined) return !!(d as any).is_available;
-    return !!d.isAvailable;
-  }
-
-  /** Libellé de disponibilité */
-  getDriverAvailabilityLabel(d: DeliveryDriver): string {
-    return this.isDriverAvailable(d) ? 'Disponible' : 'Indisponible';
+    return list;
   }
 
   /**
-   * Change le tri
+   * Gestion de la recherche
    */
-  changeSortBy(field: 'name' | 'availability' | 'vehicle'): void {
-    if (this.sortBy === field) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = field;
-      this.sortDirection = 'asc';
-    }
-    this.drivers = this.sortDrivers(this.drivers);
-  }
-
-  /**
-   * Recherche
-   */// Dans delivery-drivers-list.component.ts
-onSearch(event: any): void {
-  this.searchTerm = event.target.value;
-  this.currentPage = 1; // Reset à la première page
-  this.loadDrivers();   // Recharge avec le filtre
-}
-
-
-
-  /**
-   * Changement de filtre
-   */
-  onFilterChange(): void {
-    this.currentPage = 1;
+  onSearch(event: any): void {
+    this.searchTerm = event.target.value;
     this.loadDrivers();
   }
 
   /**
-   * Changement de page
+   * Change le filtre actif (Tabs)
    */
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.loadDrivers();
+  setFilter(filterType: 'all' | 'available' | 'busy'): void {
+    this.filter = filterType;
   }
 
   /**
-   * Créer un nouveau livreur
+   * Navigation vers création
    */
   createDriver(): void {
     this.router.navigate(['/drivers/new']);
   }
 
   /**
-   * Éditer un livreur
+   * Navigation vers édition
    */
   editDriver(driver: DeliveryDriver): void {
     this.router.navigate(['/drivers/edit', driver.id]);
   }
 
   /**
-   * Toggle la disponibilité d'un livreur
-   */
-  toggleAvailability(driver: DeliveryDriver): void {
-    this.driversService.toggleAvailability(driver.id, !driver.isAvailable)
-      .subscribe({
-        next: (updatedDriver) => {
-          driver.isAvailable = updatedDriver.isAvailable;
-          console.log(`✅ Disponibilité mise à jour pour ${driver.name}`);
-        },
-        error: (error) => {
-          console.error('❌ Error toggling availability:', error);
-          alert('Erreur lors de la modification de la disponibilité');
-        }
-      });
-  }
-
-  /**
-   * Supprimer un livreur
+   * Suppression d'un livreur
    */
   deleteDriver(driver: DeliveryDriver): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer ${driver.name} ?`)) {
-      this.driversService.deleteDriver(driver.id)
-        .subscribe({
-          next: () => {
-            console.log(`✅ Livreur supprimé: ${driver.name}`);
-            this.loadDrivers();
-          },
-          error: (error) => {
-            console.error('❌ Error deleting driver:', error);
-            alert('Erreur lors de la suppression du livreur');
-          }
-        });
+    if (confirm(`Supprimer définitivement le livreur ${driver.name} ?`)) {
+      this.driversService.deleteDriver(driver.id).subscribe({
+        next: () => this.loadDrivers(),
+        error: (err) => alert('Erreur lors de la suppression')
+      });
     }
   }
 
   /**
-   * Voir les statistiques d'un livreur
+   * Actions de la carte
    */
-  viewStatistics(driver: DeliveryDriver): void {
+  viewStats(driver: DeliveryDriver): void {
     this.router.navigate(['/drivers', driver.id, 'statistics']);
   }
 
+  assignTask(driver: DeliveryDriver): void {
+    if (!driver.is_available) {
+      alert('Ce livreur est actuellement occupé.');
+      return;
+    }
+    // Logique d'assignation ou redirection
+    console.log('Assignation pour:', driver.id);
+  }
+
   /**
-   * 📊 Export CSV
+   * Refresh manuel
+   */
+  refresh(): void {
+    this.loadDrivers();
+  }
+
+  /**
+   * Exports
    */
   exportToPdf(): void {
-    console.log('📥 Export PDF en cours...');
-    this.driversService.exportToPdf().subscribe({
-      next: (blob) => this.downloadBlob(blob, `livreurs_${new Date().toISOString().split('T')[0]}.pdf`),
-      error: (error) => { console.error('❌ Error exporting PDF:', error); alert('Erreur lors de l\'export PDF'); }
-    });
+    this.driversService.exportToPdf().subscribe(blob => this.downloadFile(blob, 'pdf'));
   }
 
   exportToExcel(): void {
-    console.log('📥 Export Excel en cours...');
-    this.driversService.exportToExcel().subscribe({
-      next: (blob) => this.downloadBlob(blob, `livreurs_${new Date().toISOString().split('T')[0]}.xlsx`),
-      error: (error) => { console.error('❌ Error exporting Excel:', error); alert('Erreur lors de l\'export Excel'); }
-    });
+    this.driversService.exportToExcel().subscribe(blob => this.downloadFile(blob, 'xlsx'));
   }
 
-  private downloadBlob(blob: Blob, filename: string) {
+  private downloadFile(blob: Blob, ext: string): void {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = filename;
+    link.download = `livreurs_${new Date().getTime()}.${ext}`;
     link.click();
-    window.URL.revokeObjectURL(url);
-    console.log('✅ Export réussi', filename);
-  }
-
-  /**
-   * 🔄 Rafraîchir la liste
-   */
-  refresh(): void {
-    console.log('🔄 Rafraîchissement...');
-    this.loadDrivers();
-  }
-
-  /**
-   * Réinitialiser les filtres
-   */
-  resetFilters(): void {
-    this.searchTerm = '';
-    this.filterAvailability = 'all';
-    this.filterVehicleType = 'all';
-    this.currentPage = 1;
-    this.loadDrivers();
-  }
-
-  /**
-   * Nombre total de pages
-   */
-  getTotalPages(): number {
-    return Math.ceil(this.totalDrivers / this.perPage);
-  }
-
-  /**
-   * Pages à afficher dans la pagination
-   */
-  getPageNumbers(): number[] {
-    const total = this.getTotalPages();
-    const current = this.currentPage;
-    const pages: number[] = [];
-
-    if (total <= 7) {
-      for (let i = 1; i <= total; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (current <= 3) {
-        pages.push(1, 2, 3, 4, -1, total);
-      } else if (current >= total - 2) {
-        pages.push(1, -1, total - 3, total - 2, total - 1, total);
-      } else {
-        pages.push(1, -1, current - 1, current, current + 1, -1, total);
-      }
-    }
-
-    return pages;
-  }
-
-  /**
-   * Obtenir le statut du livreur
-   */
-  getDriverStatus(driver: DeliveryDriver): string {
-    if (!driver.isAvailable) {
-      return 'Indisponible';
-    }
-    // Vous pouvez ajouter plus de logique ici
-    // Par exemple: en livraison, en pause, etc.
-    return 'Disponible';
-  }
-
-  /**
-   * Icône de tri
-   */
-  getSortIcon(field: 'name' | 'availability' | 'vehicle'): string {
-    if (this.sortBy !== field) return '↕️';
-    return this.sortDirection === 'asc' ? '↑' : '↓';
-  }
-
-  get availableDriversCount(): number {
-    return this.drivers.filter(d => d.isAvailable).length;
-  }
-
-  get hasAvailableDrivers(): boolean {
-    return this.availableDriversCount > 0;
   }
 }

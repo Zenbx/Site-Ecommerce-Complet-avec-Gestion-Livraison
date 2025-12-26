@@ -1,117 +1,211 @@
-<div class="reports-wrapper">
-
-  <header class="page-header">
-    <div class="header-title">
+<div class="reports-wrapper dashboard-content">
+  <header class="top-bar">
+    <div class="top-bar-left">
       <h1>Rapports et Statistiques</h1>
-      <span class="subtitle">Analyse des performances</span>
+      <span class="divider">/</span>
+      <span class="context">Analyse des performances</span>
     </div>
 
-    <div class="header-actions">
-      <button class="btn-outlined" (click)="exportPDF()" [disabled]="exportingPdf">
-        <i class="material-icons">description</i>
-        <span>{{ exportingPdf ? 'Export...' : 'PDF' }}</span>
-      </button>
-      <button class="btn-outlined" (click)="exportExcel()" [disabled]="exportingExcel">
-        <i class="material-icons">table_view</i>
-        <span>{{ exportingExcel ? 'Export...' : 'Excel' }}</span>
-      </button>
+    <div class="top-bar-right">
+      <div class="action-group" style="display: flex; gap: 10px; align-items: center;">
+
+        <div class="filter-groups">
+          <select [(ngModel)]="selectedPeriod" (change)="onPeriodChange()" class="filter-select">
+            <option *ngFor="let option of periodOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+
+        <div *ngIf="selectedPeriod === 'custom'" class="custom-dates" style="display: flex; gap: 5px;">
+          <input type="date" [(ngModel)]="customStartDate" (change)="onCustomDateChange()" class="form-control">
+          <input type="date" [(ngModel)]="customEndDate" (change)="onCustomDateChange()" class="form-control">
+        </div>
+
+        <button class="btn-action" (click)="loadData()" [disabled]="loading">
+          <i class="material-icons">refresh</i>
+        </button>
+
+        <button class="btn-action" (click)="exportReport('pdf')" [disabled]="exporting || loading">
+          <i class="material-icons">picture_as_pdf</i>
+          <span>PDF</span>
+        </button>
+
+        <button class="btn-action" (click)="exportReport('excel')" [disabled]="exporting || loading">
+          <i class="material-icons">table_view</i>
+          <span>Excel</span>
+        </button>
+      </div>
     </div>
   </header>
 
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div>
+  <div *ngIf="loading" class="loading-bar">
+    <div class="indeterminate"></div>
   </div>
 
-  <main *ngIf="!loading">
+  <main *ngIf="!loading && stats" class="animate-fade-in" style="margin-top: 24px;">
 
-    <!-- Stats globales des livraisons -->
-    <section *ngIf="stats" class="reports-content">
-      <section class="summary-cards">
-        <div class="summary-item">
-          <span class="label">Total Livraisons</span>
-          <span class="value">{{ stats.totalDeliveries || 0 }}</span>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Total Livraisons</span>
+          <i class="material-icons kpi-icon">local_shipping</i>
         </div>
-        <div class="summary-item">
-          <span class="label">Livrées Aujourd'hui</span>
-          <span class="value success-text">{{ stats.todayDeliveries || 0 }}</span>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.totals.total }}</span>
         </div>
-        <div class="summary-item">
-          <span class="label">Taux de Succès</span>
-          <span class="value">{{ stats.successRate || 0 }}%</span>
-        </div>
-        <div class="summary-item">
-          <span class="label">Temps Moyen</span>
-          <span class="value">{{ formatTime(stats.averageTime) }}</span>
-        </div>
-      </section>
+        <div class="kpi-progress info"></div>
+      </div>
 
-      <div class="charts-layout">
-        <section class="chart-panel" *ngIf="stats.deliveriesByDay?.length">
-          <div class="panel-header">
-            <h2>Volume par jour</h2>
-          </div>
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Livrées</span>
+          <i class="material-icons kpi-icon">check_circle</i>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.totals.delivered }}</span>
+        </div>
+        <div class="kpi-progress success"></div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Taux de Succès</span>
+          <i class="material-icons kpi-icon">show_chart</i>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.rates.successRate }}%</span>
+          <span class="trend-badge" [ngClass]="stats.rates.successRate >= 80 ? 'up' : 'down'">
+            <i class="material-icons">{{ stats.rates.successRate >= 80 ? 'trending_up' : 'trending_down' }}</i>
+          </span>
+        </div>
+        <div class="kpi-progress" [ngClass]="stats.rates.successRate >= 80 ? 'success' : 'warning'"></div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Temps Moyen</span>
+          <i class="material-icons kpi-icon">schedule</i>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.timing.averageTime }}</span>
+        </div>
+        <div class="kpi-progress info"></div>
+      </div>
+    </div>
+
+    <div class="split-layout">
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Volume par jour</h2>
+          <span class="indicator">
+            <i class="material-icons" style="font-size: 16px;">bar_chart</i>
+            Vue dynamique
+          </span>
+        </div>
+        <div class="panel-body" style="padding: 24px; min-height: 300px;">
           <div class="chart-container">
             <div class="bar-chart">
-              <div *ngFor="let item of stats.deliveriesByDay" class="chart-column">
+              <div *ngFor="let item of stats.by_day" class="chart-column">
                 <div class="column-track">
-                  <div class="fill-bar" [style.height.%]="(item.count / 250) * 100" [attr.data-value]="item.count">
+                  <div class="fill-bar" [style.height.%]="getBarHeight(item.count)"
+                    [title]="item.count + ' livraisons'">
+                    <span class="tooltip-value">{{ item.count }}</span>
                   </div>
                 </div>
                 <span class="column-label">{{ item.day }}</span>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section class="chart-panel" *ngIf="stats.deliveriesByStatus">
-          <div class="panel-header">
-            <h2>Répartition par statut</h2>
-          </div>
-          <div class="status-list">
-            <div *ngFor="let status of statusKeys" class="status-row">
-              <div class="row-info">
-                <span class="dot" [ngClass]="statusClasses[status]"></span>
-                <span>{{ statusLabels[status] }}</span>
-              </div>
-              <div class="row-metric">
-                <span class="percent">{{ stats.deliveriesByStatus[status] || 0 }}%</span>
-                <div class="mini-bar">
-                <div class="fill" [ngClass]="statusClasses[status]"
-                  [style.width.%]="stats.deliveriesByStatus[status] || 0"></div>
-                </div>
-              </div>
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Statuts</h2>
+        </div>
+        <div class="panel-body" style="padding: 0;">
+          <div class="status-list-widget">
+            <div class="status-row">
+              <span class="status-chip status-delivered">Livrées</span>
+              <span class="count">{{ stats.totals.delivered }}</span>
+            </div>
+            <div class="status-row">
+              <span class="status-chip status-failed">Échouées</span>
+              <span class="count">{{ stats.totals.failed }}</span>
+            </div>
+            <div class="status-row">
+              <span class="status-chip status-pending">En cours</span>
+              <span class="count">{{ stats.totals.pending }}</span>
+            </div>
+            <div class="status-row">
+              <span class="status-chip" style="background: #f1f3f4; color: #5f6368;">Annulées</span>
+              <span class="count">{{ stats.totals.canceled }}</span>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel" style="margin-top: 24px;" *ngIf="deliveryPersons.length > 0">
+      <div class="panel-header">
+        <h2>Performance des livreurs</h2>
+        <button class="btn-action" style="padding: 4px 12px; font-size: 12px;" (click)="exportDriversPdf()">
+          <i class="material-icons" style="font-size: 16px;">picture_as_pdf</i>
+          Export
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Livreur</th>
+              <th class="text-right">Total</th>
+              <th class="text-right">Succès</th>
+              <th class="text-right">Échecs</th>
+              <th class="text-right">Taux</th>
+              <th class="text-right">Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let driver of deliveryPersons">
+              <td>
+                <div class="user-cell">
+                  <div class="avatar-initial">{{ driver.name.charAt(0) }}</div>
+                  <span class="primary-text">{{ driver.name }}</span>
+                </div>
+              </td>
+              <td class="text-right">{{ driver.totalDeliveries }}</td>
+              <td class="text-right" style="color: #1e8e3e; font-weight: 500;">{{ driver.completedDeliveries }}</td>
+              <td class="text-right" style="color: #d93025;">{{ driver.failedDeliveries }}</td>
+              <td class="text-right">
+                <span class="status-chip" [ngClass]="{
+                  'status-delivered': driver.successRate >= 80,
+                  'status-pending': driver.successRate >= 50 && driver.successRate < 80,
+                  'status-failed': driver.successRate < 50
+                }">
+                  {{ driver.successRate }}%
+                </span>
+              </td>
+              <td class="text-right">
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                  <i class="material-icons" style="font-size: 16px; color: #e37400;">star</i>
+                  <span>{{ driver.rating | number:'1.1-1' }}</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
-    <!-- Performance des livreurs -->
-    <section *ngIf="deliveryPersons.length" class="delivery-persons-report">
-      <h2>Performance des livreurs</h2>
-      <table class="report-table">
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Total Livraisons</th>
-            <th>Livrées</th>
-            <th>Échecs</th>
-            <th>Taux de Succès</th>
-            <th>Note Moyenne</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let driver of deliveryPersons">
-            <td>{{ driver.name }}</td>
-            <td>{{ driver.totalDeliveries }}</td>
-            <td>{{ driver.completedDeliveries }}</td>
-            <td>{{ driver.failedDeliveries }}</td>
-            <td>{{ driver.successRate }}%</td>
-            <td>{{ driver.rating }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
   </main>
+
+  <div *ngIf="!loading && !stats" class="panel empty-state" style="text-align: center; padding: 48px;">
+    <i class="material-icons" style="font-size: 48px; color: #dadce0;">assessment</i>
+    <h3 style="margin-top: 16px; color: #5f6368;">Aucune donnée disponible</h3>
+    <p style="color: #5f6368;">Veuillez sélectionner une autre période.</p>
+  </div>
 </div>

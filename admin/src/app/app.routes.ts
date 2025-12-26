@@ -6,6 +6,7 @@ import { AccessDeniedComponent } from './shared/access-denied/access-denied.comp
 import { LayoutComponent } from './shared/layout/layout.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { ProductsComponent } from './features/products/products.component';
+import { OrdersListComponent } from './features/orders/orders-list.component';
 import { DeliveryDriversListComponent } from './features/delivery-drivers/delivery-drivers-list/delivery-drivers-list.component';
 import { DriverFormComponent } from './features/delivery-drivers/driver-form/driver-form.component';
 import { DeliveriesListComponent } from './features/deliveries/deliveries-list/deliveries-list.component'
@@ -17,9 +18,9 @@ import { ReportsComponent } from './features/reports/reports.component';
 import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  { 
-    path: 'login', 
-    component: LoginComponent 
+  {
+    path: 'login',
+    component: LoginComponent
   },
   {
     path: 'register',
@@ -36,18 +37,22 @@ export const routes: Routes = [
     component: LayoutComponent,
     canActivate: [AuthGuard], // Décommente pour activer la protection
     children: [
-      { 
-        path: '', 
-        redirectTo: 'dashboard', 
-        pathMatch: 'full' 
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
       },
-      { 
-        path: 'dashboard', 
-        component: DashboardComponent 
+      {
+        path: 'dashboard',
+        component: DashboardComponent
       },
       {
         path: 'products',
         component: ProductsComponent
+      },
+      {
+        path: 'orders',
+        component: OrdersListComponent
       },
       {
         path: 'drivers',
@@ -81,16 +86,16 @@ export const routes: Routes = [
         path: 'map',
         component: MapComponent
       },
-      { 
-        path: 'reports', 
-        component: ReportsComponent 
+      {
+        path: 'reports',
+        component: ReportsComponent
       }
     ]
   },
 
   // Redirection par défaut
-  { 
-    path: '**', 
-    redirectTo: 'login' 
+  {
+    path: '**',
+    redirectTo: 'login'
   }
 ];

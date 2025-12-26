@@ -101,12 +101,14 @@ $google-blue: #1a73e8;
     justify-content: space-between;
     align-items: center;
     h3 { font-size: 14px; margin: 0; color: $text-main; }
-    .mark-read-btn { 
+  }
+
+  .mark-read-btn { 
       background: none; border: none; color: $google-blue; 
       font-size: 12px; cursor: pointer; font-weight: 500;
+      text-decoration: none;
       &:hover { text-decoration: underline; }
     }
-  }
 }
 
 // PROFIL UTILISATEUR

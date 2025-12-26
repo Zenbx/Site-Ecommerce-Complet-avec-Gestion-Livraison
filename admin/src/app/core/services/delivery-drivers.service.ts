@@ -2,25 +2,67 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of, delay, map } from 'rxjs';
+import { Observable, map, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DeliveryDriver } from '../models/delivery.model';
 
+/**
+ * Driver model matching API response
+ */
+export interface DeliveryDriver {
+  id: number;
+  name: string;
+  email: string;
+  id_card_number: string;
+  address: string;
+  photo_url: string;
+  is_available: boolean;
+  availability_status: string;
+  statistics: {
+    total_deliveries: number;
+    completed_deliveries: number;
+    pending_deliveries: number;
+  };
+  created_at: string;
+  updated_at: string;
+  member_since: string;
+}
+
+/**
+ * API Response wrapper
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+/**
+ * Request to create a driver
+ */
 export interface DriverCreateRequest {
-  firstName: string;
-  lastName: string;
-  phone: string;
+  name: string;
+  email: string;
+  id_card_number: string;
+  address: string;
+  photo_url: string;
+  is_available: boolean;
+}
+
+/**
+ * Request to update a driver
+ */
+export interface DriverUpdateRequest {
+  name?: string;
   email?: string;
-  vehicleType: string;
-  vehiclePlate: string;
-  licenseNumber: string;
+  id_card_number?: string;
+  address?: string;
+  photo_url?: string;
+  is_available?: boolean;
 }
 
-export interface DriverUpdateRequest extends Partial<DriverCreateRequest> {
-  isAvailable?: boolean;
-  isActive?: boolean;
-}
-
+/**
+ * Drivers list response with pagination
+ */
 export interface DriversListResponse {
   data: DeliveryDriver[];
   total: number;
@@ -28,27 +70,17 @@ export interface DriversListResponse {
   perPage: number;
 }
 
-export interface DriverStatistics {
-  totalDeliveries: number;
-  completedDeliveries: number;
-  failedDeliveries: number;
-  averageDeliveryTime: number;
-  successRate: number;
-  totalDistance: number;
-  rating: number;
-  lastDelivery?: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })
 export class DeliveryDriversService {
-  private apiUrl = `${environment.apiUrl}/delivery-persons`;
+  private apiUrl = `${environment.apiUrl}/admin/delivery-persons`;
+  private apiExportUrl = `${environment.apiUrl}/admin/reports/delivery-persons/export`;
 
   constructor(private http: HttpClient) {}
 
   /**
-   * Récupère la liste des livreurs avec pagination et filtres
+   * Get all drivers with optional pagination and filters
    */
   getDrivers(page: number = 1, perPage: number = 10, filters?: any): Observable<DriversListResponse> {
     let params = new HttpParams()
@@ -57,157 +89,228 @@ export class DeliveryDriversService {
 
     if (filters) {
       Object.keys(filters).forEach(key => {
-        if (filters[key]) {
+        if (filters[key] !== null && filters[key] !== undefined) {
           params = params.set(key, filters[key]);
         }
       });
     }
 
-    return this.http.get<DriversListResponse>(this.apiUrl, { params });
+    return this.http.get<ApiResponse<DeliveryDriver[]>>(this.apiUrl, { params }).pipe(
+      map(response => ({
+        data: response.data,
+        total: response.data.length,
+        page: page,
+        perPage: perPage
+      }))
+    );
   }
 
   /**
-   * Récupère un livreur par ID
+   * Get driver by ID
    */
   getDriver(id: number): Observable<DeliveryDriver> {
-    return this.http.get<DeliveryDriver>(`${this.apiUrl}/${id}`);
+    return this.http.get<ApiResponse<DeliveryDriver>>(`${this.apiUrl}/${id}`).pipe(
+      map(response => response.data)
+    );
   }
 
   /**
-   * Crée un nouveau livreur
+   * Create a new driver
    */
   createDriver(driver: DriverCreateRequest): Observable<DeliveryDriver> {
-    return this.http.post<DeliveryDriver>(this.apiUrl, driver);
+    return this.http.post<ApiResponse<DeliveryDriver>>(this.apiUrl, driver).pipe(
+      map(response => response.data)
+    );
   }
 
   /**
-   * Met à jour un livreur
+   * Update a driver
    */
   updateDriver(id: number, driver: DriverUpdateRequest): Observable<DeliveryDriver> {
-    return this.http.put<DeliveryDriver>(`${this.apiUrl}/${id}`, driver);
+    return this.http.put<ApiResponse<DeliveryDriver>>(`${this.apiUrl}/${id}`, driver).pipe(
+      map(response => response.data)
+    );
   }
 
   /**
-   * Supprime un livreur
+   * Delete a driver
    */
   deleteDriver(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`).pipe(
+      map(() => undefined)
+    );
   }
 
   /**
-   * Change la disponibilité d'un livreur
+   * Toggle driver availability
    */
   toggleAvailability(id: number, isAvailable: boolean): Observable<DeliveryDriver> {
-    return this.http.patch<DeliveryDriver>(`${this.apiUrl}/${id}/availability`, { isAvailable });
+    return this.http.patch<ApiResponse<DeliveryDriver>>(
+      `${this.apiUrl}/${id}/availability`, 
+      { is_available: isAvailable }
+    ).pipe(
+      map(response => response.data)
+    );
   }
 
   /**
-   * Récupère les livreurs disponibles
+   * Get available drivers only
    */
   getAvailableDrivers(): Observable<DeliveryDriver[]> {
-    return this.http.get<DeliveryDriver[]>(`${this.apiUrl}/available`);
+    return this.http.get<ApiResponse<DeliveryDriver[]>>(`${this.apiUrl}?available=1`).pipe(
+      map(response => response.data.filter(d => d.is_available))
+    );
   }
 
   /**
-   * Récupère les statistiques d'un livreur
+   * Get driver statistics
    */
-  getDriverStatistics(id: number): Observable<DriverStatistics> {
-    return this.http.get<DriverStatistics>(`${this.apiUrl}/${id}/statistics`);
+  getDriverStatistics(id: number): Observable<DeliveryDriver['statistics']> {
+    return this.getDriver(id).pipe(
+      map(driver => driver.statistics)
+    );
   }
 
   /**
-   * ASSIGNATION AUTOMATIQUE - Trouve le meilleur livreur pour une livraison
+   * Find best driver for auto-assignment (closest available driver)
    */
-  findBestDriver(deliveryLocation: { latitude: number; longitude: number }): Observable<DeliveryDriver | null> {
+  findBestDriver(deliveryLocation?: { latitude: number; longitude: number }): Observable<DeliveryDriver | null> {
     return this.getAvailableDrivers().pipe(
       map(drivers => {
         if (drivers.length === 0) return null;
 
-        // Calcule la distance pour chaque livreur disponible
-        const driversWithDistance = drivers.map(driver => ({
-          driver,
-          distance: this.calculateDistance(
-            deliveryLocation.latitude,
-            deliveryLocation.longitude,
-            driver.currentLocation?.latitude || 0,
-            driver.currentLocation?.longitude || 0
-          )
-        }));
-
-        // Trie par distance et retourne le plus proche
-        driversWithDistance.sort((a, b) => a.distance - b.distance);
-        
-        console.log('Auto-assignment:', {
-          total: drivers.length,
-          closest: driversWithDistance[0].driver.name,
-          distance: driversWithDistance[0].distance.toFixed(2) + ' km'
+        // Sort by least pending deliveries (or random if no location provided)
+        drivers.sort((a, b) => {
+          const aPending = a.statistics.pending_deliveries;
+          const bPending = b.statistics.pending_deliveries;
+          return aPending - bPending;
         });
 
-        return driversWithDistance[0].driver;
+        console.log('🚚 Auto-assignment - Best driver:', {
+          name: drivers[0].name,
+          pending: drivers[0].statistics.pending_deliveries,
+          completed: drivers[0].statistics.completed_deliveries
+        });
+
+        return drivers[0];
       })
     );
   }
 
   /**
-   * Calcule la distance entre deux points GPS (formule de Haversine)
-   */
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Rayon de la Terre en km
-    const dLat = this.deg2rad(lat2 - lat1);
-    const dLon = this.deg2rad(lon2 - lon1);
-    
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-    
-    return distance;
-  }
-
-  private deg2rad(deg: number): number {
-    return deg * (Math.PI / 180);
-  }
-
-  /**
-   * Export des livreurs en CSV
-   */
-  exportToCsv(): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/export/csv`, { responseType: 'blob' });
-  }
-
-  /**
-   * Export des livreurs en PDF
+   * Export drivers to PDF
    */
   exportToPdf(): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/export/pdf`, { responseType: 'blob' });
+    return this.http.get(`${this.apiExportUrl}/pdf`, { responseType: 'blob' });
   }
 
   /**
-   * Export des livreurs en Excel (XLSX/CSV fallback)
+   * Export drivers to Excel
    */
   exportToExcel(): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/export/excel`, { responseType: 'blob' });
+    return this.http.get(`${this.apiExportUrl}/excel`, { responseType: 'blob' });
   }
 
-  private generateCsv(drivers: DeliveryDriver[]): string {
-    const headers = ['ID', 'Prénom', 'Nom', 'Téléphone', 'Véhicule', 'Plaque', 'Disponible'];
-    const rows = drivers.map(d => [
-      d.id,
-      d.name,
-      d.phone,
-      d.email,
-      d.isAvailable ? 'Oui' : 'Non',
-      d.rating,
-      d.statistics,
-      d.totalDeliveries
-    ]);
+  /**
+   * Search drivers by name or email
+   */
+  searchDrivers(searchTerm: string): Observable<DeliveryDriver[]> {
+    return this.http.get<ApiResponse<DeliveryDriver[]>>(
+      `${this.apiUrl}?search=${encodeURIComponent(searchTerm)}`
+    ).pipe(
+      map(response => response.data)
+    );
+  }
 
-    return [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
+  /**
+   * Get drivers statistics summary
+   */
+  getDriversSummary(): Observable<{
+    total: number;
+    available: number;
+    busy: number;
+    totalDeliveries: number;
+  }> {
+    return this.getDrivers(1, 1000).pipe(
+      map(response => {
+        const drivers = response.data;
+        return {
+          total: drivers.length,
+          available: drivers.filter(d => d.is_available).length,
+          busy: drivers.filter(d => !d.is_available).length,
+          totalDeliveries: drivers.reduce((sum, d) => sum + d.statistics.total_deliveries, 0)
+        };
+      })
+    );
+  }
+
+  /**
+   * Validate photo file before upload
+   */
+  validatePhotoFile(file: File): { valid: boolean; error?: string } {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        valid: false,
+        error: 'Format non supporté. Utilisez JPG, PNG ou WebP.'
+      };
+    }
+
+    if (file.size > maxSize) {
+      return {
+        valid: false,
+        error: 'La taille du fichier ne doit pas dépasser 5MB.'
+      };
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Upload photo and return URL
+   * Note: Adjust endpoint based on your API
+   */
+  uploadPhoto(file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    return this.http.post<ApiResponse<{ photo_url: string }>>(
+      `${environment.apiUrl}/upload/driver-photo`,
+      formData
+    ).pipe(
+      map(response => response.data.photo_url)
+    );
+  }
+
+  /**
+   * Create driver with photo upload
+   */
+  createDriverWithPhoto(request: DriverCreateRequest, photoFile?: File): Observable<DeliveryDriver> {
+    if (photoFile) {
+      return this.uploadPhoto(photoFile).pipe(
+        switchMap(photoUrl => {
+          const updatedRequest = { ...request, photo_url: photoUrl };
+          return this.createDriver(updatedRequest);
+        })
+      );
+    }
+    return this.createDriver(request);
+  }
+
+  /**
+   * Update driver with photo upload
+   */
+  updateDriverWithPhoto(id: number, request: DriverUpdateRequest, photoFile?: File): Observable<DeliveryDriver> {
+    if (photoFile) {
+      return this.uploadPhoto(photoFile).pipe(
+        switchMap(photoUrl => {
+          const updatedRequest = { ...request, photo_url: photoUrl };
+          return this.updateDriver(id, updatedRequest);
+        })
+      );
+    }
+    return this.updateDriver(id, request);
   }
 }

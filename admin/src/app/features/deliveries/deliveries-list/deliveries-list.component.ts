@@ -6,9 +6,9 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { DeliveriesService, DeliveryFilters } from '../../../core/services/deliveries.service';
-import { DeliveryDriversService } from '../../../core/services/delivery-drivers.service';
+import { DeliveryDriversService, DeliveryDriver } from '../../../core/services/delivery-drivers.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
-import { Delivery, DeliveryDriver } from '../../../core/models/delivery.model';
+import { Delivery } from '../../../core/models/delivery.model';
 import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-deliveries-list',

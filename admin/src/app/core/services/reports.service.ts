@@ -1,62 +1,60 @@
-// src/app/features/reports/reports.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ApiResponse, DeliveriesReportData, DeliveryPersonStat, ReportParams } from '../models/reports.model';
 import { environment } from '../../../environments/environment';
 
-export interface DeliveriesByStatus {
-  delivered: number;
-  inProgress: number;
-  pending: number;
-  failed: number;
-}
-
-export interface DeliveryReportStats {
-  totalDeliveries: number;
-  todayDeliveries: number;
-  successRate: number;
-  averageTime: number;
-  deliveriesByDay?: { day: string; count: number }[];
-  deliveriesByStatus: DeliveriesByStatus; // <- plus optional
-}
-
-export interface DeliveryPersonPerformance {
-  id: number;
-  name: string;
-  totalDeliveries: number;
-  completedDeliveries: number;
-  failedDeliveries: number;
-  successRate: number;
-  rating?: number;
-}
-
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class ReportsService {
-  private api = `${environment.apiUrl}/reports`;
+  private apiUrl = `${environment.apiUrl}/admin/reports`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  getDeliveriesReport(): Observable<DeliveryReportStats> {
-    return this.http.get<DeliveryReportStats>(`${this.api}/deliveries`);
+  // Construit les query params
+  private buildParams(params: ReportParams): HttpParams {
+    let httpParams = new HttpParams().set('period', params.period);
+    if (params.period === 'custom' && params.start_date && params.end_date) {
+      httpParams = httpParams
+        .set('start_date', params.start_date)
+        .set('end_date', params.end_date);
+    }
+    return httpParams;
   }
 
-  exportDeliveriesPdf(): Observable<Blob> {
-    return this.http.get(`${this.api}/deliveries/export/pdf`, { responseType: 'blob' });
+  getDeliveriesReport(params: ReportParams): Observable<DeliveriesReportData> {
+    return this.http.get<ApiResponse<DeliveriesReportData>>(`${this.apiUrl}/deliveries`, {
+      params: this.buildParams(params)
+    }).pipe(map(res => res.data));
   }
 
-  exportDeliveriesExcel(): Observable<Blob> {
-    return this.http.get(`${this.api}/deliveries/export/excel`, { responseType: 'blob' });
+  getDeliveryPersonsReport(params: ReportParams): Observable<DeliveryPersonStat[]> {
+    return this.http.get<ApiResponse<DeliveryPersonStat[]>>(`${this.apiUrl}/delivery-persons`, {
+      params: this.buildParams(params)
+    }).pipe(map(res => res.data));
   }
 
-  getDeliveryPersonsReport(): Observable<DeliveryPersonPerformance[]> {
-    return this.http.get<DeliveryPersonPerformance[]>(`${this.api}/delivery-persons`);
+  // Gestion des exports (Blob pour téléchargement fichier)
+  exportDeliveriesPdf(params: ReportParams): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/deliveries/export/pdf`, {
+      params: this.buildParams(params),
+      responseType: 'blob'
+    });
   }
 
-  exportDeliveryPersonsPdf(): Observable<Blob> {
-    return this.http.get(`${this.api}/delivery-persons/export/pdf`, { responseType: 'blob' });
+  exportDeliveriesExcel(params: ReportParams): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/deliveries/export/excel`, {
+      params: this.buildParams(params),
+      responseType: 'blob'
+    });
   }
 
-  exportDeliveryPersonsExcel(): Observable<Blob> {
-    return this.http.get(`${this.api}/delivery-persons/export/excel`, { responseType: 'blob' });
+  exportDeliveryPersonsPdf(params: ReportParams): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/delivery-persons/export/pdf`, {
+      params: this.buildParams(params),
+      responseType: 'blob'
+    });
   }
 }

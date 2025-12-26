@@ -51,13 +51,13 @@
             <i class="material-icons">inventory_2</i>
           </div>
           <div class="kpi-body">
-            <span class="kpi-value">{{ stats.readyToShip }}</span>
+            <span class="kpi-value">{{ stats.deliveries.assigned }}</span>
             <div class="kpi-trend" *ngIf="previousStats">
               <span class="trend-badge" 
-                [class.up]="hasIncreased(stats.readyToShip, previousStats.readyToShip)"
-                [class.down]="hasDecreased(stats.readyToShip, previousStats.readyToShip)">
-                {{ getTrendIcon(stats.readyToShip, previousStats.readyToShip) }}
-                {{ Math.abs(getChangePercentage(stats.readyToShip, previousStats.readyToShip)) }}%
+                [class.up]="hasIncreased(stats.deliveries.assigned, previousStats.deliveries.assigned)"
+                [class.down]="hasDecreased(stats.deliveries.assigned, previousStats.deliveries.assigned)">
+                {{ getTrendIcon(stats.deliveries.assigned, previousStats.deliveries.assigned) }}
+                {{ Math.abs(getChangePercentage(stats.deliveries.assigned, previousStats.deliveries.assigned)) }}%
               </span>
             </div>
           </div>
@@ -70,13 +70,13 @@
             <i class="material-icons">local_shipping</i>
           </div>
           <div class="kpi-body">
-            <span class="kpi-value">{{ stats.inTransit }}</span>
+            <span class="kpi-value">{{ stats.deliveries.in_transit }}</span>
             <div class="kpi-trend" *ngIf="previousStats">
               <span class="trend-badge" 
-                [class.up]="hasIncreased(stats.inTransit, previousStats.inTransit)"
-                [class.down]="hasDecreased(stats.inTransit, previousStats.inTransit)">
-                {{ getTrendIcon(stats.inTransit, previousStats.inTransit) }}
-                {{ Math.abs(getChangePercentage(stats.inTransit, previousStats.inTransit)) }}%
+                [class.up]="hasIncreased(stats.deliveries.in_transit, previousStats.deliveries.in_transit)"
+                [class.down]="hasDecreased(stats.deliveries.in_transit, previousStats.deliveries.in_transit)">
+                {{ getTrendIcon(stats.deliveries.in_transit, previousStats.deliveries.in_transit) }}
+                {{ Math.abs(getChangePercentage(stats.deliveries.in_transit, previousStats.deliveries.in_transit)) }}%
               </span>
             </div>
           </div>
@@ -89,13 +89,13 @@
             <i class="material-icons">check_circle</i>
           </div>
           <div class="kpi-body">
-            <span class="kpi-value">{{ stats.delivered }}</span>
+            <span class="kpi-value">{{ stats.deliveries.delivered }}</span>
             <div class="kpi-trend" *ngIf="previousStats">
               <span class="trend-badge" 
-                [class.up]="hasIncreased(stats.delivered, previousStats.delivered)"
-                [class.down]="hasDecreased(stats.delivered, previousStats.delivered)">
-                {{ getTrendIcon(stats.delivered, previousStats.delivered) }}
-                {{ Math.abs(getChangePercentage(stats.delivered, previousStats.delivered)) }}%
+                [class.up]="hasIncreased(stats.deliveries.delivered, previousStats.deliveries.delivered)"
+                [class.down]="hasDecreased(stats.deliveries.delivered, previousStats.deliveries.delivered)">
+                {{ getTrendIcon(stats.deliveries.delivered, previousStats.deliveries.delivered) }}
+                {{ Math.abs(getChangePercentage(stats.deliveries.delivered, previousStats.deliveries.delivered)) }}%
               </span>
             </div>
           </div>
@@ -108,13 +108,13 @@
             <i class="material-icons">error</i>
           </div>
           <div class="kpi-body">
-            <span class="kpi-value">{{ stats.failed }}</span>
+            <span class="kpi-value">{{ stats.deliveries.failed }}</span>
             <div class="kpi-trend" *ngIf="previousStats">
               <span class="trend-badge" 
-                [class.up]="hasIncreased(stats.failed, previousStats.failed)"
-                [class.down]="hasDecreased(stats.failed, previousStats.failed)">
-                {{ getTrendIcon(stats.failed, previousStats.failed) }}
-                {{ Math.abs(getChangePercentage(stats.failed, previousStats.failed)) }}%
+                [class.up]="hasIncreased(stats.deliveries.failed, previousStats.deliveries.failed)"
+                [class.down]="hasDecreased(stats.deliveries.failed, previousStats.deliveries.failed)">
+                {{ getTrendIcon(stats.deliveries.failed, previousStats.deliveries.failed) }}
+                {{ Math.abs(getChangePercentage(stats.deliveries.failed, previousStats.deliveries.failed)) }}%
               </span>
             </div>
           </div>
@@ -125,63 +125,67 @@
       <div class="split-layout">
         
         <section class="panel data-panel">
-          <div class="panel-header">
-            <h2>Dernières activités</h2>
-            <div class="panel-actions">
-              <span class="indicator">
-                <span class="pulse-ring"></span>
-                En direct
-              </span>
+  <div class="panel-header">
+    <h2>Dernières activités</h2>
+    <div class="panel-actions">
+      <span class="indicator">
+        <span class="pulse-ring"></span>
+        En direct
+      </span>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Activité</th>
+          <th>Détails</th>
+          <th class="text-right">Moment</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="loading">
+          <td colspan="3" class="empty-cell">Chargement...</td>
+        </tr>
+
+        <tr *ngIf="!loading && recentActivities.length === 0">
+          <td colspan="3" class="empty-cell">Aucune donnée récente</td>
+        </tr>
+
+        <tr *ngFor="let act of recentActivities">
+          <td>
+            <div class="user-cell">
+              <span class="primary-text">{{ act.title }}</span>
             </div>
-          </div>
-          
-          <div class="table-container">
-            <table class="modern-table">
-              <thead>
-                <tr>
-                  <th>Commande</th>
-                  <th>Client</th>
-                  <th>Statut</th>
-                  <th class="text-right">Heure</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngIf="recentDeliveries.length === 0">
-                  <td colspan="4" class="empty-cell">Aucune donnée récente</td>
-                </tr>
-                <tr *ngFor="let delivery of recentDeliveries">
-                  <td class="primary-text">#{{ delivery.orderNumber }}</td>
-                  <td>
-                    <div class="user-cell">
-                      <div class="avatar-initial">{{ delivery.customerName.charAt(0) }}</div>
-                      <span>{{ delivery.customerName }}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="status-chip" [ngClass]="getStatusClass(delivery.status)">
-                      {{ getStatusLabel(delivery.status) }}
-                    </span>
-                  </td>
-                  <td class="text-right meta-text">
-                    {{ delivery.timestamp | date: 'HH:mm' }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+          </td>
+          <td>
+            <a routerLink="act.link" class="activity-link">
+              <span class="status-chip" [ngClass]="{'chip-alert': act.type === 'low_stock'}">
+                {{ act.message }}
+              </span>
+            </a>
+          </td>
+          <td class="text-right meta-text">
+            {{ act.time_ago }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
         <aside class="sidebar">
           
           <div class="mini-stats-row">
             <div class="mini-card">
               <span class="label">Total Aujourd'hui</span>
-              <span class="value">{{ stats.totalToday }}</span>
+              <span class="value">{{ stats.deliveries.total }}</span>
             </div>
-            <div class="mini-card">
+            <!-- <div class="mini-card">
               <span class="label">Délai Moyen</span>
-              <span class="value">{{ formatTime(stats.averageDeliveryTime) }}</span>
-            </div>
+              <span class="value">{{ formatTime() }}</span>
+            </div> -->
           </div>
 
           <div class="panel driver-panel">
@@ -196,9 +200,9 @@
                 <div class="driver-info">
                   <span class="driver-name">{{ driver.driverName }}</span>
                   <div class="driver-metrics">
-                    <span>{{ driver.deliveriesCompleted }} livraisons</span>
+                    <span>{{ driver.statistics.deliveries.delivered }} livraisons</span>
                     <span class="separator">•</span>
-                    <span class="success-rate">{{ driver.successRate }}% succès</span>
+<span class="success-rate">{{ driver.statistics.deliveries.success_rate }}% succès</span>
                   </div>
                 </div>
                 <div class="driver-time">

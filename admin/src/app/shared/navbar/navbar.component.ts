@@ -1,6 +1,6 @@
 import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../core/services/auth.service';
+import { Admin, AuthService } from '../../core/services/auth.service';
 
 // Définition d'une interface pour la sécurité du type
 interface Notification {
@@ -25,34 +25,46 @@ export class NavbarComponent implements OnDestroy {
 
   // Liste des notifications mise à jour
   notifications: Notification[] = [
-    { 
-      id: 1, 
-      type: 'success', 
+    {
+      id: 1,
+      type: 'success',
       message: 'Livraison #CMD-001 terminée',
       time: '5 min',
       read: false // Par défaut non lu
     },
-    { 
-      id: 2, 
-      type: 'warning', 
+    {
+      id: 2,
+      type: 'warning',
       message: 'Livreur en retard - #CMD-045',
       time: '12 min',
       read: false
     },
-    { 
-      id: 3, 
-      type: 'info', 
+    {
+      id: 3,
+      type: 'info',
       message: 'Nouvelle commande assignée',
       time: '25 min',
       read: true // Exemple d'une déjà lue
     }
   ];
+  adminProfile!: Admin;
 
   constructor(public authService: AuthService) {
     // Mise à jour de l'heure
     this.timer = setInterval(() => {
       this.currentTime = new Date();
     }, 1000);
+  }
+
+  ngOnInit(): void {
+    this.authService.getProfile().subscribe({
+      next: (profile) => {
+        this.adminProfile = profile;
+      },
+      error: (err) => {
+        console.error('Failed to load profile', err);
+      }
+    });
   }
 
   // Nettoyage du timer quand on quitte le composant

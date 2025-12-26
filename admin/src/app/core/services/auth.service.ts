@@ -61,7 +61,7 @@ export class AuthService {
    * En utilisant environment.apiUrl plutôt qu'une URL codée en dur, nous
    * pouvons facilement changer l'URL selon l'environnement sans toucher ce code.
    */
-  private apiUrl = environment.apiAuthUrl;
+  private apiUrl = `${environment.apiUrl}/auth/admin`;
 
   /**
    * BehaviorSubject qui garde l'état de l'admin connecté
@@ -238,7 +238,7 @@ export class AuthService {
    */
   getProfile(): Observable<Admin> {
     return this.http.get<{success: boolean; data: Admin}>(
-      `${this.apiUrl}/admin/me`
+      `${this.apiUrl}/me`
     ).pipe(
       map(response => response.data),
       tap(admin => {

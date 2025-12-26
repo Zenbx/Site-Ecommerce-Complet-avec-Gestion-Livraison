@@ -139,6 +139,7 @@ export interface PhotoSelectionState {
   file: File | null;
   url: string;
   previewUrl: string;
+  objectUrl?: string;
 }
 
 /**

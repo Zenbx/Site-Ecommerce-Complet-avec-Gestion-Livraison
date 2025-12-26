@@ -16,8 +16,8 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class DriverService {
-  private readonly API_URL = `${environment.apiUrl}/delivery-persons`; // Adjust to your API base URL
-  private readonly PHOTO_UPLOAD_URL = `${environment.apiUrl}/api/upload/driver-photo`; // Photo upload endpoint
+  private readonly API_URL = `${environment.apiUrl}/admin/delivery-persons`; // Adjust to your API base URL
+  private readonly PHOTO_UPLOAD_URL = `${environment.apiUrl}/admin/upload/driver-photo`; // Photo upload endpoint
 
   constructor(private http: HttpClient) {}
 
@@ -42,20 +42,22 @@ export class DriverService {
   /**
    * Create a new driver
    */
-  createDriver(request: DriverCreateRequest): Observable<Driver> {
-    return this.http.post<Driver>(this.API_URL, request).pipe(
-      catchError(this.handleError)
-    );
-  }
+  createDriver(formData: FormData): Observable<Driver> {
+  return this.http.post<Driver>(this.API_URL, formData).pipe(
+    catchError(this.handleError)
+  );
+}
+
 
   /**
    * Update an existing driver
    */
-  updateDriver(id: number, request: DriverUpdateRequest): Observable<Driver> {
-    return this.http.put<Driver>(`${this.API_URL}/${id}`, request).pipe(
-      catchError(this.handleError)
-    );
-  }
+  updateDriver(id: number, formData: FormData): Observable<Driver> {
+  return this.http.put<Driver>(`${this.API_URL}/${id}`, formData).pipe(
+    catchError(this.handleError)
+  );
+}
+
 
   /**
    * Delete a driver
@@ -77,44 +79,6 @@ export class DriverService {
       map(response => response.photo_url),
       catchError(this.handleError)
     );
-  }
-
-  /**
-   * Create driver with photo upload
-   * If file is provided, uploads it first, then creates driver with the returned URL
-   */
-  createDriverWithPhoto(request: DriverCreateRequest, photoFile?: File): Observable<Driver> {
-    if (photoFile) {
-      return this.uploadPhoto(photoFile).pipe(
-        switchMap(photoUrl => {
-          const requestWithPhoto: DriverCreateRequest = {
-            ...request,
-            photo_url: photoUrl
-          };
-          return this.createDriver(requestWithPhoto);
-        })
-      );
-    }
-    return this.createDriver(request);
-  }
-
-  /**
-   * Update driver with photo upload
-   * If file is provided, uploads it first, then updates driver with the returned URL
-   */
-  updateDriverWithPhoto(id: number, request: DriverUpdateRequest, photoFile?: File): Observable<Driver> {
-    if (photoFile) {
-      return this.uploadPhoto(photoFile).pipe(
-        switchMap(photoUrl => {
-          const requestWithPhoto: DriverUpdateRequest = {
-            ...request,
-            photo_url: photoUrl
-          };
-          return this.updateDriver(id, requestWithPhoto);
-        })
-      );
-    }
-    return this.updateDriver(id, request);
   }
 
   /**

@@ -28,7 +28,7 @@ export interface Category {
 
 @Injectable({ providedIn: 'root' })
 export class ProductsService {
-  private api = `${environment.apiUrl}`;
+  private api = `${environment.apiUrl}/admin`;
 
   constructor(private http: HttpClient) {}
 

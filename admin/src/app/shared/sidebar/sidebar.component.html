@@ -8,26 +8,24 @@
   </div>
 
   <div class="sidebar-nav">
-    <a
-      *ngFor="let item of menuItems"
-      class="nav-item"
-      [routerLink]="item.route"
-      routerLinkActive="active"
-    >
-      <div class="nav-indicator"></div>
-      <i class="material-icons nav-icon">{{ item.icon }}</i>
-      <span class="nav-label">{{ item.label }}</span>
-    </a>
+    <ul>
+      <li *ngFor="let item of menuItems">
+        <a [routerLink]="item.route" routerLinkActive="active" class="nav-link">
+          <span class="material-icons">{{ item.icon }}</span>
+          <span class="label">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
   </div>
 
   <div class="sidebar-footer">
     <div class="user-card">
       <div class="user-avatar">
-        {{ 'Admin'.charAt(0) }}
+        {{ adminProfile?.name?.charAt(0) }}
       </div>
       <div class="user-details">
-        <span class="user-name">Admin</span>
-        <span class="user-role">Administrateur</span>
+        <span class="user-name">{{ adminProfile?.name }}</span>
+        <span class="user-role">{{ adminProfile?.role }}</span>
       </div>
     </div>
 

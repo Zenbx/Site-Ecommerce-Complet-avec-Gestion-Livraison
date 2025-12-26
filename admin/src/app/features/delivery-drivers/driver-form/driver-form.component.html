@@ -120,24 +120,6 @@
                   style="display: none;">
                 <small class="help-text">JPG, PNG ou WebP - Max 5MB</small>
               </div>
-
-              <!-- Or divider -->
-              <div class="upload-divider">
-                <span>ou</span>
-              </div>
-
-              <!-- URL input -->
-              <div class="upload-option">
-                <div class="input-group">
-                  <label>URL de la photo</label>
-                  <input 
-                    type="url" 
-                    class="google-input" 
-                    [value]="photoState.sourceType === PhotoSourceType.URL ? photoState.url : ''"
-                    (input)="onPhotoUrlChanged($event)"
-                    placeholder="https://example.com/photo.jpg">
-                </div>
-              </div>
             </div>
 
             <!-- Photo error -->

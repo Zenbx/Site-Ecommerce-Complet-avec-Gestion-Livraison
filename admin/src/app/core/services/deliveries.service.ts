@@ -69,7 +69,7 @@ export class DeliveriesService {
    * URL de base pour les endpoints de livraisons admin
    * Construit automatiquement à partir de l'environnement
    */
-  private apiUrl = `${environment.apiUrl}/deliveries`;
+  private apiUrl = `${environment.apiUrl}/admin/deliveries`;
 
   constructor(private http: HttpClient) {}
 
@@ -195,7 +195,7 @@ export class DeliveriesService {
    * ```
    */
   getAvailableDrivers(): Observable<DeliveryDriver[]> {
-    return this.http.get<AvailableDriversResponse>(`${environment.apiUrl}/delivery-persons`)
+    return this.http.get<AvailableDriversResponse>(`${environment.apiUrl}/admin/delivery-persons`)
       .pipe(
         map(response => response.data),
         catchError(this.handleError)
@@ -407,7 +407,7 @@ export class DeliveriesService {
    * @returns Observable contenant les données de l'itinéraire
    */
   getDeliveryRoute(id: number): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/delivery-person/deliveries/${id}/route`)
+    return this.http.get(`${environment.apiUrl}/admin/delivery-person/deliveries/${id}/route`)
       .pipe(
         catchError(this.handleError)
       );
