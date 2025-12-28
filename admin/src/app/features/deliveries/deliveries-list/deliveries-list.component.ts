@@ -318,7 +318,7 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
   }
 
   getTotalPages(): number {
-    return Math.ceil(this.totalDeliveries / this.perPage);
+    return Math.max(1, Math.ceil(this.totalDeliveries / this.perPage));
   }
 
   canUnassign(delivery: Delivery): boolean {
