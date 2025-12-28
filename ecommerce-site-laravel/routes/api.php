@@ -15,7 +15,6 @@ use App\Http\Controllers\Api\DeliveryPerson\AuthController as DeliveryPersonAuth
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
-//use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\DeliveryPersonController as AdminDeliveryPersonController;
 use App\Http\Controllers\Api\Admin\DeliveryController as AdminDeliveryController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
@@ -31,6 +30,7 @@ use App\Http\Controllers\Api\Client\ProfileController as ClientProfileController
 use App\Http\Controllers\Api\DeliveryPerson\DeliveryController as DeliveryPersonDeliveryController;
 use App\Http\Controllers\Api\DeliveryPerson\ProfileController as DeliveryPersonProfileController;
 use App\Http\Controllers\Api\DeliveryPerson\DashboardController as DeliveryPersonDashboardController;
+use App\Http\Controllers\Api\DeliveryPerson\LocationController as DeliveryPersonLocationController;
 
 // Controllers utilitaires
 use App\Http\Controllers\Api\MapController;
@@ -145,9 +145,6 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(func
         Route::post('/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('cancel');
     });
     
-    // Gestion des utilisateurs
-    //Route::apiResource('users', AdminUserController::class);
-    
     // Gestion des livreurs
     Route::prefix('delivery-persons')->name('delivery-persons.')->group(function () {
         Route::get('/', [AdminDeliveryPersonController::class, 'index'])->name('index');
@@ -157,6 +154,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(func
         Route::delete('/{deliveryPerson}', [AdminDeliveryPersonController::class, 'destroy'])->name('destroy');
         Route::patch('/{deliveryPerson}/availability', [AdminDeliveryPersonController::class, 'updateAvailability'])->name('update-availability');
         Route::get('/{deliveryPerson}/deliveries', [AdminDeliveryPersonController::class, 'deliveries'])->name('deliveries');
+        
+        // *** NOUVEAU : Tracking de localisation pour l'admin ***
+        Route::get('/tracking/active', [DeliveryPersonLocationController::class, 'getActiveDeliveryPersons'])
+            ->name('tracking.active');
+        Route::get('/{deliveryPerson}/location', [DeliveryPersonLocationController::class, 'getLocation'])
+            ->name('location');
     });
     
     // Gestion des livraisons
@@ -168,23 +171,16 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(func
         Route::patch('/{delivery}/reassign', [AdminDeliveryController::class, 'reassign'])->name('reassign');
     });
 
+    // Rapports
     Route::prefix('reports')->name('reports.')->group(function () {
         // Rapport statistique des livraisons
         Route::get('/deliveries', [AdminReportController::class, 'deliveriesReport']);
-        
-        // Export PDF du rapport de livraisons
         Route::get('/deliveries/export/pdf', [AdminReportController::class, 'exportDeliveriesPDF']);
-        
-        // Export Excel du rapport de livraisons
         Route::get('/deliveries/export/excel', [AdminReportController::class, 'exportDeliveriesExcel']);
-    });    
-    
-    Route::prefix('reports')->name('reports.')->group(function () {
+        
         // Rapport de performance des livreurs
         Route::get('/delivery-persons', [AdminReportController::class, 'deliveryPersonsReport']);
-        // Export PDF du rapport des livreurs
         Route::get('/delivery-persons/export/pdf', [AdminReportController::class, 'exportDeliveryPersonsPDF']);
-        // Export Excel du rapport des livreurs (si vous l'implémentez)
         Route::get('/delivery-persons/export/excel', [AdminReportController::class, 'exportDeliveryPersonsExcel']);
     });
 });
@@ -267,9 +263,18 @@ Route::prefix('delivery-person')->name('delivery-person.')->middleware('auth:del
         Route::get('/{delivery}/route', [DeliveryPersonDeliveryController::class, 'getRoute'])->name('get-route');
     });
 
-    
+    // *** NOUVEAU : Localisation en temps réel du livreur ***
+    Route::prefix('location')->name('location.')->group(function () {
+        // Mettre à jour la position (appelé toutes les 15 secondes par l'app React Native)
+        Route::post('/update', [DeliveryPersonLocationController::class, 'updateLocation'])->name('update');
+        
+        // Changer le statut online/offline
+        Route::post('/status', [DeliveryPersonLocationController::class, 'setOnlineStatus'])->name('status');
+        
+        // Obtenir sa propre position actuelle
+        Route::get('/current', [DeliveryPersonLocationController::class, 'getCurrentLocation'])->name('current');
+    });
 });
-
 
 // ============================================================================
 // SECTION 6 : ROUTES UTILITAIRES (Cartographie)

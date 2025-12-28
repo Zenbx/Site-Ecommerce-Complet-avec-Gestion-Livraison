@@ -69,6 +69,7 @@ class DeliveryStatusChanged implements ShouldBroadcast
             'IN_TRANSIT' => 'En cours de livraison',
             'DELIVERED' => 'Livrée',
             'FAILED' => 'Échec de livraison',
+            'CANCELLED' => 'Annulation de livraison',
             default => $this->newStatus,
         };
     }

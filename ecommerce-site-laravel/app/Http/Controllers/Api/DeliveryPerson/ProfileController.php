@@ -70,7 +70,7 @@ class ProfileController extends Controller
      *                  @OA\Property(property="email", type="string"),
      *                  @OA\Property(property="id_card_number", type="string"),
      *                  @OA\Property(property="is_available", type="boolean"),
-     *                  @OA\Property(property="statistics", type="object")
+     *                  @OA\Property(property="statistics", type="object"),
      *                  @OA\Property(property="member_since", type="string"),
      *                  @OA\Property(property="created_at", type="string"),
      *              )
