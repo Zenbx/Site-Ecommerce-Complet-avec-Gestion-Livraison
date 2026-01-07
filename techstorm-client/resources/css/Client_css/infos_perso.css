@@ -1,0 +1,57 @@
+/* Détails personnels. */
+.details-personnal-info {
+  flex: 1;
+  background: #000000;
+  border-radius: 12px;
+  padding: 2rem;
+}
+
+.details-personnal-info h1 {
+  margin-bottom: 1.5rem;
+  color: #fff;
+  font-size: 1.5rem;
+}
+
+.info-card {
+  background: #0f0f17;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid #333;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-weight: 500;
+  color: #9f9ff7;
+}
+
+.value {
+  color: #fff;
+  font-weight: 400;
+}
+
+.btn-edit-info {
+  margin-top: 1.5rem;
+  background: #7a5cff;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-edit-info:hover {
+  background: #6245e0;
+}
+
+/* Responsive géré désormais centralement dans profil-client. css. */

@@ -1,0 +1,246 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background: #020024;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Auth Container: Split Screen. */
+.auth-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    /* Background blob effect. */
+    background: radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(174, 0, 255, 0.1) 0%, transparent 50%);
+}
+
+/* Left Side: Logo/Text. */
+.auth-left {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 4rem;
+    font-weight: 300;
+    z-index: 10;
+}
+
+.auth-logo {
+    font-family: serif; 
+    letter-spacing: 2px;
+}
+
+/* Right Side: Form Card. */
+.auth-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.login-card {
+    background: #020024;
+    width: 400px;
+    padding: 3rem 2.5rem;
+    border-radius: 20px;
+    border: 2px solid #00ffff;
+    box-shadow: 0 0 15px #00ffff, inset 0 0 10px rgba(0, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* Title */
+h1#CreerUnCompte {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(90deg, #00D4FF, #AE00FF);
+    -webkit-background-clip: text;
+    background-clip: text; /* Compatibility fix. */
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Google Button. */
+#google-btn {
+    width: 100%;
+    background: transparent;
+    color: white;
+    padding: 10px;
+    border-radius: 30px;
+    border: 1px solid #00ffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+#google-btn:hover {
+    box-shadow: 0 0 10px #00ffff;
+    background: rgba(0, 255, 255, 0.1);
+}
+
+#google-btn img {
+    width: 18px;
+    height: 18px;
+}
+
+/* Separator */
+#ou {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 1.5rem 0;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.line {
+    flex: 1;
+    height: 1px;
+    background-color: white;
+    border: none;
+    margin: 0 10px;
+}
+
+/* Form Fields. */
+.form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.form input {
+    width: 100%;
+    background: transparent;
+    border: 2px solid #00d4ff;
+    border-radius: 30px;
+    padding: 12px 20px;
+    color: white;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.form input::placeholder {
+    color: #ccc;
+}
+
+.form input:focus {
+    box-shadow: 0 0 10px #00ffff;
+}
+
+/* Submit Button. */
+#signUp-btn {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 12px;
+    border-radius: 30px;
+    border: none;
+    color: white;
+    background: linear-gradient(90deg, #00D4FF, #AE00FF);
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+#signUp-btn:hover {
+    box-shadow: 0 0 15px rgba(174, 0, 255, 0.8);
+    transform: scale(1.02);
+}
+
+/* Footer Link. */
+.register {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: white;
+}
+
+#ConnectezVous {
+    color: #00ffff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#ConnectezVous:hover {
+    text-decoration: underline;
+    text-shadow: 0 0 5px #00ffff;
+}
+
+/* RESPONSIVE DESIGN. */
+@media screen and (max-width: 900px) {
+    .auth-logo {
+        font-size: 3rem;
+    }
+    
+    .login-card {
+        width: 350px;
+        padding: 2rem;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .auth-container {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .auth-left {
+        flex: 0 0 auto;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .auth-logo {
+        font-size: 2.5rem;
+    }
+
+    .auth-right {
+        flex: 1;
+        width: 100%;
+        align-items: center;
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem 1.5rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .auth-logo {
+        font-size: 2rem;
+    }
+
+    .login-card {
+         box-shadow: 0 0 10px #00ffff;
+         background: #020024;
+         border: 2px solid #00ffff;
+         border-radius: 15px;
+         padding: 1.5rem;
+    }
+}

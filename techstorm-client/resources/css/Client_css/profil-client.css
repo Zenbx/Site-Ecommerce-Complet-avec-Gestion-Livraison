@@ -1,0 +1,259 @@
+.client-informations {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - 60px); /* Hauteur viewport moins header. */
+}
+
+.left-side-bar {
+  position: sticky;
+  top: 60px; /* Hauteur du header. */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: calc(100vh - 60px);
+  width: 275px;
+  min-width: 275px;
+  padding-top: 30px;
+  background-color: #1c1c1e;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+}
+
+.user-picture-name {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  gap: 15px;
+}
+
+.user-picture {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.user-picture:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(138, 43, 226, 0.5);
+}
+
+.user-picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: #333;
+}
+
+.username {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #fff;
+  text-align: center;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 30px;
+  gap: 5px;
+  flex-grow: 1;
+}
+
+.info hr {
+  border: none;
+  border-bottom: 1px solid rgb(100, 100, 100);
+  width: 100%;
+  opacity: 0.5;
+}
+
+.info a {
+  color: #ccc;
+  text-decoration: none;
+  font-weight: 400;
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.info a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: linear-gradient(180deg, #0066FF, #8A2BE2);
+  border-radius: 0 3px 3px 0;
+  transition: height 0.3s ease;
+}
+
+.info a:hover,
+.info a.active {
+  color: #9f39ff;
+  background-color: rgba(138, 43, 226, 0.1);
+  padding-left: 20px;
+}
+
+.info a:hover::before,
+.info a.active::before {
+  height: 100%;
+}
+
+.logout {
+  display: flex;
+  align-items: center;
+  height: 60px;
+  border-top: 2px solid rgb(80, 80, 80);
+  padding-left: 30px;
+  cursor: pointer;
+  color: #ccc;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-top: auto;
+}
+
+.logout:hover {
+  background-color: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+}
+
+/* Scrollbar personnalisée pour la sidebar. */
+.left-side-bar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.left-side-bar::-webkit-scrollbar-track {
+  background: #1c1c1e;
+}
+
+.left-side-bar::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+.left-side-bar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.main-section {
+  flex: 1;
+  padding: 40px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  overflow-y: auto;
+}
+
+.main-section h1 {
+  font-size: 2rem;
+  color: #8a2be2;
+  margin-bottom: 20px;
+}
+
+/* =========================================
+ RESPONSIVE (Tablettes & Mobiles).
+ < 900px: La sidebar devient horizontale.
+ =========================================
+ */
+@media screen and (max-width: 900px) {
+
+  /* Le conteneur ne doit plus être en row mais en column. */
+  .client-informations {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  /* La barre latérale prend toute la largeur et devient un menu horizontal défilant. */
+  .left-side-bar {
+    position: relative;
+    top: 0;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    padding: 10px;
+    gap: 20px;
+    border-right: none;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+    /* Optionnel: Masquer la scrollbar. */
+    scrollbar-width: thin;
+  }
+
+  .left-side-bar::-webkit-scrollbar {
+    height: 4px; /* Scrollbar horizontale fine. */
+  }
+
+  /* Section photo + nom: compacte. */
+  .user-picture-name {
+    flex-direction: row;
+    padding: 0;
+    gap: 10px;
+    min-width: max-content;
+  }
+
+  .user-picture {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .username {
+    font-size: 1rem;
+    text-align: left;
+    display: none; /* On peut cacher le nom si ça prend trop de place, ou le laisser. */
+  }
+
+  /* Navigation: devient horizontale. */
+  .info {
+    flex-direction: row;
+    padding: 0;
+    gap: 10px;
+    flex-grow: 0; /* Ne pas prendre tout l'espace. */
+  }
+
+  .info hr {
+    display: none; /* Pas de séparateurs traits en mode horizontal. */
+  }
+
+  .info a {
+    white-space: nowrap; /* Empêche le texte de revenir à la ligne. */
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* Pas de petite barre latérale au survol en mode horizontal, ou alors en bas. */
+  .info a::before {
+    display: none;
+  }
+
+  .info a:hover, 
+  .info a.active {
+    background-color: rgba(138, 43, 226, 0.2);
+    padding-left: 12px; /* Reset du padding. */
+  }
+
+  /* Bouton déconnexion. */
+  .logout {
+    margin-top: 0;
+    border-top: none;
+    padding-left: 15px;
+    border-left: 1px solid #444;
+    height: auto;
+    margin-left: auto; /* Pousse à droite si possible. */
+  }
+  
+  /* Contenu principal: marge plus petite. */
+  .main-section {
+    padding: 20px;
+    overflow-y: visible;
+  }
+}
