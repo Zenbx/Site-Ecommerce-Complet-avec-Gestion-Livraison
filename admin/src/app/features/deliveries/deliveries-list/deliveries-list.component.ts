@@ -289,6 +289,10 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/deliveries', delivery.id]);
   }
 
+  viewDeliveryProof(delivery: Delivery): void {
+    this.router.navigate(['/deliveries/proof', delivery.id]);
+  }
+
   trackDelivery(delivery: Delivery): void {
     this.router.navigate(['/deliveries/track', delivery.id]);
   }
@@ -328,6 +332,10 @@ export class DeliveriesListComponent implements OnInit, OnDestroy {
   canTrack(delivery: Delivery): boolean {
     return delivery.status === 'PICKED_UP' || 
            delivery.status === 'ASSIGNED';
+  }
+
+  canViewProof(delivery: Delivery): boolean {
+    return delivery.status === 'PICKED_UP';
   }
 
   // Méthodes communes à ajouter dans les composants

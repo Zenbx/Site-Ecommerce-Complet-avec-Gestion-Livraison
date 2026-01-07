@@ -1,114 +1,112 @@
-<!-- src/app/features/deliveries/delivery-map/delivery-map.component.html -->
+<!-- Container principal de la carte -->
+<div class="map-wrapper" [class.loading]="isLoading">
 
-<div class="map-wrapper">
-  
-  <!-- Map Container -->
-  <div id="map" class="map-container"></div>
+  <!-- ============================================================================
+       CARTE LEAFLET - Container
+       ============================================================================ -->
+  <div class="map-container-wrapper">
+    <!-- Container de la carte (Leaflet s'y attachera) -->
+    <div #mapContainer class="map-container"></div>
 
-  <!-- Map Controls Overlay -->
-  <div class="map-controls">
-    <button class="control-btn" (click)="zoomIn()" title="Zoomer">
-      <i class="material-icons">add</i>
-    </button>
-    <button class="control-btn" (click)="zoomOut()" title="Dézoomer">
-      <i class="material-icons">remove</i>
-    </button>
-    <button class="control-btn" (click)="centerMap()" title="Centrer">
-      <i class="material-icons">my_location</i>
-    </button>
-    <button class="control-btn" (click)="toggleFullscreen()" title="Plein écran">
-      <i class="material-icons">fullscreen</i>
-    </button>
-  </div>
+    <!-- ============================================================================
+         OVERLAYS - Affichés au-dessus de la carte
+         ============================================================================ -->
 
-  <!-- Legend Overlay -->
-  <div class="map-legend" *ngIf="showLegend">
-    <div class="legend-header">
-      <h3>Légende</h3>
-    </div>
-    <div class="legend-items">
-      <div class="legend-item">
-        <div class="legend-marker pending"></div>
-        <span>En attente</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-marker in-transit"></div>
-        <span>En cours</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-marker delivered"></div>
-        <span>Livrée</span>
+    <!-- Overlay de chargement -->
+    <div class="map-overlay loading-overlay" *ngIf="isLoading">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Chargement de la carte...</p>
       </div>
     </div>
-  </div>
 
-  <!-- Loading Overlay -->
-  <div *ngIf="loading" class="map-overlay loading">
-    <div class="overlay-content">
-      <div class="spinner"></div>
-      <p>Chargement de la carte...</p>
-    </div>
-  </div>
-
-  <!-- Error Overlay -->
-  <div *ngIf="error" class="map-overlay error">
-    <div class="overlay-content">
-      <i class="material-icons error-icon">error_outline</i>
-      <h3>Erreur de chargement</h3>
-      <p>{{ error }}</p>
-      <!-- <button class="btn-retry" (click)="retry()">
-        <i class="material-icons">refresh</i>
-        Réessayer
-      </button> -->
-    </div>
-  </div>
-
-  <!-- Info Panel for Selected Delivery -->
-  <div class="info-panel" *ngIf="selectedDelivery" [@slideIn]>
-    <div class="panel-header">
-      <div class="panel-title">
-        <h3>Livraison #{{ selectedDelivery.orderNumber }}</h3>
-        <span class="status-badge" [ngClass]="getStatusClass(selectedDelivery.status)">
-          {{ getStatusLabel(selectedDelivery.status) }}
-        </span>
+    <!-- Overlay d'erreur -->
+    <div class="map-overlay error-overlay" *ngIf="error && !isLoading">
+      <div class="error-content">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <h3>Erreur de chargement</h3>
+        <p>{{ error }}</p>
+        <button class="retry-btn" (click)="refresh()">
+          Réessayer
+        </button>
       </div>
-      <button class="btn-close-panel" (click)="closePanel()">
-        <i class="material-icons">close</i>
-      </button>
     </div>
-    
-    <div class="panel-body">
-      <div class="info-section">
-        <div class="info-item">
-          <i class="material-icons">person</i>
-          <div>
-            <span class="label">Client</span>
-            <span class="value">{{ selectedDelivery.customer.name }}</span>
-          </div>
+
+    <!-- Overlay "Aucun livreur" -->
+    <div class="map-overlay empty-overlay" *ngIf="!isLoading && !error && onlineCount === 0 && offlineCount === 0">
+      <div class="empty-content">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" />
+          <path d="M12 12v4M12 8h.01" />
+        </svg>
+        <h3>Aucun livreur actif</h3>
+        <p>Aucun livreur n'a de position GPS enregistrée pour le moment.</p>
+      </div>
+    </div>
+
+    <!-- Légende de la carte (mode overview) -->
+    <div class="map-legend" *ngIf="mode === 'overview' && !isLoading && !error">
+      <h4>Légende</h4>
+      <div class="legend-items">
+        <div class="legend-item">
+          <span class="legend-marker online"></span>
+          <span class="legend-label">Livreur en ligne</span>
         </div>
-        
-        <div class="info-item">
-          <i class="material-icons">location_on</i>
-          <div>
-            <span class="label">Destination</span>
-            <span class="value">{{ selectedDelivery.address.city }}</span>
-          </div>
+        <div class="legend-item">
+          <span class="legend-marker offline"></span>
+          <span class="legend-label">Livreur hors ligne</span>
         </div>
-        
-        <div class="info-item" *ngIf="selectedDelivery.driver">
-          <i class="material-icons">local_shipping</i>
-          <div>
-            <span class="label">Livreur</span>
-            <span class="value">{{ selectedDelivery.driver.firstName }} {{ selectedDelivery.driver.lastName }}</span>
+        <div class="legend-item" *ngIf="showDeliveryDestinations">
+          <span class="legend-marker delivery"></span>
+          <span class="legend-label">Destination de livraison</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info tracking (mode tracking) -->
+    <div class="tracking-info" *ngIf="mode === 'tracking' && deliveryPersonId">
+      <div class="tracking-card">
+        <h4>Suivi en temps réel</h4>
+        <div class="tracking-details">
+          <div class="tracking-detail">
+            <span class="label">Distance restante:</span>
+            <span class="value">--</span>
+          </div>
+          <div class="tracking-detail">
+            <span class="label">Temps estimé:</span>
+            <span class="value">--</span>
+          </div>
+          <div class="tracking-detail">
+            <span class="label">Arrivée prévue:</span>
+            <span class="value">--</span>
           </div>
         </div>
       </div>
-      
-      <button class="btn-view-details" (click)="viewDetails(selectedDelivery)">
-        <i class="material-icons">visibility</i>
-        Voir les détails complets
-      </button>
     </div>
   </div>
 
-</div>
+  <!-- ============================================================================
+     STYLES INLINE POUR L'ANIMATION PULSE (injecté dynamiquement)
+     ============================================================================ -->
+  <style>
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+  </style>

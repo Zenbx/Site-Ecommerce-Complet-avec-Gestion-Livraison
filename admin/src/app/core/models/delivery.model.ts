@@ -77,7 +77,18 @@ export interface Delivery {
   delivery_person: {
     id: number;
     name: string;
+    email: string;
+    id_card_number: string;
+    address: string;
+    photo_url: string;
     is_available: boolean;
+    created_at?: string;
+    updated_at?: string;
+    is_online: boolean;
+    current_longitude: string;
+    current_latitude: string;
+    last_location_update: string;
+    current_address: string;
   } | null;
   delivery_address: string;
   created_at: string;

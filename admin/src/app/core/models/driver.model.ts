@@ -13,6 +13,11 @@ export interface Driver {
   is_available: boolean;
   created_at?: string;
   updated_at?: string;
+  is_online: boolean;
+  current_longitude: string;
+  current_latitude: string;
+  last_location_update: string;
+  current_address: string;
 }
 
 /**

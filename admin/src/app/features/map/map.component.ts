@@ -1,461 +1,518 @@
-// src/app/features/map/map.component.ts
-
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { trigger, transition, style, animate } from '@angular/animations';
+import { Subject, interval, takeUntil, switchMap, startWith } from 'rxjs';
 import * as L from 'leaflet';
 
+import { DeliveryPersonLocationService } from '../../core/services/delivery-person-location.service';
+import { GeocodingService } from '../../core/services/geocoding.service';
+import { MapService } from '../../core/services/map.service';
+
+import { Driver } from '../../core/models/driver.model';
+import { DeliveryLocation } from '../../core/models/delivery-location.model';
+import { MapConfig, MapMode } from '../../core/models/map-config.model';
+
 /**
- * Interface représentant une livraison sur la carte
- * Cette interface est maintenant exportée pour pouvoir être utilisée par d'autres composants
+ * Composant de carte modulaire pour afficher :
+ * - Mode 'overview': Tous les livreurs + livraisons optionnelles
+ * - Mode 'tracking': Un livreur spécifique + sa livraison
  */
-export interface Delivery {
-  id: number;
-  orderNumber: string;
-  status: 'pending' | 'assigned' | 'in_transit' | 'delivered' | 'failed';
-  customer: {
-    name: string;
-    phone: string;
-  };
-  address: {
-    street: string;
-    city: string;
-    postalCode: string;
-    country: string;
-    latitude: number;
-    longitude: number;
-  };
-  driver?: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    phone: string;
-  };
-  priority?: 'high' | 'medium' | 'low';
-}
-
-// Configuration des icônes Leaflet
-const iconRetinaUrl = 'assets/marker-icon-2x.png';
-const iconUrl = 'assets/marker-icon.png';
-const shadowUrl = 'assets/marker-shadow.png';
-const iconDefault = L.icon({
-  iconRetinaUrl,
-  iconUrl,
-  shadowUrl,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  tooltipAnchor: [16, -28],
-  shadowSize: [41, 41]
-});
-L.Marker.prototype.options.icon = iconDefault;
-
 @Component({
   selector: 'app-map',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './map.component.html',
-  styleUrls: ['./map.component.scss'],
-  animations: [
-    trigger('slideIn', [
-      transition(':enter', [
-        style({ transform: 'translateX(-100%)', opacity: 0 }),
-        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', 
-          style({ transform: 'translateX(0)', opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', 
-          style({ transform: 'translateX(-100%)', opacity: 0 }))
-      ])
-    ])
-  ]
+  styleUrls: ['./map.component.scss']
 })
-export class MapComponent implements OnInit, OnDestroy, OnChanges {
-  /**
-   * PROPRIÉTÉS D'ENTRÉE (@Input)
-   * 
-   * Le décorateur @Input() transforme une propriété en point d'entrée pour les données.
-   * Cela signifie que le composant parent peut maintenant passer des valeurs à ces propriétés
-   * en utilisant la syntaxe de binding [propertyName]="value" dans son template.
-   * 
-   * Ces propriétés créent un contrat clair : "Je suis un composant qui peut recevoir
-   * ces informations de l'extérieur". C'est l'équivalent des paramètres d'une fonction,
-   * mais pour un composant Angular.
-   */
-  
-  /**
-   * Tableau des livraisons à afficher sur la carte
-   * 
-   * Le parent peut maintenant contrôler quelles livraisons sont affichées en passant
-   * un tableau. Si le parent change ce tableau, Angular détectera automatiquement
-   * le changement et le composant mettra à jour la carte via OnChanges.
-   * 
-   * Le point d'exclamation indique à TypeScript que cette propriété sera initialisée
-   * par Angular via l'Input, même si elle n'a pas de valeur par défaut explicite.
-   */
-  @Input() deliveries!: Delivery[];
-  
-  /**
-   * État de chargement contrôlé par le parent
-   * 
-   * Le parent peut indiquer que les données sont en cours de chargement,
-   * et notre composant affichera l'état de chargement approprié.
-   * La valeur par défaut false signifie que si le parent ne passe rien,
-   * nous considérons que les données ne sont pas en cours de chargement.
-   */
-  @Input() loading = false;
-  
-  /**
-   * Message d'erreur contrôlé par le parent
-   * 
-   * Si le parent rencontre une erreur lors du chargement des données,
-   * il peut nous le communiquer et nous afficherons un message d'erreur approprié.
-   * Le type "string | null" signifie que cette propriété peut contenir
-   * soit une chaîne de caractères (le message d'erreur) soit null (pas d'erreur).
-   */
-  @Input() error: string | null = null;
-  
-  /**
-   * Hauteur personnalisée de la carte
-   * 
-   * Cette propriété optionnelle permet au parent de contrôler la hauteur de la carte.
-   * Si le parent ne spécifie rien, la carte utilisera la hauteur par défaut définie
-   * dans le CSS. C'est un exemple de propriété d'Input optionnelle qui offre de la
-   * flexibilité sans être obligatoire.
-   */
-  @Input() height?: string;
+export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef;
+
+  // ============================================================================
+  // INPUTS - Configuration du composant
+  // ============================================================================
 
   /**
-   * PROPRIÉTÉS DE SORTIE (@Output)
-   * 
-   * Le décorateur @Output() crée un canal de communication dans le sens inverse :
-   * du composant enfant vers le composant parent. Quand quelque chose d'important
-   * se passe dans notre composant (comme la sélection d'une livraison), nous pouvons
-   * "émettre" un événement que le parent peut écouter et traiter.
-   * 
-   * C'est comme lever la main en classe pour signaler quelque chose à l'enseignant.
-   * Le parent décide ensuite quoi faire avec cette information.
+   * Mode d'affichage de la carte
+   * - 'overview': Vue globale de tous les livreurs
+   * - 'tracking': Suivi d'un livreur spécifique
    */
-  
-  /**
-   * Événement émis quand l'utilisateur sélectionne une livraison
-   * 
-   * EventEmitter est un type spécial Angular qui permet d'émettre des événements.
-   * Le type générique <Delivery> indique que cet événement transportera
-   * un objet Delivery quand il sera émis.
-   * 
-   * Le parent peut écouter cet événement avec la syntaxe :
-   * (deliverySelected)="onDeliverySelected($event)"
-   * où $event contiendra l'objet Delivery sélectionné.
-   */
-  @Output() deliverySelected = new EventEmitter<Delivery>();
-  
-  /**
-   * Événement émis quand l'utilisateur demande à voir les détails
-   * 
-   * Cet événement permet au parent de gérer la navigation ou l'affichage
-   * des détails de la manière qui convient le mieux à son architecture.
-   */
-  @Output() viewDetailsRequested = new EventEmitter<Delivery>();
+  @Input() mode: MapMode = 'overview';
 
   /**
-   * PROPRIÉTÉS PRIVÉES DE LA CARTE
-   * 
-   * Ces propriétés restent privées car elles sont des détails d'implémentation
-   * interne que le parent n'a pas besoin de connaître ou de contrôler.
+   * ID du livreur à suivre (mode 'tracking' uniquement)
    */
-  private map: L.Map | null = null;
-  private markersLayer: L.LayerGroup | null = null;
-  private markers: Map<number, L.Marker> = new Map();
+  @Input() deliveryPersonId?: number;
 
   /**
-   * PROPRIÉTÉS PUBLIQUES D'ÉTAT
-   * 
-   * Ces propriétés contrôlent l'interface utilisateur interne du composant.
+   * ID de la livraison à afficher (mode 'tracking' uniquement)
    */
-  showLegend = true;
-  selectedDelivery: Delivery | null = null;
-
-  constructor(private router: Router) {}
+  @Input() deliveryId?: number;
 
   /**
-   * HOOK DE CYCLE DE VIE : ngOnInit
-   * 
-   * Cette méthode est appelée une fois après la première vérification des propriétés
-   * d'entrée. C'est le moment idéal pour initialiser la carte car nous sommes sûrs
-   * que toutes les propriétés @Input() ont été définies.
+   * Afficher les destinations des livraisons assignées (mode 'overview')
    */
+  @Input() showDeliveryDestinations: boolean = false;
+
+  /**
+   * Intervalle de refresh en secondes (mode 'overview')
+   */
+  @Input() refreshInterval: number = 10;
+
+  /**
+   * Configuration personnalisée de la carte
+   */
+  @Input() mapConfig?: Partial<MapConfig>;
+
+  // ============================================================================
+  // OUTPUTS - Événements
+  // ============================================================================
+
+  /**
+   * Émis quand un marqueur de livreur est cliqué
+   */
+  @Output() deliveryPersonClicked = new EventEmitter<Driver>();
+
+  /**
+   * Émis quand un marqueur de livraison est cliqué
+   */
+  @Output() deliveryClicked = new EventEmitter<DeliveryLocation>();
+
+  /**
+   * Émis quand une erreur survient
+   */
+  @Output() mapError = new EventEmitter<Error>();
+
+  // ============================================================================
+  // PROPRIÉTÉS PUBLIQUES
+  // ============================================================================
+
+  map?: L.Map;
+  isLoading: boolean = true;
+  error: string | null = null;
+
+  // Compteurs pour l'UI
+  onlineCount: number = 0;
+  offlineCount: number = 0;
+  deliveryCount: number = 0;
+
+  // ============================================================================
+  // PROPRIÉTÉS PRIVÉES
+  // ============================================================================
+
+  private destroy$ = new Subject<void>();
+  private deliveryPersonMarkers: Map<number, L.Marker> = new Map();
+  private deliveryMarkers: Map<number, L.Marker> = new Map();
+  private routeLayer?: L.Polyline;
+
+  // Groupes de layers pour une gestion facile
+  private onlineDeliveryPersonsLayer!: L.LayerGroup;
+  private offlineDeliveryPersonsLayer!: L.LayerGroup;
+  private deliveriesLayer!: L.LayerGroup;
+
+  // Configuration par défaut
+  private readonly defaultConfig: MapConfig = {
+    center: [3.8667, 11.5167], // Yaoundé, Cameroun
+    zoom: 12,
+    maxZoom: 18,
+    minZoom: 10
+  };
+
+  // ============================================================================
+  // CONSTRUCTOR
+  // ============================================================================
+
+  constructor(
+    private deliveryPersonLocationService: DeliveryPersonLocationService,
+    private geocodingService: GeocodingService,
+    private mapService: MapService
+  ) {}
+
+  // ============================================================================
+  // LIFECYCLE HOOKS
+  // ============================================================================
+
   ngOnInit(): void {
-    setTimeout(() => {
-      this.initializeMap();
-    }, 0);
+    this.validateInputs();
   }
 
-  /**
-   * HOOK DE CYCLE DE VIE : ngOnChanges
-   * 
-   * Cette méthode est absolument cruciale pour un composant réutilisable avec des Inputs.
-   * Elle est appelée automatiquement par Angular chaque fois qu'une propriété @Input()
-   * change. Cela nous permet de réagir aux changements de données venant du parent.
-   * 
-   * Par exemple, si le parent charge de nouvelles livraisons et met à jour la propriété
-   * deliveries, Angular appellera automatiquement cette méthode avec les anciennes
-   * et nouvelles valeurs. Nous pouvons alors mettre à jour la carte en conséquence.
-   * 
-   * @param changes - Un objet contenant toutes les propriétés qui ont changé
-   */
-  ngOnChanges(changes: SimpleChanges): void {
-    // Vérifier si la propriété deliveries a changé
-    if (changes['deliveries'] && !changes['deliveries'].firstChange) {
-      // Ce n'est pas le premier changement (qui est géré par ngOnInit)
-      // donc nous devons mettre à jour les marqueurs avec les nouvelles données
-      console.log('📊 Mise à jour des livraisons sur la carte');
-      this.addMarkers();
-      this.fitBounds();
+  ngAfterViewInit(): void {
+    this.initializeMap();
+    this.loadData();
+
+    // Mode overview : refresh automatique
+    if (this.mode === 'overview') {
+      this.setupAutoRefresh();
     }
+
+    this.toggleDeliveryDestinations();
   }
 
-  /**
-   * HOOK DE CYCLE DE VIE : ngOnDestroy
-   * 
-   * Nettoyage des ressources pour éviter les fuites mémoire.
-   */
   ngOnDestroy(): void {
-    if (this.map) {
-      this.map.remove();
-      this.map = null;
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.cleanupMap();
+  }
+
+  // ============================================================================
+  // INITIALISATION
+  // ============================================================================
+
+  /**
+   * Valide les inputs selon le mode
+   */
+  private validateInputs(): void {
+    if (this.mode === 'tracking' && !this.deliveryPersonId) {
+      console.warn('[MapComponent] Mode "tracking" requires deliveryPersonId');
     }
   }
 
   /**
-   * Initialiser la carte Leaflet
-   * 
-   * Cette méthode reste largement identique à la version précédente,
-   * mais elle est maintenant plus flexible car elle travaille avec
-   * des données qui peuvent venir de l'extérieur.
+   * Initialise la carte Leaflet
    */
   private initializeMap(): void {
     try {
-      const mapElement = document.getElementById('map');
-      if (!mapElement) {
-        console.error('❌ Élément de carte introuvable');
-        return;
-      }
+      const config = { ...this.defaultConfig, ...this.mapConfig };
 
-      // Appliquer la hauteur personnalisée si fournie
-      if (this.height) {
-        mapElement.style.height = this.height;
-      }
+      // Créer la carte
+      this.map = L.map(this.mapContainer.nativeElement, {
+        center: config.center as L.LatLngExpression,
+        zoom: config.zoom,
+        maxZoom: config.maxZoom,
+        minZoom: config.minZoom,
+        zoomControl: true
+      });
 
-      // Créer la carte centrée sur Douala
-      this.map = L.map('map').setView([4.0511, 9.7679], 12);
-
-      // Ajouter les tuiles OpenStreetMap
+      // Ajouter le tile layer (OpenStreetMap)
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: config.maxZoom
       }).addTo(this.map);
 
-      // Créer le groupe de calques pour les marqueurs
-      this.markersLayer = L.layerGroup().addTo(this.map);
+      // Créer les layers groups
+      this.onlineDeliveryPersonsLayer = L.layerGroup().addTo(this.map);
+      this.offlineDeliveryPersonsLayer = L.layerGroup().addTo(this.map);
+      this.deliveriesLayer = L.layerGroup().addTo(this.map);
 
-      // Ajouter les marqueurs si nous avons déjà des livraisons
-      if (this.deliveries && this.deliveries.length > 0) {
-        this.addMarkers();
-        this.fitBounds();
-      }
+      // Forcer un resize après initialisation
+      setTimeout(() => {
+        this.map?.invalidateSize();
+      }, 100);
 
-      console.log('✅ Carte initialisée avec succès');
-    } catch (err) {
-      console.error('❌ Erreur lors de l\'initialisation de la carte:', err);
+    } catch (error) {
+      console.error('[MapComponent] Error initializing map:', error);
+      this.handleError(error as Error);
     }
   }
 
   /**
-   * Ajouter les marqueurs de livraison sur la carte
+   * Configure le refresh automatique (mode overview)
    */
-  private addMarkers(): void {
-    if (!this.map || !this.markersLayer || !this.deliveries) return;
-
-    // Nettoyer les marqueurs existants
-    this.markersLayer.clearLayers();
-    this.markers.clear();
-
-    // Créer un marqueur pour chaque livraison
-    this.deliveries.forEach(delivery => {
-      const iconHtml = this.createMarkerIcon(delivery.status);
-      
-      const customIcon = L.divIcon({
-        html: iconHtml,
-        className: 'custom-marker',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32]
+  private setupAutoRefresh(): void {
+    interval(this.refreshInterval * 1000)
+      .pipe(
+        startWith(0), // Démarrer immédiatement
+        switchMap(() => this.deliveryPersonLocationService.getAllLocations()),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (response) => this.updateDeliveryPersonMarkers(response.data),
+        error: (error) => this.handleError(error)
       });
+  }
 
-      const marker = L.marker(
-        [delivery.address.latitude, delivery.address.longitude],
-        { icon: customIcon }
-      );
+  // ============================================================================
+  // CHARGEMENT DES DONNÉES
+  // ============================================================================
 
-      // Quand l'utilisateur clique sur un marqueur, nous émettons un événement
-      // plutôt que de gérer directement la sélection. Cela donne au parent
-      // le contrôle sur ce qui devrait se passer.
-      marker.on('click', () => {
-        this.onMarkerClick(delivery);
-      });
+  /**
+   * Charge les données selon le mode
+   */
+  private loadData(): void {
+    this.isLoading = true;
+    this.error = null;
 
-      const popupContent = `
-        <div class="marker-popup">
-          <strong>${delivery.orderNumber}</strong><br>
-          ${delivery.customer.name}<br>
-          <span class="status-${delivery.status}">
-            ${this.getStatusLabel(delivery.status)}
-          </span>
-        </div>
-      `;
-      marker.bindPopup(popupContent);
-
-      this.markersLayer!.addLayer(marker);
-      this.markers.set(delivery.id, marker);
-    });
-
-    console.log(`📍 ${this.deliveries.length} marqueurs ajoutés`);
+    if (this.mode === 'overview') {
+      this.loadAllDeliveryPersons();
+    } else if (this.mode === 'tracking') {
+      this.loadSingleDeliveryPerson();
+    }
   }
 
   /**
-   * Gérer le clic sur un marqueur
-   * 
-   * Cette méthode émet un événement pour informer le parent qu'une livraison
-   * a été sélectionnée. Le parent peut alors décider quoi faire avec cette information.
-   * 
-   * @param delivery - La livraison qui a été cliquée
+   * Charge tous les livreurs (mode overview)
    */
-  private onMarkerClick(delivery: Delivery): void {
-    this.selectedDelivery = delivery;
-    
-    // Centrer la carte sur le marqueur
-    if (this.map) {
-      this.map.setView(
-        [delivery.address.latitude, delivery.address.longitude],
-        15,
-        { animate: true, duration: 0.5 }
-      );
+  private loadAllDeliveryPersons(): void {
+    this.deliveryPersonLocationService.getAllLocations()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.updateDeliveryPersonMarkers(response.data);
+          this.isLoading = false;
+
+          // Charger les livraisons si demandé
+          if (this.showDeliveryDestinations) {
+            this.loadAssignedDeliveries();
+          }
+        },
+        error: (error) => {
+          this.handleError(error);
+          this.isLoading = false;
+        }
+      });
+  }
+
+  /**
+   * Charge un livreur spécifique (mode tracking)
+   */
+  private loadSingleDeliveryPerson(): void {
+    if (!this.deliveryPersonId) {
+      this.isLoading = false;
+      return;
     }
 
-    // Émettre l'événement pour informer le parent
-    // C'est comme dire : "Quelque chose d'important s'est passé, voici les détails"
-    this.deliverySelected.emit(delivery);
-    
-    console.log('📍 Livraison sélectionnée:', delivery.orderNumber);
+    this.deliveryPersonLocationService.getLocation(this.deliveryPersonId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.updateDeliveryPersonMarkers([response.data]);
+          this.isLoading = false;
+
+          // Charger la livraison si un ID est fourni
+          if (this.deliveryId) {
+            this.loadDeliveryRoute();
+          }
+        },
+        error: (error) => {
+          this.handleError(error);
+          this.isLoading = false;
+        }
+      });
   }
 
   /**
-   * Créer l'icône HTML d'un marqueur
+   * Charge les livraisons assignées et leurs destinations
    */
-  private createMarkerIcon(status: string): string {
-    let color = '#1a73e8';
+  private loadAssignedDeliveries(): void {
+    // TODO: Implémenter l'appel à l'API des livraisons
+    // Pour l'instant, placeholder
+    console.log('[MapComponent] Loading assigned deliveries...');
+  }
+
+  /**
+   * Charge et affiche la route d'une livraison (mode tracking)
+   */
+  private loadDeliveryRoute(): void {
+    // TODO: Implémenter le chargement de la route
+    console.log('[MapComponent] Loading delivery route...');
+  }
+
+  // ============================================================================
+  // GESTION DES MARQUEURS - LIVREURS
+  // ============================================================================
+
+  /**
+   * Met à jour les marqueurs des livreurs
+   */
+  private updateDeliveryPersonMarkers(deliveryPersons: Driver[]): void {
+    // Séparer les livreurs online/offline
+    const online = deliveryPersons.filter(dp => dp.is_online && dp.current_latitude && dp.current_longitude);
+    const offline = deliveryPersons.filter(dp => !dp.is_online && dp.current_latitude && dp.current_longitude);
+
+    // Mettre à jour les compteurs
+    this.onlineCount = online.length;
+    this.offlineCount = offline.length;
+
+    // Nettoyer les anciens marqueurs
+    this.clearDeliveryPersonMarkers();
+
+    // Créer les nouveaux marqueurs
+    online.forEach(dp => this.createDeliveryPersonMarker(dp, true));
+    offline.forEach(dp => this.createDeliveryPersonMarker(dp, false));
+
+    // Ajuster la vue si nécessaire (mode overview uniquement)
+    if (this.mode === 'overview' && deliveryPersons.length > 0) {
+      this.fitBoundsToMarkers();
+    }
+  }
+
+  /**
+   * Crée un marqueur pour un livreur
+   */
+  private createDeliveryPersonMarker(deliveryPerson: Driver, isOnline: boolean): void {
+    if (!deliveryPerson.current_latitude || !deliveryPerson.current_longitude) {
+      return;
+    }
+
+    const lat = parseFloat(deliveryPerson.current_latitude);
+    const lng = parseFloat(deliveryPerson.current_longitude);
+
+    // Créer l'icône selon le statut
+    const icon = this.mapService.createDeliveryPersonIcon(isOnline, deliveryPerson.is_available);
+
+    // Créer le marqueur
+    const marker = L.marker([lat, lng], { icon })
+      .bindPopup(this.createDeliveryPersonPopup(deliveryPerson, isOnline))
+      .on('click', () => this.onDeliveryPersonMarkerClick(deliveryPerson));
+
+    // Ajouter au bon layer
+    if (isOnline) {
+      marker.addTo(this.onlineDeliveryPersonsLayer);
+    } else {
+      marker.addTo(this.offlineDeliveryPersonsLayer);
+    }
+
+    // Stocker la référence
+    this.deliveryPersonMarkers.set(deliveryPerson.id, marker);
+  }
+
+  /**
+   * Crée le contenu HTML du popup pour un livreur
+   */
+  private createDeliveryPersonPopup(deliveryPerson: Driver, isOnline: boolean): string {
+    const status = isOnline ? '🟢 En ligne' : '⚫ Hors ligne';
+    const availability = deliveryPerson.is_available ? '✅ Disponible' : '🚫 Non disponible';
     
-    switch (status) {
-      case 'pending': color = '#fbbc04'; break;
-      case 'assigned': color = '#1a73e8'; break;
-      case 'in_transit': color = '#4285f4'; break;
-      case 'delivered': color = '#34a853'; break;
-      case 'failed': color = '#ea4335'; break;
+    let lastUpdate = '';
+    if (deliveryPerson.last_location_update) {
+      lastUpdate = `<br><small>Mis à jour: ${this.formatDate(deliveryPerson.last_location_update)}</small>`;
     }
 
     return `
-      <svg width="32" height="32" viewBox="0 0 32 32">
-        <circle cx="16" cy="16" r="12" fill="${color}" stroke="white" stroke-width="3"/>
-        <circle cx="16" cy="16" r="5" fill="white" opacity="0.8"/>
-      </svg>
+      <div class="delivery-person-popup">
+        <strong>${deliveryPerson.name}</strong><br>
+        ${status} | ${availability}
+        ${lastUpdate}
+        ${deliveryPerson.current_address ? `<br><small>📍 ${deliveryPerson.current_address}</small>` : ''}
+      </div>
     `;
   }
 
   /**
-   * Ajuster la vue pour montrer tous les marqueurs
+   * Nettoie tous les marqueurs de livreurs
    */
-  private fitBounds(): void {
-    if (!this.map || !this.deliveries || this.deliveries.length === 0) return;
+  private clearDeliveryPersonMarkers(): void {
+    this.onlineDeliveryPersonsLayer.clearLayers();
+    this.offlineDeliveryPersonsLayer.clearLayers();
+    this.deliveryPersonMarkers.clear();
+  }
 
-    const bounds = this.deliveries.map(d => 
-      [d.address.latitude, d.address.longitude] as [number, number]
-    );
+  // ============================================================================
+  // GESTION DES MARQUEURS - LIVRAISONS
+  // ============================================================================
 
-    if (bounds.length > 0) {
-      this.map.fitBounds(bounds, {
-        padding: [50, 50],
-        maxZoom: 15
-      });
+  /**
+   * Crée un marqueur pour une destination de livraison
+   */
+  private createDeliveryMarker(delivery: DeliveryLocation): void {
+    // TODO: Implémenter
+  }
+
+  /**
+   * Nettoie tous les marqueurs de livraisons
+   */
+  private clearDeliveryMarkers(): void {
+    this.deliveriesLayer.clearLayers();
+    this.deliveryMarkers.clear();
+  }
+
+  // ============================================================================
+  // ÉVÉNEMENTS
+  // ============================================================================
+
+  /**
+   * Gère le clic sur un marqueur de livreur
+   */
+  private onDeliveryPersonMarkerClick(deliveryPerson: Driver): void {
+    this.deliveryPersonClicked.emit(deliveryPerson);
+  }
+
+  /**
+   * Gère le clic sur un marqueur de livraison
+   */
+  private onDeliveryMarkerClick(delivery: DeliveryLocation): void {
+    this.deliveryClicked.emit(delivery);
+  }
+
+  // ============================================================================
+  // MÉTHODES UTILITAIRES
+  // ============================================================================
+
+  /**
+   * Ajuste la vue pour afficher tous les marqueurs
+   */
+  private fitBoundsToMarkers(): void {
+    const bounds = L.latLngBounds([]);
+    
+    this.deliveryPersonMarkers.forEach(marker => {
+      bounds.extend(marker.getLatLng());
+    });
+
+    if (bounds.isValid()) {
+      this.map?.fitBounds(bounds, { padding: [50, 50] });
     }
   }
 
   /**
-   * Fermer le panneau d'informations
+   * Formate une date pour l'affichage
    */
-  closePanel(): void {
-    this.selectedDelivery = null;
+  private formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 60) return `Il y a ${diffMins} min`;
+    if (diffMins < 1440) return `Il y a ${Math.floor(diffMins / 60)} h`;
+    return `Il y a ${Math.floor(diffMins / 1440)} j`;
   }
 
   /**
-   * Voir les détails d'une livraison
-   * 
-   * Au lieu de naviguer directement, nous émettons un événement pour que
-   * le parent puisse gérer la navigation de la manière qui lui convient.
-   * 
-   * @param delivery - La livraison dont on veut voir les détails
+   * Gère les erreurs
    */
-  viewDetails(delivery: Delivery): void {
-    // Émettre l'événement pour demander au parent d'afficher les détails
-    this.viewDetailsRequested.emit(delivery);
+  private handleError(error: Error): void {
+    console.error('[MapComponent] Error:', error);
+    this.error = error.message || 'Une erreur est survenue';
+    this.mapError.emit(error);
   }
 
   /**
-   * MÉTHODES DE CONTRÔLE DE LA CARTE
+   * Nettoie les ressources de la carte
    */
-
-  zoomIn(): void {
-    if (this.map) this.map.zoomIn();
+  private cleanupMap(): void {
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+    }
   }
 
-  zoomOut(): void {
-    if (this.map) this.map.zoomOut();
+  // ============================================================================
+  // MÉTHODES PUBLIQUES (API du composant)
+  // ============================================================================
+
+  /**
+   * Recharge manuellement les données
+   */
+  public refresh(): void {
+    this.loadData();
   }
 
-  centerMap(): void {
-    this.fitBounds();
+  /**
+   * Centre la carte sur des coordonnées spécifiques
+   */
+  public centerOn(lat: number, lng: number, zoom?: number): void {
+    this.map?.setView([lat, lng], zoom || this.map.getZoom());
   }
 
-  toggleFullscreen(): void {
-    const mapElement = document.getElementById('map');
-    if (!mapElement) return;
-
-    if (!document.fullscreenElement) {
-      mapElement.requestFullscreen().catch(err => {
-        console.error('Erreur plein écran:', err);
-      });
+  /**
+   * Toggle l'affichage des destinations de livraison
+   */
+  public toggleDeliveryDestinations(): void {
+    this.showDeliveryDestinations = !this.showDeliveryDestinations;
+    
+    if (this.showDeliveryDestinations) {
+      this.loadAssignedDeliveries();
     } else {
-      document.exitFullscreen();
+      this.clearDeliveryMarkers();
     }
-  }
-
-  /**
-   * MÉTHODES UTILITAIRES
-   */
-
-  getStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      'pending': 'En attente',
-      'assigned': 'Assignée',
-      'in_transit': 'En transit',
-      'delivered': 'Livrée',
-      'failed': 'Échouée'
-    };
-    return labels[status] || status;
-  }
-
-  getStatusClass(status: string): string {
-    return `status-${status}`;
   }
 }

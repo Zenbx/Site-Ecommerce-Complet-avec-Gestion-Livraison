@@ -143,6 +143,16 @@
         </button>
 
         <button 
+          *ngIf="canViewProof(delivery)" 
+          class="btn-action error"
+          (click)="viewDeliveryProof(delivery)"
+          title="Voir les preuves de livraison"
+        >
+          <i class="material-icons">map</i>
+          <span>Preuve de livraison</span>
+        </button>
+
+        <button 
           class="btn-action default"
           (click)="viewDelivery(delivery)"
           title="Voir les détails"

@@ -1,0 +1,234 @@
+<!-- Page complète pour la vue d'ensemble de la carte -->
+<div class="map-overview-page">
+  
+  <!-- ============================================================================
+       HEADER DE LA PAGE
+       ============================================================================ -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Carte des livreurs
+        </h1>
+        <p class="subtitle">Suivi en temps réel de tous les livreurs actifs</p>
+      </div>
+      
+      <div class="header-actions">
+        <!-- Filtres rapides -->
+        <div class="quick-filters">
+          <button 
+            class="filter-chip"
+            [class.active]="filters.onlineOnly"
+            (click)="toggleFilter('onlineOnly')">
+            🟢 En ligne uniquement
+          </button>
+          
+          <button 
+            class="filter-chip"
+            [class.active]="filters.availableOnly"
+            (click)="toggleFilter('availableOnly')">
+            ✅ Disponibles uniquement
+          </button>
+          
+          <button 
+            class="filter-chip"
+            [class.active]="filters.withDeliveries"
+            (click)="toggleFilter('withDeliveries')">
+            📦 Avec livraisons
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- ============================================================================
+       STATISTIQUES GLOBALES
+       ============================================================================ -->
+  <div class="stats-grid">
+    <div class="stat-card-large online">
+      <div class="stat-header">
+        <h3>Livreurs en ligne</h3>
+        <span class="stat-icon">🟢</span>
+      </div>
+      <div class="stat-body">
+        <div class="stat-value-large">{{ stats.online }}</div>
+        <div class="stat-change positive" *ngIf="stats.onlineChange > 0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="18 15 12 9 6 15"/>
+          </svg>
+          +{{ stats.onlineChange }} depuis hier
+        </div>
+      </div>
+    </div>
+    
+    <div class="stat-card-large available">
+      <div class="stat-header">
+        <h3>Disponibles</h3>
+        <span class="stat-icon">✅</span>
+      </div>
+      <div class="stat-body">
+        <div class="stat-value-large">{{ stats.available }}</div>
+        <div class="stat-subtext">
+          {{ (stats.available / (stats.online || 1) * 100).toFixed(0) }}% des livreurs en ligne
+        </div>
+      </div>
+    </div>
+    
+    <div class="stat-card-large deliveries">
+      <div class="stat-header">
+        <h3>Livraisons en cours</h3>
+        <span class="stat-icon">📦</span>
+      </div>
+      <div class="stat-body">
+        <div class="stat-value-large">{{ stats.activeDeliveries }}</div>
+        <div class="stat-subtext">
+          {{ stats.completedToday }} terminées aujourd'hui
+        </div>
+      </div>
+    </div>
+    
+    <div class="stat-card-large response-time">
+      <div class="stat-header">
+        <h3>Temps de réponse moyen</h3>
+        <span class="stat-icon">⏱️</span>
+      </div>
+      <div class="stat-body">
+        <div class="stat-value-large">{{ stats.avgResponseTime }} min</div>
+        <div class="stat-change negative" *ngIf="stats.responseTimeChange < 0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+          {{ stats.responseTimeChange }} min vs hier
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- ============================================================================
+       CARTE PRINCIPALE
+       ============================================================================ -->
+  <div class="map-section">
+    <app-map
+      mode="overview"
+      [showDeliveryDestinations]="showDeliveryDestinations"
+      [refreshInterval]="refreshInterval"
+      (deliveryPersonClicked)="onDeliveryPersonClicked($event)"
+      (deliveryClicked)="onDeliveryClicked($event)"
+      (mapError)="onMapError($event)">
+    </app-map>
+  </div>
+  
+  <!-- ============================================================================
+       PANNEAU LATÉRAL - Liste des livreurs
+       ============================================================================ -->
+  <div class="side-panel" [class.open]="sidePanelOpen">
+    <!-- Toggle du panneau -->
+    <button class="panel-toggle" (click)="toggleSidePanel()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline [attr.points]="sidePanelOpen ? '15 18 9 12 15 6' : '9 18 15 12 9 6'"/>
+      </svg>
+    </button>
+    
+    <!-- Contenu du panneau -->
+    <div class="panel-content" *ngIf="sidePanelOpen">
+      <div class="panel-header">
+        <h3>Livreurs actifs ({{ filteredDeliveryPersons.length }})</h3>
+        
+        <!-- Barre de recherche -->
+        <div class="search-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input 
+            type="text" 
+            placeholder="Rechercher un livreur..."
+            [(ngModel)]="searchQuery"
+            (input)="filterDeliveryPersons()">
+        </div>
+      </div>
+      
+      <!-- Liste des livreurs -->
+      <div class="panel-body">
+        <div class="delivery-persons-list">
+          <div 
+            *ngFor="let dp of filteredDeliveryPersons; trackBy: trackByDeliveryPersonId"
+            class="delivery-person-item"
+            [class.selected]="selectedDeliveryPerson?.id === dp.id"
+            [class.online]="dp.is_online"
+            (click)="selectDeliveryPerson(dp)">
+            
+            <!-- Photo -->
+            <div class="dp-avatar">
+              <img *ngIf="dp.photo_url" [src]="dp.photo_url" [alt]="dp.name">
+              <div *ngIf="!dp.photo_url" class="avatar-placeholder">
+                {{ dp.name.charAt(0).toUpperCase() }}
+              </div>
+              <span class="status-indicator" [class.online]="dp.is_online"></span>
+            </div>
+            
+            <!-- Infos -->
+            <div class="dp-info">
+              <h4>{{ dp.name }}</h4>
+              <div class="dp-status">
+                <span class="badge" [class.online]="dp.is_online" [class.offline]="!dp.is_online">
+                  {{ dp.is_online ? '🟢 En ligne' : '⚫ Hors ligne' }}
+                </span>
+                <span class="badge" [class.available]="dp.is_available" [class.busy]="!dp.is_available">
+                  {{ dp.is_available ? '✅ Disponible' : '🚫 Occupé' }}
+                </span>
+              </div>
+              <div class="dp-details" *ngIf="dp.current_address">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span class="truncate">{{ dp.current_address }}</span>
+              </div>
+              <div class="dp-last-update" *ngIf="dp.last_location_update">
+                <small>Mis à jour {{ formatRelativeTime(dp.last_location_update) }}</small>
+              </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="dp-actions">
+              <button 
+                class="icon-btn"
+                (click)="centerOnDeliveryPerson(dp); $event.stopPropagation()"
+                title="Centrer sur la carte">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+              
+              <button 
+                class="icon-btn"
+                (click)="viewDeliveryPersonDetails(dp); $event.stopPropagation()"
+                title="Voir détails">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Message si liste vide -->
+          <div class="empty-state" *ngIf="filteredDeliveryPersons.length === 0">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M16 16s-1.5-2-4-2-4 2-4 2M9 9h.01M15 9h.01"/>
+            </svg>
+            <p>Aucun livreur trouvé</p>
+            <small>Essayez de modifier vos filtres</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -547,6 +547,19 @@ $transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
       }
 
+      &.error {
+        color: $error;
+
+        .material-icons {
+          color: $error;
+        }
+
+        &:hover:not(:disabled) {
+          background: rgba($error, 0.08);
+          border-color: $error;
+        }
+      }
+
       &.default {
         color: $text-secondary;
 
