@@ -70,7 +70,11 @@ class LocationController extends Controller
         );
 
         // Broadcast the location update to all listening clients (admin dashboard)
-        broadcast(new DeliveryPersonLocationUpdated($deliveryPerson))->toOthers();
+        broadcast(new DeliveryPersonLocationUpdated($deliveryPerson, [
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'address' => $request->address
+        ]))->toOthers();
 
         return response()->json([
             'success' => true,
@@ -232,22 +236,46 @@ class LocationController extends Controller
      *     @OA\Response(response=404, description="Delivery person not found")
      * )
      */
-    public function getLocation(int $id): JsonResponse
+    /**
+ * @OA\Get(
+ *     path="/api/admin/delivery-persons/{deliveryPerson}/location",
+ *     summary="Get specific delivery person location (Admin only)",
+ *     tags={"Admin - Delivery Person Tracking"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="deliveryPerson",
+ *         in="path",
+ *         required=true,
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(response=200, description="Delivery person location"),
+ *     @OA\Response(response=404, description="Delivery person not found")
+ * )
+ */
+public function getLocation(DeliveryPerson $deliveryPerson): JsonResponse
+{
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $deliveryPerson->id,
+            'name' => $deliveryPerson->name,
+            'email' => $deliveryPerson->email,
+            'photo_url' => $deliveryPerson->photo_url,
+            'location' => $deliveryPerson->location,
+            'is_online' => $deliveryPerson->is_online,
+            'is_available' => $deliveryPerson->is_available,
+            'last_update' => $deliveryPerson->last_location_update?->diffForHumans(),
+        ]
+    ]);
+}
+
+    public function getAllLocations(): JsonResponse
     {
-        $deliveryPerson = DeliveryPerson::findOrFail($id);
+        $deliveryPersons = DeliveryPerson::all();
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'id' => $deliveryPerson->id,
-                'name' => $deliveryPerson->name,
-                'email' => $deliveryPerson->email,
-                'photo_url' => $deliveryPerson->photo_url,
-                'location' => $deliveryPerson->location,
-                'is_online' => $deliveryPerson->is_online,
-                'is_available' => $deliveryPerson->is_available,
-                'last_update' => $deliveryPerson->last_location_update?->diffForHumans(),
-            ]
+            'data' => $deliveryPersons,
         ]);
     }
 }

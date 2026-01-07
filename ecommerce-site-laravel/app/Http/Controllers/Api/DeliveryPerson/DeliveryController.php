@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\DeliveryPerson;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DeliveryResource;
 use App\Models\Delivery;
-use App\Events\DeliveryLocationUpdated;
+use App\Events\DeliveryPersonLocationUpdated;
 use App\Events\DeliveryStatusChanged;
 use App\Services\GeolocationService;
 use Illuminate\Http\Request;
@@ -442,7 +442,7 @@ public function updateLocation(Request $request, Delivery $delivery): JsonRespon
     // DÉCLENCHER L'ÉVÉNEMENT WEBSOCKET
     // Cette ligne unique fait toute la magie : elle diffuse instantanément
     // la nouvelle position vers tous les clients connectés
-    broadcast(new DeliveryLocationUpdated($delivery, $validated))->toOthers();
+    broadcast(new DeliveryPersonLocationUpdated($delivery, $validated))->toOthers();
     
     return response()->json([
         'success' => true,

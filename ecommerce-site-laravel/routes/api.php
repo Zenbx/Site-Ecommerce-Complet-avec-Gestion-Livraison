@@ -56,11 +56,11 @@ use App\Http\Controllers\Api\MapController;
 // ============================================================================
 
 Route::prefix('auth')->name('auth.')->group(function () {
-    
+
     // Authentification Admin
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/login', [AdminAuthController::class, 'login'])->name('login');
-        
+
         // Routes protégées admin auth
         Route::middleware('auth:admin-api')->group(function () {
             Route::post('/register', [AdminAuthController::class, 'register'])->name('register');
@@ -69,24 +69,24 @@ Route::prefix('auth')->name('auth.')->group(function () {
             Route::get('/me', [AdminAuthController::class, 'me'])->name('me');
         });
     });
-    
+
     // Authentification Client
     Route::prefix('client')->name('client.')->group(function () {
         Route::post('/register', [ClientAuthController::class, 'register'])->name('register');
         Route::post('/login', [ClientAuthController::class, 'login'])->name('login');
-        
+
         Route::middleware('auth:client-api')->group(function () {
             Route::post('/logout', [ClientAuthController::class, 'logout'])->name('logout');
             Route::post('/refresh', [ClientAuthController::class, 'refresh'])->name('refresh');
             Route::get('/me', [ClientAuthController::class, 'me'])->name('me');
         });
     });
-    
+
     // Authentification Delivery Person
     Route::prefix('delivery-person')->name('delivery-person.')->group(function () {
         Route::post('/register', [DeliveryPersonAuthController::class, 'register'])->name('register');
         Route::post('/login', [DeliveryPersonAuthController::class, 'login'])->name('login');
-        
+
         Route::middleware('auth:delivery-api')->group(function () {
             Route::post('/logout', [DeliveryPersonAuthController::class, 'logout'])->name('logout');
             Route::post('/refresh', [DeliveryPersonAuthController::class, 'refresh'])->name('refresh');
@@ -113,7 +113,7 @@ Route::prefix('public')->name('public.')->group(function () {
 // ============================================================================
 
 Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(function () {
-    
+
     // Dashboard Admin
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/overview', [AdminDashboardController::class, 'overview'])->name('overview');
@@ -122,10 +122,10 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(func
         Route::get('/delivery-performance', [AdminDashboardController::class, 'deliveryPerformance'])->name('delivery-performance');
         Route::get('/recent-activity', [AdminDashboardController::class, 'recentActivity'])->name('recent-activity');
     });
-    
+
     // Gestion des catégories
     Route::apiResource('categories', AdminCategoryController::class);
-    
+
     // Gestion des produits
     Route::prefix('products')->name('products.')->group(function () {
         Route::get('/', [AdminProductController::class, 'index'])->name('index');
@@ -135,7 +135,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(func
         Route::delete('/{product}', [AdminProductController::class, 'destroy'])->name('destroy');
         Route::patch('/{product}/stock', [AdminProductController::class, 'updateStock'])->name('update-stock');
     });
-    
+
     // Gestion des commandes
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [AdminOrderController::class, 'index'])->name('index');
@@ -144,24 +144,39 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(func
         Route::post('/{order}/assign-delivery', [AdminOrderController::class, 'assignDelivery'])->name('assign-delivery');
         Route::post('/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('cancel');
     });
-    
+
     // Gestion des livreurs
     Route::prefix('delivery-persons')->name('delivery-persons.')->group(function () {
+        // ========== ROUTES STATIQUES D'ABORD ==========
+
+        // Liste de tous les livreurs avec localisation
+        Route::get('/locations', [DeliveryPersonLocationController::class, 'getAllLocations'])
+            ->name('locations');
+
+        // Tracking de localisation pour l'admin
+        Route::get('/tracking/active', [DeliveryPersonLocationController::class, 'getActiveDeliveryPersons'])
+            ->name('tracking.active');
+
+        // ========== ROUTES COLLECTION (sans paramètre) ==========
         Route::get('/', [AdminDeliveryPersonController::class, 'index'])->name('index');
         Route::post('/', [AdminDeliveryPersonController::class, 'store'])->name('store');
+
+        // ========== ROUTES DYNAMIQUES À LA FIN ==========
         Route::get('/{deliveryPerson}', [AdminDeliveryPersonController::class, 'show'])->name('show');
         Route::put('/{deliveryPerson}', [AdminDeliveryPersonController::class, 'update'])->name('update');
         Route::delete('/{deliveryPerson}', [AdminDeliveryPersonController::class, 'destroy'])->name('destroy');
-        Route::patch('/{deliveryPerson}/availability', [AdminDeliveryPersonController::class, 'updateAvailability'])->name('update-availability');
-        Route::get('/{deliveryPerson}/deliveries', [AdminDeliveryPersonController::class, 'deliveries'])->name('deliveries');
-        
-        // *** NOUVEAU : Tracking de localisation pour l'admin ***
-        Route::get('/tracking/active', [DeliveryPersonLocationController::class, 'getActiveDeliveryPersons'])
-            ->name('tracking.active');
+
+        Route::patch('/{deliveryPerson}/availability', [AdminDeliveryPersonController::class, 'updateAvailability'])
+            ->name('update-availability');
+
+        Route::get('/{deliveryPerson}/deliveries', [AdminDeliveryPersonController::class, 'deliveries'])
+            ->name('deliveries');
+
+        // Cette route EN TOUT DERNIER
         Route::get('/{deliveryPerson}/location', [DeliveryPersonLocationController::class, 'getLocation'])
             ->name('location');
     });
-    
+
     // Gestion des livraisons
     Route::prefix('deliveries')->name('deliveries.')->group(function () {
         Route::get('/', [AdminDeliveryController::class, 'index'])->name('index');
@@ -177,7 +192,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(func
         Route::get('/deliveries', [AdminReportController::class, 'deliveriesReport']);
         Route::get('/deliveries/export/pdf', [AdminReportController::class, 'exportDeliveriesPDF']);
         Route::get('/deliveries/export/excel', [AdminReportController::class, 'exportDeliveriesExcel']);
-        
+
         // Rapport de performance des livreurs
         Route::get('/delivery-persons', [AdminReportController::class, 'deliveryPersonsReport']);
         Route::get('/delivery-persons/export/pdf', [AdminReportController::class, 'exportDeliveryPersonsPDF']);
@@ -190,7 +205,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth:admin-api')->group(func
 // ============================================================================
 
 Route::prefix('client')->name('client.')->middleware('auth:client-api')->group(function () {
-    
+
     // Profil client
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ClientProfileController::class, 'show'])->name('show');
@@ -199,13 +214,13 @@ Route::prefix('client')->name('client.')->middleware('auth:client-api')->group(f
         Route::put('/password', [ClientProfileController::class, 'changePassword'])->name('change-password');
         Route::get('/orders', [ClientProfileController::class, 'orderHistory'])->name('order-history');
     });
-    
+
     // Catalogue produits (authentifié pour personnalisation)
     Route::get('/products', [ClientProductController::class, 'index'])->name('products.index');
     Route::get('/products/{product}', [ClientProductController::class, 'show'])->name('products.show');
     Route::get('/products/search', [ClientProductController::class, 'search'])->name('products.search');
     Route::get('/categories', [ClientProductController::class, 'categories'])->name('categories');
-    
+
     // Gestion du panier
     Route::prefix('cart')->name('cart.')->group(function () {
         Route::get('/', [CartController::class, 'show'])->name('show');
@@ -214,7 +229,7 @@ Route::prefix('client')->name('client.')->middleware('auth:client-api')->group(f
         Route::delete('/items/{cartLine}', [CartController::class, 'removeItem'])->name('remove-item');
         Route::delete('/', [CartController::class, 'clear'])->name('clear');
     });
-    
+
     // Gestion des commandes
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [ClientOrderController::class, 'index'])->name('index');
@@ -230,13 +245,13 @@ Route::prefix('client')->name('client.')->middleware('auth:client-api')->group(f
 // ============================================================================
 
 Route::prefix('delivery-person')->name('delivery-person.')->middleware('auth:delivery-api')->group(function () {
-    
+
     // Dashboard livreur
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/overview', [DeliveryPersonDashboardController::class, 'overview'])->name('overview');
         Route::get('/daily-summary', [DeliveryPersonDashboardController::class, 'dailySummary'])->name('daily-summary');
     });
-    
+
     // Profil livreur
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [DeliveryPersonProfileController::class, 'show'])->name('show');
@@ -247,7 +262,7 @@ Route::prefix('delivery-person')->name('delivery-person.')->middleware('auth:del
         Route::get('/deliveries', [DeliveryPersonProfileController::class, 'deliveryHistory'])->name('delivery-history');
         Route::get('/statistics', [DeliveryPersonProfileController::class, 'statistics'])->name('statistics');
     });
-    
+
     // Gestion des livraisons
     Route::prefix('deliveries')->name('deliveries.')->group(function () {
         Route::get('/', [DeliveryPersonDeliveryController::class, 'index'])->name('index');
@@ -267,10 +282,10 @@ Route::prefix('delivery-person')->name('delivery-person.')->middleware('auth:del
     Route::prefix('location')->name('location.')->group(function () {
         // Mettre à jour la position (appelé toutes les 15 secondes par l'app React Native)
         Route::post('/update', [DeliveryPersonLocationController::class, 'updateLocation'])->name('update');
-        
+
         // Changer le statut online/offline
         Route::post('/status', [DeliveryPersonLocationController::class, 'setOnlineStatus'])->name('status');
-        
+
         // Obtenir sa propre position actuelle
         Route::get('/current', [DeliveryPersonLocationController::class, 'getCurrentLocation'])->name('current');
     });
