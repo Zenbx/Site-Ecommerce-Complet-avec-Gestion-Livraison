@@ -2,13 +2,13 @@
 
 const ENV = {
   // URL de l'API - à modifier selon l'environnement
-  API_URL: 'http://192.168.1.103:8000/api',
+  API_URL: 'http://10.95.56.23:8000/api',
   
   // Timeout des requêtes HTTP (en ms)
   API_TIMEOUT: 30000,
   
   // Intervalle de mise à jour GPS (en ms)
-  GPS_UPDATE_INTERVAL: 30000, // 30 secondes
+  GPS_UPDATE_INTERVAL: 10000, // 10 secondes
   
   // Timeout de session (en minutes)
   SESSION_TIMEOUT: 30,

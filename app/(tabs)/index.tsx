@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useDelivery } from '../../context/DeliveryContext';
 import { useAuth } from '../../context/AuthContext';
+import { useLocation } from '@/hooks/useLocation';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function DashboardScreen() {
     failed: 0,
   });
   const [loading, setLoading] = useState(true);
+  const { location, isTracking, startTracking } = useLocation();
 
   useEffect(() => {
     loadData();
@@ -89,7 +91,7 @@ export default function DashboardScreen() {
 
         <View style={styles.content}>
           <Text style={styles.sectionLabel}>Activité du jour</Text>
-          
+
           <View style={styles.statsGrid}>
             <View style={[styles.statCard, { borderColor: '#0077ff' }]}>
               <Text style={[styles.statValue, { color: '#0077ff' }]}>{stats.total}</Text>
@@ -277,5 +279,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#94A3B8',
     marginTop: 2,
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  startButton: {
+    backgroundColor: '#2e7d32',
+  },
+  stopButton: {
+    backgroundColor: '#c62828',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });

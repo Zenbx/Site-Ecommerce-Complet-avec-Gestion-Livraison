@@ -9,12 +9,7 @@ interface User {
   id: number;
   name: string;
   email: string;
-  id_card_number: string;  // Nouveau : numéro de carte d'identité
-  address: string;         // Nouveau : adresse complète
-  photo_url: string;       // Nouveau : URL de la photo de profil
   is_available: boolean;
-  created_at: string;      // Nouveau : date de création
-  updated_at: string;      // Nouveau : date de mise à jour
 }
 
 interface AuthContextData {
@@ -59,8 +54,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Extraction du token et des données utilisateur selon le nouveau schéma API
       // La réponse contient { success, message, data: { delivery_person, token, token_type } }
-      const authToken = response.data.token;
-      const userData = response.data.delivery_person;
+      const authToken = response.token;
+      const userData = response.user;
 
       setToken(authToken);
       setUser(userData);

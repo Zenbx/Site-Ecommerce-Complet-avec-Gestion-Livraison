@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
   Text,
@@ -25,14 +26,9 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     const newErrors = { email: '', password: '' };
-    
-    if (!validateEmail(email)) {
-      newErrors.email = 'Email invalide';
-    }
-    
-    if (!validatePassword(password)) {
-      newErrors.password = 'Mot de passe requis (min 6 caractères)';
-    }
+
+    if (!validateEmail(email)) newErrors.email = 'Email invalide';
+    if (!validatePassword(password)) newErrors.password = 'Mot de passe requis (min 6 caractères)';
 
     if (newErrors.email || newErrors.password) {
       setErrors(newErrors);
@@ -42,8 +38,11 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       setErrors({ email: '', password: '' });
-      
+
+      // signIn depuis le contexte gère déjà AsyncStorage
       await signIn(email, password);
+
+      // navigation vers l’écran principal
       router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert(
