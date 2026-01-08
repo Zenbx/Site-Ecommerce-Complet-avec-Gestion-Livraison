@@ -25,7 +25,16 @@ if [ ! -f .env ]; then
     echo "PUSHER_APP_CLUSTER=${PUSHER_APP_CLUSTER}" >> .env
     echo "PUSHER_SCHEME=${PUSHER_SCHEME}" >> .env
     echo "PUSHER_PORT=${PUSHER_PORT}" >> .env
+    echo "" >> .env
+    echo "SUPABASE_URL=${SUPABASE_URL}" >> .env
+    echo "SUPABASE_KEY=${SUPABASE_KEY}" >> .env
+    echo "SUPABASE_BUCKET=${SUPABASE_BUCKET}" >> .env
+    echo "FILESYSTEM_DISK=${FILESYSTEM_DISK}" >> .env
 fi
+
+echo "Clearing any cached config..."
+php artisan config:clear || true
+php artisan cache:clear || true
 
 echo "Running Composer scripts (package discovery)..."
 composer run-script post-autoload-dump || true
