@@ -28,8 +28,8 @@ WORKDIR /var/www
 # Copy application files
 COPY . /var/www
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install dependencies (skip scripts during build, will run in entrypoint)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www \

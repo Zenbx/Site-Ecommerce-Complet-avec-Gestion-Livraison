@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+echo "Running Composer scripts (package discovery)..."
+composer run-script post-autoload-dump || true
+
+echo "Generating application key if needed..."
+php artisan key:generate --force || true
+
 echo "Running migrations..."
 php artisan migrate --force
 
