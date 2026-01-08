@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Admin, AuthService } from '../../core/services/auth.service';
@@ -11,6 +11,10 @@ import { Admin, AuthService } from '../../core/services/auth.service';
   styleUrls: ['./sidebar.component.scss']
 })
 export class SidebarComponent {
+  @Input() isMobile = false;
+  @Input() isTablet = false;
+  @Output() itemClick = new EventEmitter<void>();
+
   menuItems = [
     {
       icon: 'dashboard',
@@ -62,6 +66,11 @@ export class SidebarComponent {
         console.error('Failed to load profile', err);
       }
     });
+  }
+
+  onItemClick() {
+    // Émet un événement pour fermer la sidebar sur mobile/tablet
+    this.itemClick.emit();
   }
 
   logout(): void {

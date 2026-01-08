@@ -1,0 +1,91 @@
+<div class="app-layout" [class.sidebar-open]="isSidebarOpen">
+  <!-- Hamburger Button (Tablet & Mobile) -->
+  <button
+    class="hamburger-btn"
+    (click)="toggleSidebar()"
+    *ngIf="isMobile || isTablet"
+  >
+    <span class="material-icons">{{ isSidebarOpen ? "close" : "menu" }}</span>
+  </button>
+
+  <!-- Overlay (Tablet & Mobile) -->
+  <div
+    class="sidebar-overlay"
+    *ngIf="(isMobile || isTablet) && isSidebarOpen"
+    (click)="closeSidebar()"
+  ></div>
+
+  <!-- Navbar -->
+  <app-navbar></app-navbar>
+
+  <div class="main-wrapper">
+    <!-- Sidebar -->
+    <app-sidebar
+      [class.mobile-open]="isSidebarOpen"
+      [isMobile]="isMobile"
+      [isTablet]="isTablet"
+      (itemClick)="closeSidebar()"
+    >
+    </app-sidebar>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <!-- Bottom Navigation (Mobile Only) -->
+  <nav class="bottom-nav" *ngIf="isMobile">
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="active"
+      class="bottom-nav-item"
+    >
+      <span class="material-icons">dashboard</span>
+      <span class="label">Dashboard</span>
+    </a>
+    <a routerLink="/orders" routerLinkActive="active" class="bottom-nav-item">
+      <span class="material-icons">shopping_cart</span>
+      <span class="label">Commandes</span>
+    </a>
+    <a
+      routerLink="/deliveries"
+      routerLinkActive="active"
+      class="bottom-nav-item"
+    >
+      <span class="material-icons">local_shipping</span>
+      <span class="label">Livraisons</span>
+    </a>
+    <a routerLink="/products" routerLinkActive="active" class="bottom-nav-item">
+      <span class="material-icons">inventory_2</span>
+      <span class="label">Produits</span>
+    </a>
+    <button class="bottom-nav-item" (click)="toggleMoreMenu()" type="button">
+      <span class="material-icons">menu</span>
+      <span class="label">Plus</span>
+    </button>
+  </nav>
+
+  <!-- More popover shown when clicking "Plus" -->
+  <div class="more-popover" *ngIf="showMoreMenu">
+    <ul>
+      <li *ngFor="let item of extraMenuItems">
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="bottom-nav-item"
+          (click)="closeMoreMenu()"
+        >
+          <span class="material-icons">{{ item.icon }}</span>
+          <span class="label">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div
+    class="more-overlay"
+    *ngIf="showMoreMenu"
+    (click)="closeMoreMenu()"
+  ></div>
+</div>

@@ -78,7 +78,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.lastUpdateTime = new Date();
           this.loading = false;
           
-          console.log('✅ Dashboard data loaded:', data);
+          console.log(' Dashboard data loaded:', data);
           
           // Vérifier les alertes
           this.checkForAlerts();

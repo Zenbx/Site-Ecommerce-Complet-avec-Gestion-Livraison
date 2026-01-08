@@ -1,27 +1,32 @@
 // src/app/features/dashboard/dashboard.component.scss
 
 // --- Variables (Google / Material Palette) ---
-$primary: #1a73e8;       // Google Blue
-$success: #1e8e3e;       // Google Green
-$warning: #e37400;       // Google Yellow/Orange
-$error: #d93025;         // Google Red
-$bg-body: #f8f9fa;       // Light Gray Background
-$border-color: #dadce0;  // Subtle Border
-$text-primary: #202124;  // Almost Black
-$text-secondary: #5f6368; // Dark Gray
+$primary: #1a73e8;
+$success: #1e8e3e;
+$warning: #e37400;
+$error: #d93025;
+$bg-body: #f8f9fa;
+$border-color: #dadce0;
+$text-primary: #202124;
+$text-secondary: #5f6368;
+
+// --- Breakpoints ---
+$breakpoint-mobile: 480px;
+$breakpoint-tablet: 768px;
+$breakpoint-desktop: 1024px;
+$breakpoint-large: 1280px;
 
 // --- Mixins ---
 @mixin card-base {
   background: white;
   border: 1px solid $border-color;
   border-radius: 8px;
-  // Pas d'ombre par défaut, style "flat" propre
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 // --- Layout ---
 .dashboard-wrapper {
-  background-color: white; // Ou $bg-body si tu veux tout gris
+  background-color: white;
   min-height: 100vh;
   font-family: 'Roboto', 'Segoe UI', sans-serif;
   color: $text-primary;
@@ -43,7 +48,7 @@ $text-secondary: #5f6368; // Dark Gray
 
     h1 {
       font-size: 22px;
-      font-weight: 400; // Light/Regular style Google
+      font-weight: 400;
       margin: 0;
       color: $text-primary;
     }
@@ -103,7 +108,7 @@ $text-secondary: #5f6368; // Dark Gray
       transition: background 0.2s;
 
       &:hover:not(:disabled) {
-        background: #f1f3f4; // Google hover gray
+        background: #f1f3f4;
       }
       
       &:disabled {
@@ -111,7 +116,7 @@ $text-secondary: #5f6368; // Dark Gray
         cursor: not-allowed;
       }
 
-      i { font-style: normal; font-size: 18px; } // Si tu utilises Material Icons
+      i { font-style: normal; font-size: 18px; }
     }
   }
 }
@@ -140,7 +145,7 @@ $text-secondary: #5f6368; // Dark Gray
 // --- Main Content ---
 .dashboard-content {
   padding: 24px;
-  max-width: 1400px; // Évite que ça s'étire trop sur les très grands écrans
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -232,7 +237,6 @@ $text-secondary: #5f6368; // Dark Gray
     }
   }
 
-  // Barre colorée décorative en bas
   .kpi-progress {
     position: absolute;
     bottom: 0;
@@ -251,7 +255,7 @@ $text-secondary: #5f6368; // Dark Gray
 // --- Split Layout ---
 .split-layout {
   display: grid;
-  grid-template-columns: 2fr 1fr; // Ratio 2/3 - 1/3
+  grid-template-columns: 2fr 1fr;
   gap: 24px;
 }
 
@@ -320,7 +324,6 @@ $text-secondary: #5f6368; // Dark Gray
 
   tr:last-child td { border-bottom: none; }
   
-  // Interactions
   tbody tr:hover { background-color: #f8f9fa; }
 
   .primary-text { font-weight: 500; }
@@ -356,7 +359,6 @@ $text-secondary: #5f6368; // Dark Gray
   font-weight: 500;
   white-space: nowrap;
 
-  // Use SCSS selector nesting for the dynamic classes
   &.status-pending { background: #fef7e0; color: #b06000; }
   &.status-assigned { background: #e8f0fe; color: $primary; }
   &.status-in-progress { background: #e8f0fe; color: $primary; border: 1px solid rgba($primary, 0.2); }
@@ -448,20 +450,369 @@ $text-secondary: #5f6368; // Dark Gray
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba($success, 0); }
 }
 
-// --- Responsive ---
-@media (max-width: 1024px) {
-  .split-layout {
-    grid-template-columns: 1fr; // Stack les colonnes sur tablette/mobile
+// ========================================
+// RESPONSIVE DESIGN
+// ========================================
+
+// --- Large Desktop (1280px+) ---
+@media (min-width: $breakpoint-large) {
+  .dashboard-content {
+    padding: 32px;
   }
   
+  .kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+// --- Desktop (1024px - 1279px) ---
+@media (max-width: $breakpoint-desktop) {
+  .split-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    .mini-stats-row {
+      .mini-card {
+        .value { font-size: 20px; }
+      }
+    }
+  }
+}
+
+// --- Tablet (768px - 1023px) ---
+@media (max-width: $breakpoint-tablet) {
   .top-bar {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+    padding: 12px 16px;
+
+    .top-bar-left {
+      width: 100%;
+      flex-wrap: wrap;
+      
+      h1 {
+        font-size: 20px;
+      }
+      
+      .divider {
+        display: none;
+      }
+      
+      .context {
+        width: 100%;
+        font-size: 13px;
+        margin-top: 4px;
+      }
+    }
 
     .top-bar-right {
       width: 100%;
+      flex-direction: row;
       justify-content: space-between;
+      gap: 16px;
+
+      .meta-info {
+        align-items: flex-start;
+        order: 1;
+      }
+      
+      .btn-action {
+        order: 2;
+        padding: 8px 12px;
+        font-size: 13px;
+        
+        span {
+          display: none;
+        }
+      }
     }
+  }
+
+  .dashboard-content {
+    padding: 16px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    padding: 16px;
+    
+    .kpi-body {
+      .kpi-value {
+        font-size: 28px;
+      }
+    }
+  }
+
+  .split-layout {
+    gap: 16px;
+  }
+
+  .modern-table {
+    th, td {
+      padding: 12px 16px;
+      font-size: 13px;
+    }
+  }
+
+  .panel-header {
+    padding: 12px 16px !important;
+    
+    h2 {
+      font-size: 15px;
+    }
+  }
+}
+
+// --- Mobile (480px - 767px) ---
+@media (max-width: $breakpoint-mobile) {
+  .top-bar {
+    padding: 12px;
+
+    .top-bar-left {
+      h1 {
+        font-size: 18px;
+      }
+      
+      .context {
+        font-size: 12px;
+      }
+    }
+
+    .top-bar-right {
+      flex-wrap: wrap;
+      
+      .meta-info {
+        font-size: 11px;
+      }
+      
+      .btn-action {
+        padding: 6px 10px;
+        
+        i {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+
+  .dashboard-content {
+    padding: 12px;
+  }
+
+  .alerts-section {
+    margin-bottom: 16px;
+  }
+
+  .alert-banner {
+    padding: 10px 12px;
+    gap: 12px;
+    font-size: 13px;
+    
+    .alert-icon {
+      font-size: 18px;
+    }
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .kpi-card {
+    padding: 14px;
+    
+    .kpi-header {
+      .kpi-label {
+        font-size: 11px;
+      }
+      
+      .kpi-icon {
+        font-size: 18px;
+      }
+    }
+    
+    .kpi-body {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      
+      .kpi-value {
+        font-size: 26px;
+      }
+      
+      .trend-badge {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .split-layout {
+    gap: 12px;
+  }
+
+  .panel {
+    .panel-header {
+      padding: 12px !important;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      
+      h2 {
+        font-size: 14px;
+      }
+      
+      .indicator {
+        font-size: 11px;
+      }
+    }
+  }
+
+  .modern-table {
+    font-size: 12px;
+    
+    th {
+      padding: 10px 12px;
+      font-size: 11px;
+    }
+    
+    td {
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    
+    .user-cell {
+      gap: 8px;
+      
+      .avatar-initial {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+      }
+    }
+    
+    .meta-text {
+      font-size: 11px;
+    }
+  }
+
+  .status-chip {
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+
+  .mini-stats-row {
+    gap: 12px;
+    margin-bottom: 16px;
+    
+    .mini-card {
+      padding: 12px;
+      
+      .label {
+        font-size: 11px;
+      }
+      
+      .value {
+        font-size: 16px;
+      }
+    }
+  }
+
+  .driver-list {
+    .driver-item {
+      padding: 10px 12px;
+      gap: 12px;
+      
+      .rank-col {
+        font-size: 13px;
+        width: 16px;
+      }
+      
+      .driver-info {
+        .driver-name {
+          font-size: 13px;
+        }
+        
+        .driver-metrics {
+          font-size: 11px;
+          flex-wrap: wrap;
+        }
+      }
+      
+      .driver-time {
+        font-size: 11px;
+      }
+    }
+  }
+}
+
+// --- Extra Small Mobile (< 400px) ---
+@media (max-width: 400px) {
+  .top-bar {
+    .top-bar-left h1 {
+      font-size: 16px;
+    }
+  }
+
+  .kpi-card .kpi-body .kpi-value {
+    font-size: 24px;
+  }
+
+  .modern-table {
+    th, td {
+      padding: 8px 10px;
+    }
+  }
+
+  .driver-list .driver-item {
+    flex-wrap: wrap;
+    
+    .driver-time {
+      width: 100%;
+      margin-top: 4px;
+      text-align: left;
+    }
+  }
+}
+
+// --- Print Styles ---
+@media print {
+  .top-bar-right,
+  .loading-bar,
+  .alerts-section,
+  .btn-action {
+    display: none !important;
+  }
+  
+  .dashboard-wrapper {
+    background: white;
+  }
+  
+  .split-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .kpi-card,
+  .panel {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-wrapper {
+    padding-bottom: 60px; // Espace pour la bottom nav
+  }
+
+  .dashboard-content {
+    padding: 12px;
+    padding-bottom: 20px;
   }
 }
