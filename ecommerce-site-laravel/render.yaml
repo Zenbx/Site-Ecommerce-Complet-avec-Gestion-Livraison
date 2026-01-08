@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: techstorm-api
+    runtime: php
+    plan: free
+    buildCommand: composer install --no-dev --optimize-autoloader && php artisan optimize
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    envVars:
+      - key: APP_NAME
+        value: TechStorm API
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: db.kloqndxqnernodizotxc.supabase.co
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        value: postgres
+      - key: DB_USERNAME
+        value: postgres
+      - key: DB_PASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        value: https://kloqndxqnernodizotxc.supabase.co
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: products
